@@ -9,7 +9,7 @@ const opts = (scale) => ({ fitTo: { mode: "zoom", value: scale }, font: { loadSy
 export const toPng = (svg, scale = 2) => new Resvg(svg, opts(scale)).render().asPng();
 
 /** frameAt(t) returns a static SVG for t∈[0,1]; the last frame is held before looping. */
-export function toGif(frameAt, { fps = 15, hold = 3000, scale = 1 } = {}) {
+export function toGif(frameAt, { fps = 12, hold = 3000, scale = 1 } = {}) {
   const gif = GIFEncoder();
   const n = Math.round(DURATION * fps);
   for (let i = 0; i <= n; i++) {

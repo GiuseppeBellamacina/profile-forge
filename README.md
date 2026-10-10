@@ -76,6 +76,38 @@ All-time commits are added up from `contributionsCollection` year by year throug
 
 3. Run the workflow once from the **Actions** tab (`workflow_dispatch`).
 
+### Full-README mode (`profile.json`)
+
+You can turn the card into your *whole* README: an About section, a "Working on" list, and a tech-stack carousel that loops endlessly. To do that, add a `profile.json` to your profile repo and pass `config: profile.json` to the action.
+
+```jsonc
+{
+  "title": "AI Engineer",                       // shown next to @login
+  "about": ["Paragraph one…", "Paragraph two…"],  // wrapped automatically, **bold** markers are stripped
+  "workingOn": [{ "title": "Project", "description": "One line", "url": "https://…" }],
+  "links": [                                    // rendered as separate clickable buttons
+    { "label": "Portfolio", "url": "https://…", "icon": "globe", "color": "#7aa2f7" },
+    { "label": "LinkedIn", "url": "https://…", "icon": "linkedin", "color": "#0A66C2" }
+  ],
+  "techStack": [                                // flattened and shuffled on every run
+    { "category": "Languages", "items": [{ "name": "Python", "image": "assets/img/python.svg" }] }
+  ]
+}
+```
+
+- **Images** are paths relative to `profile.json`. They are embedded in the SVG as data URIs (svg, png, jpg, webp, gif). resvg can't decode webp, so webp images show up only in the SVG, not in the PNG/GIF exports.
+- **The carousel** is reshuffled in random order every time the card is generated (daily with the cron). Row 1 scrolls left and row 2 scrolls right. A static SVG can't reshuffle per page view, because GitHub doesn't run scripts in README images.
+- **Links:** GitHub shows README SVGs through `<img>`, which is never clickable inside, so links are not drawn on the card. Each link instead gets its own animated button, written to `<output_dir>/buttons/<label>-<theme>.svg`. Wrap each button in a link:
+
+  ```html
+  <a href="https://linkedin.com/in/you"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/buttons/linkedin-dark.svg">
+    <img src="assets/buttons/linkedin-light.svg" alt="LinkedIn">
+  </picture></a>
+  ```
+
+  `icon` can be `instagram`, `linkedin`, or any bundled Octicon: `globe`, `github`, `code`, `rocket`, `zap`, `star`, `repo`, `people`…
+
 ### Private contributions (optional)
 
 The default `github.token` can only see public data. To include private contributions:
@@ -91,6 +123,7 @@ Private *repositories* still don't count toward stars, languages or repo count u
 |---|---|---|
 | `username` | repo owner | Login to render |
 | `token` | `github.token` | GraphQL token |
+| `config` | – | Path to `profile.json` (full-README mode) |
 | `output_dir` | `assets` | Output folder |
 | `name` | `profile-forge` | File base name, giving `<name>-<theme>.svg` |
 | `themes` | `dark,light` | Themes to render |

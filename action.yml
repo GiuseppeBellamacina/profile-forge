@@ -11,6 +11,9 @@ inputs:
   token:
     description: Token for the GraphQL API. Use a PAT (read:user, repo) to include private contributions.
     default: ${{ github.token }}
+  config:
+    description: Optional profile.json (about, workingOn, links, techStack) to turn the card into a full README
+    default: ""
   output_dir:
     description: Where to write the SVG files
     default: assets
@@ -50,8 +53,10 @@ runs:
         PF_CW: ${{ inputs.count_weight }}
         PF_HIDE: ${{ inputs.hide }}
         PF_PRIVATE: ${{ inputs.include_private }}
+        PF_CONFIG: ${{ inputs.config }}
       run: |
         args=(--user "$PF_USER" --out "$PF_OUT" --name "$PF_NAME" --theme "$PF_THEMES" --tz "$PF_TZ"
               --size-weight "$PF_SW" --count-weight "$PF_CW" --hide "$PF_HIDE")
         [ "$PF_PRIVATE" = "true" ] && args+=(--include-private)
+        [ -n "$PF_CONFIG" ] && args+=(--config "$PF_CONFIG")
         node "$GITHUB_ACTION_PATH/src/cli.js" "${args[@]}"

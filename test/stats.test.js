@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { render } from "../src/render.js";
+import { render, renderButton } from "../src/render.js";
 import { calculateRank, computeStreak, summarize, topLanguages, trophies } from "../src/stats.js";
 
 test("rank: zero activity is C, heavy activity is S", () => {
@@ -54,10 +54,14 @@ test("render: static frame has no CSS animation and nothing hidden; animated has
     followers: 5, organizations: 0, prs: 3, issues: 2, contributedTo: 1, repoCount: 4, stars: 12, commits: 300, reviews: 1,
     repos: [{ isFork: false, languages: [{ name: "Rust", color: "#dea584", size: 100 }] }], days,
   });
+  d.config = { about: ["Hello **world**"], workingOn: [{ title: "Thing", url: "https://x.dev" }], stack: Array.from({ length: 30 }, (_, k) => ({ name: `T${k}`, id: `i${k}`, data: "data:image/png;base64," })) };
   const still = render(d, { theme: "light", t: 1 });
+  assert.ok(still.includes("Hello world") && still.includes("WORKING ON") && still.includes("TECH STACK"));
+  assert.ok(!still.includes("#row0"), "static carousel inlines visible tiles only");
   assert.ok(!still.includes("@keyframes") && !still.includes("animation"));
   assert.ok(!/ opacity="0"/.test(still));
   assert.ok(still.includes("Ada &#60;Lovelace&#62;"));
   const animated = render(d);
-  assert.ok(animated.includes("@keyframes"));
+  assert.ok(animated.includes("@keyframes m0") && animated.includes("#row1"));
+  assert.ok(renderButton({ label: "LinkedIn", url: "u", icon: "linkedin" }).includes(">LinkedIn</text>"));
 });
