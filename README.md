@@ -60,7 +60,7 @@ All-time commits are added up from `contributionsCollection` year by year throug
              git config user.name "github-actions[bot]"
              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
              git add assets
-             git diff --cached --quiet || (git commit -m "chore: refresh profile card" && git push)
+             git diff --cached --quiet || (git commit -m "chore: refresh profile card" && git pull --rebase && git push)
    ```
 
    The same workflow is in [`examples/profile-workflow.yml`](examples/profile-workflow.yml).
