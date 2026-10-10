@@ -1,0 +1,57 @@
+name: profile-forge
+description: Generate one animated all-in-one GitHub profile card (rank, stats, streaks, languages, trophies, heatmap).
+author: GiuseppeBellamacina
+branding:
+  icon: award
+  color: purple
+inputs:
+  username:
+    description: GitHub login to render
+    default: ${{ github.repository_owner }}
+  token:
+    description: Token for the GraphQL API. Use a PAT (read:user, repo) to include private contributions.
+    default: ${{ github.token }}
+  output_dir:
+    description: Where to write the SVG files
+    default: assets
+  name:
+    description: File base name (-> <name>-<theme>.svg)
+    default: profile-forge
+  themes:
+    description: Comma-separated themes (dark, light)
+    default: dark,light
+  timezone:
+    description: IANA time zone used to decide "today" for streaks
+    default: UTC
+  size_weight:
+    description: Language ranking exponent on bytes
+    default: "1"
+  count_weight:
+    description: Language ranking exponent on repo count
+    default: "0"
+  hide:
+    description: Comma-separated languages to hide
+    default: ""
+  include_private:
+    description: Include private repos in stars/languages/repo count (needs PAT)
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        PF_USER: ${{ inputs.username }}
+        PF_OUT: ${{ inputs.output_dir }}
+        PF_NAME: ${{ inputs.name }}
+        PF_THEMES: ${{ inputs.themes }}
+        PF_TZ: ${{ inputs.timezone }}
+        PF_SW: ${{ inputs.size_weight }}
+        PF_CW: ${{ inputs.count_weight }}
+        PF_HIDE: ${{ inputs.hide }}
+        PF_PRIVATE: ${{ inputs.include_private }}
+      run: |
+        args=(--user "$PF_USER" --out "$PF_OUT" --name "$PF_NAME" --theme "$PF_THEMES" --tz "$PF_TZ"
+              --size-weight "$PF_SW" --count-weight "$PF_CW" --hide "$PF_HIDE")
+        [ "$PF_PRIVATE" = "true" ] && args+=(--include-private)
+        node "$GITHUB_ACTION_PATH/src/cli.js" "${args[@]}"

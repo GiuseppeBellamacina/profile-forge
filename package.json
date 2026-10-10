@@ -1,0 +1,18 @@
+{
+  "name": "profile-forge",
+  "version": "1.0.0",
+  "description": "One animated, all-in-one GitHub profile card: rank, stats, streaks, top languages, trophies and contribution heatmap.",
+  "type": "module",
+  "bin": { "profile-forge": "src/cli.js" },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "card": "node src/cli.js"
+  },
+  "engines": { "node": ">=20" },
+  "optionalDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "gifenc": "^1.0.3"
+  },
+  "license": "MIT",
+  "repository": "github:GiuseppeBellamacina/profile-forge"
+}

@@ -1,0 +1,31 @@
+name: preview
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["src/**", "action.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --test test/*.test.js
+      - uses: ./
+        with:
+          output_dir: docs
+          timezone: Europe/Rome
+          size_weight: "0.01"
+          count_weight: "0.4"
+          hide: batchfile,shell,makefile
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || (git commit -m "chore: refresh preview card" && git push)
