@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { fetchProfile } from "./github.js";
 import { render, renderButton } from "./render.js";
@@ -74,18 +75,25 @@ if (o.config) {
   data.config = cfg;
 }
 
+// Webfonts are embedded as data URIs: GitHub shows README SVGs as images, which can't fetch fonts.
+const fontDir = join(dirname(fileURLToPath(import.meta.url)), "..", "fonts");
+const face = async (family, file) =>
+  `@font-face{font-family:'${family}';font-weight:300 800;src:url(data:font/woff2;base64,${(await readFile(join(fontDir, file))).toString("base64")}) format("woff2")}`;
+const bodyFont = await face("Inter", "inter.woff2");
+const displayFont = await face("Space Grotesk", "space-grotesk.woff2");
+
 await mkdir(o.out, { recursive: true });
 // Loaded lazily so the GitHub Action works without installing the optional export deps.
 const exporter = o.png || o.gif ? await import("./export.js") : null;
 for (const theme of o.theme.split(",").map((s) => s.trim())) {
   const base = join(o.out, `${o.name}-${theme}`);
-  await writeFile(`${base}.svg`, render(data, { theme }));
+  await writeFile(`${base}.svg`, render(data, { theme, fontCss: bodyFont + displayFont }));
   if (o.png) await writeFile(`${base}.png`, exporter.toPng(render(data, { theme, t: 1 })));
   if (o.gif) await writeFile(`${base}.gif`, exporter.toGif((t) => render(data, { theme, t })));
   for (const link of data.config?.links ?? []) {
     const slug = link.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     await mkdir(join(o.out, "buttons"), { recursive: true });
-    await writeFile(join(o.out, "buttons", `${slug}-${theme}.svg`), renderButton(link, { theme }));
+    await writeFile(join(o.out, "buttons", `${slug}-${theme}.svg`), renderButton(link, { theme, fontCss: displayFont }));
   }
   console.log(`wrote ${base}.svg${o.png ? " .png" : ""}${o.gif ? " .gif" : ""}`);
 }

@@ -1,4 +1,4 @@
-import { BRANDS, ICONS } from "./icons.js";
+import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 
 export const THEMES = {
   dark: {
@@ -13,8 +13,10 @@ export const THEMES = {
   },
 };
 
-const TROPHY_COLORS = { S: "#f5c443", A: "#a9b8cc", B: "#d08a4a", C: "#a86b3c", "?": "#6b7280" };
 /** Total timeline length in seconds; GIF frames sample t∈[0,1] over it. */
+/** Body and display font stacks; Inter / Space Grotesk are embedded via @font-face when available. */
+const FB = "Inter, 'Segoe UI', Ubuntu, 'Helvetica Neue', Arial, sans-serif";
+const FD = "'Space Grotesk', Inter, 'Segoe UI', Ubuntu, sans-serif";
 export const DURATION = 4.4;
 const W = 1000;
 
@@ -92,7 +94,7 @@ function animator(t) {
 const panel = (x, y, w, h, c) =>
   `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${c.panel}" stroke="${c.border}"/>`;
 const heading = (x, y, text, c, extra = "") =>
-  `<text x="${x}" y="${y}" font-size="12" font-weight="700" letter-spacing="1.6" fill="${c.muted}">${esc(text)}${extra}</text>`;
+  `<text x="${x}" y="${y}" font-size="12" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.muted}">${esc(text)}${extra}</text>`;
 
 function header(d, c, A) {
   const joined = new Date(d.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
@@ -110,7 +112,7 @@ function header(d, c, A) {
     <image href="${d.avatar}" x="40" y="38" width="104" height="104" clip-path="url(#av)" preserveAspectRatio="xMidYMid slice"/>
   </g>
   <g${A.a(0.15, 0.6, { o: 0, ty: 12 })}>
-    <text x="172" y="78" font-size="32" font-weight="800" fill="${c.text}">${esc(trunc(d.name, 24))}</text>
+    <text x="172" y="78" font-size="32" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(trunc(d.name, 24))}</text>
     <text x="172" y="106" font-size="16" font-weight="600" fill="${c.accent}">@${esc(d.login)}${d.config?.title ? `<tspan dx="4" font-weight="400" fill="${c.muted}">· ${esc(d.config.title)}</tspan>` : ""}</text>
     ${icon("history", 172, 122, 14, c.muted)}
     <text x="193" y="134" font-size="13" fill="${c.muted}">Joined ${joined} · ${d.years} ${d.years === 1 ? "year" : "years"} on GitHub</text>
@@ -127,10 +129,10 @@ function header(d, c, A) {
     <circle cx="900" cy="90" r="50" fill="none" stroke="${c.track}" stroke-width="8"/>
     <circle cx="900" cy="90" r="50" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round"
       stroke-dasharray="${r3(C)}" transform="rotate(-90 900 90)"${A.a(0.5, 1.4, { dash: C }, { dash: (C * (100 - progress)) / 100 })}/>
-    <text x="900" y="99" text-anchor="middle" font-size="30" font-weight="800" fill="${c.text}">${d.rank.level}</text>
+    <text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="${FD}" fill="${c.text}">${d.rank.level}</text>
     <text x="900" y="117" text-anchor="middle" font-size="10" fill="${c.muted}">top ${r3(d.rank.percentile).toFixed(1)}%</text>
   </g>
-  <text x="900" y="162" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.6" fill="${c.muted}"${A.a(0.6, 0.5, { o: 0 })}>RANK</text>`;
+  <text x="900" y="162" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.muted}"${A.a(0.6, 0.5, { o: 0 })}>RANK</text>`;
 }
 
 function statsPanel(d, c, A) {
@@ -154,7 +156,7 @@ function statsPanel(d, c, A) {
       return `<g${A.a(0.55 + i * 0.07, 0.45, { o: 0, ty: 8 })}>
     ${icon(ic, x, y - 12, 15, c.accent)}
     <text x="${x + 24}" y="${y}" font-size="13.5" fill="${c.muted}">${label}</text>
-    <text x="${x + 200}" y="${y}" text-anchor="end" font-size="15" font-weight="700" fill="${c.text}">${num(value)}</text>
+    <text x="${x + 200}" y="${y}" text-anchor="end" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${num(value)}</text>
   </g>`;
     })
     .join("")}`;
@@ -164,7 +166,7 @@ function streakPanel(d, c, A) {
   const { total, current, longest, first } = d.streak;
   const range = (s) => (s.length ? `${fmtDate(s.start, false)} – ${fmtDate(s.end)}` : "No streak yet");
   const col = (x, delay, value, label, sub, color) => `<g${A.a(delay, 0.5, { o: 0, ty: 10 })}>
-    <text x="${x}" y="${value.big ? 278 : 276}" text-anchor="middle" font-size="${value.big ? 30 : 26}" font-weight="800" fill="${color}">${value.text}</text>
+    <text x="${x}" y="${value.big ? 278 : 276}" text-anchor="middle" font-size="${value.big ? 30 : 26}" font-weight="700" font-family="${FD}" fill="${color}">${value.text}</text>
     <text x="${x}" y="326" text-anchor="middle" font-size="13" font-weight="600" fill="${color === c.fire ? c.fire : c.text}">${label}</text>
     <text x="${x}" y="343" text-anchor="middle" font-size="11" fill="${c.muted}">${sub}</text>
   </g>`;
@@ -210,33 +212,71 @@ function languagesPanel(d, c, A) {
     .join("")}`;
 }
 
-function trophiesPanel(d, c, A) {
+// Trophy palettes from github-profile-trophy: "darkhub" for dark, "default" for light.
+const TROPHY_THEMES = {
+  dark: {
+    title: "#c9d1d9", text: "#8b949e", circle: "#f0f6fb", laurel: "#178600", bar: "#ff79c6",
+    secret: ["#ff5555", "#ff79c6", "#388bfd", "#ff79c6"], S: ["#ffb86c", "#ffb86c", "#0d1117"], A: ["#8be9fd", "#8be9fd", "#0d1117"],
+    B: ["#ff5555", "#ff5555", "#0d1117"], other: ["#6272a4", "#6272a4", "#0d1117"],
+  },
+  light: {
+    title: "#000", text: "#666", circle: "#fff", laurel: "#009366", bar: "#0366d6",
+    secret: ["red", "fuchsia", "blue", "fuchsia"], S: ["#FAD200", "#C8A090", "#886000"], A: ["#B0B0B0", "#9090C0", "#505050"],
+    B: ["#A18D66", "#816D96", "#412D06"], other: ["#777", "#333", "#333"],
+  },
+};
+const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` : `${n}pt`);
+
+/** One 110×110 trophy, drawn like github-profile-trophy (cup, laurel for S/A, extra cups for SS/SSS). */
+function trophy(tr, tt, theme) {
+  const id = `tg-${theme}-${tr.rank === "?" ? "UNKNOWN" : tr.rank}`;
+  const secret = tr.rank === "SECRET";
+  const [base, shadow, rankText] = secret ? tt.secret.slice(1) : tt[tr.rank[0]] ?? tt.other;
+  const stops = secret
+    ? tt.secret.slice(0, 3).map((col, i) => `<stop offset="${i * 50}%" stop-color="${col}"/>`).join("")
+    : `<stop offset="0%" stop-color="${base}"/><stop offset="${tt[tr.rank[0]] ? 70 : 50}%" stop-color="${base}"/><stop offset="100%" stop-color="${shadow}"/>`;
+  const cup = (fill, letterColor) =>
+    `${CUP}<circle cx="8" cy="6" r="4" fill="${tt.circle}"/><text x="6" y="8" font-family="Courier, monospace" font-size="7" fill="${letterColor}">${secret ? "S" : tr.rank[0]}</text>`;
+  const extra = secret ? 0 : tr.rank.length - 1;
+  const small = (x) => `<svg x="${x}" y="35" width="65" height="65" viewBox="0 0 30 30" fill="${base}">${cup(base, rankText)}</svg>`;
+  const laurel = !secret && "SA".includes(tr.rank[0])
+    ? `<svg width="120" height="120" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${LAUREL(tt.laurel)}</svg>`
+    : "";
+  return {
+    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)">${stops}</linearGradient>`,
+    body: `${laurel}${extra === 2 ? small(7) : ""}${extra >= 1 ? small(68) : ""}
+      <svg x="28" y="20" width="100" height="100" viewBox="0 0 30 30" fill="url(#${id})">${cup(null, secret ? tt.secret[3] : rankText)}</svg>
+      <text x="55" y="18" text-anchor="middle" font-size="13" font-weight="700" font-family="${FD}" fill="${tt.title}">${esc(tr.title)}</text>
+      <text x="55" y="85" text-anchor="middle" font-size="10.5" font-weight="700" font-family="${FD}" fill="${tt.text}">${esc(tr.label)}</text>
+      <text x="55" y="97" text-anchor="middle" font-size="10" font-weight="700" font-family="${FD}" fill="${tt.text}">${tr.title === "Experience" ? `${tr.score} yrs` : secret ? "SECRET" : abridge(tr.score)}</text>
+      <rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${tt.bar}"/>`,
+  };
+}
+
+function trophiesPanel(d, c, A, theme) {
+  const tt = TROPHY_THEMES[theme] ?? TROPHY_THEMES.dark;
   const list = d.trophies;
-  const n = list.length;
-  const gap = 10;
-  const cw = (920 - gap * (n - 1)) / n;
-  const chars = Math.max(4, Math.floor(cw / 6.6));
-  return `
-  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, 940, 150, c)}${heading(50, 530, "TROPHIES", c)}</g>
-  ${list
+  const gap = 12;
+  const s = Math.min(110, (920 - gap * (list.length - 1)) / list.length);
+  const x0 = 30 + (940 - (list.length * s + gap * (list.length - 1))) / 2;
+  const defs = [];
+  const cards = list
     .map((tr, i) => {
-      const x = 40 + i * (cw + gap);
-      const cx = x + cw / 2;
-      const secret = tr.rank === "SECRET";
-      const color = secret ? "url(#rainbow)" : TROPHY_COLORS[tr.rank[0]] ?? TROPHY_COLORS["?"];
-      const letter = secret ? "★" : tr.rank;
-      const barW = cw - 20;
-      return `<g${A.a(1.45 + i * 0.07, 0.45, { o: 0, s: 0.5 }, {}, [r3(cx), 590])}>
-    <title>${esc(tr.title)}: ${esc(tr.label)}${tr.score !== null ? ` (${num(tr.score)})` : ""}</title>
-    <rect x="${r3(x)}" y="542" width="${r3(cw)}" height="102" rx="10" fill="${c.bg1}" stroke="${c.border}"/>
-    ${icon("trophy", r3(cx - 13), 552, 26, color)}
-    <text x="${r3(cx)}" y="604" text-anchor="middle" font-size="${letter.length > 2 ? 15 : 18}" font-weight="800" fill="${color}">${letter}</text>
-    <text x="${r3(cx)}" y="621" text-anchor="middle" font-size="11" font-weight="600" fill="${c.muted}">${esc(trunc(tr.title, chars))}</text>
-    <rect x="${r3(x + 10)}" y="631" width="${r3(barW)}" height="3" rx="1.5" fill="${c.track}"/>
-    <rect x="${r3(x + 10)}" y="631" width="${r3(barW * tr.progress)}" height="3" rx="1.5" fill="${color}"/>
+      const x = x0 + i * (s + gap);
+      const { defs: g, body } = trophy(tr, tt, theme);
+      defs.push(g);
+      return `<g${A.a(1.45 + i * 0.08, 0.5, { o: 0, s: 0.6 }, {}, [r3(x + s / 2), r3(542 + s / 2)])}>
+    <svg x="${r3(x)}" y="542" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">
+      <rect x="0.5" y="0.5" rx="4.5" width="109" height="109" fill="${c.bg1}" stroke="${c.border}"/>
+      ${body}
+      <g${A.a(1.8 + i * 0.08, 0.9, { sx: 0 }, {}, [15, 102])}><rect x="15" y="101" rx="1" width="${r3(80 * tr.progress)}" height="3.2" fill="${tt.bar}"/></g>
+    </svg>
   </g>`;
     })
-    .join("")}`;
+    .join("");
+  return `<defs>${defs.join("")}</defs>
+  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, 940, 168, c)}${heading(50, 530, "TROPHIES", c)}</g>
+  ${cards}`;
 }
 
 function heatmapPanel(d, c, A) {
@@ -296,7 +336,8 @@ function heatmapPanel(d, c, A) {
 // Text layout without font metrics: per-character width estimate (em units) for a Segoe-UI-like sans.
 const charW = (ch) =>
   /[il.,;:!|'`’]/.test(ch) ? 0.27 : /[ftrjI()[\] ]/.test(ch) ? 0.34 : /[mwMW@]/.test(ch) ? 0.84 : /[A-Z0-9#&%]/.test(ch) ? 0.62 : 0.53;
-export const textWidth = (s, size) => [...s].reduce((w, ch) => w + charW(ch), 0) * size;
+// x1.07: Inter runs slightly wider than the Segoe UI metrics this table was tuned on.
+export const textWidth = (s, size) => [...s].reduce((w, ch) => w + charW(ch), 0) * size * 1.07;
 const fit = (s, size, maxW) => {
   while (s.length > 1 && textWidth(s, size) > maxW) s = s.slice(0, -2) + "…";
   return s;
@@ -349,7 +390,7 @@ function workingPanel(d, c, A) {
     <rect x="${r3(x)}" y="46" width="${r3(cw)}" height="96" rx="12" fill="${c.bg1}" stroke="${c.border}"/>
     <circle cx="${r3(x + 26)}" cy="72" r="15" fill="url(#grad)" opacity="0.2"/>
     ${icon(icons[i % icons.length], r3(x + 18), 64, 16, c.accent)}
-    <text x="${r3(x + 50)}" y="77" font-size="15" font-weight="700" fill="${c.text}">${esc(fit(plain(it.title), 15, cw - 62))}</text>
+    <text x="${r3(x + 50)}" y="77" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(plain(it.title), 15, cw - 62))}</text>
     ${desc.map((l, k) => `<text x="${r3(x + 50)}" y="${98 + k * 16}" font-size="12.5" fill="${c.muted}">${esc(l)}</text>`).join("")}
     ${url ? `<text x="${r3(x + 50)}" y="132" font-size="11" fill="${c.accent2}">${esc(fit(url, 11, cw - 62))}</text>` : ""}
   </g>`;
@@ -400,7 +441,7 @@ function carousel(d, c, A, defs) {
 }
 
 /** Render the full card. opts.t undefined = animated SVG, number = static frame at that progress. */
-export function render(d, { theme = "dark", t } = {}) {
+export function render(d, { theme = "dark", t, fontCss = "" } = {}) {
   const c = THEMES[theme] ?? THEMES.dark;
   const A = animator(t);
   const cfg = d.config ?? {};
@@ -418,12 +459,12 @@ export function render(d, { theme = "dark", t } = {}) {
   A.dt = cfg.about || cfg.workingOn ? 0.6 : 0;
   place(statsPanel(d, c, A) + streakPanel(d, c, A), 168, 184);
   place(languagesPanel(d, c, A), 112, 372);
-  place(trophiesPanel(d, c, A), 150, 504);
+  place(trophiesPanel(d, c, A, theme), 168, 504);
   place(heatmapPanel(d, c, A), 180, 674);
   if (cfg.stack?.length) (A.dt = 2.9), place(...carousel(d, c, A, defs));
   A.dt = 0;
   const H = y + 8;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'Segoe UI', Ubuntu, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
   <title>${esc(d.name)} (@${esc(d.login)}) — GitHub profile</title>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.bg1}"/><stop offset="1" stop-color="${c.bg2}"/></linearGradient>
@@ -431,7 +472,7 @@ export function render(d, { theme = "dark", t } = {}) {
     <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b9a"/><stop offset=".5" stop-color="#b48cff"/><stop offset="1" stop-color="#4fd1ff"/></linearGradient>
     <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="850" cy="0" r="650"><stop offset="0" stop-color="${c.accent2}" stop-opacity="0.18"/><stop offset="1" stop-color="${c.accent2}" stop-opacity="0"/></radialGradient>
     ${defs.join("\n    ")}
-  </defs>${A.css.length ? `\n  <style>${A.css.join("")}</style>` : ""}
+  </defs>${t === undefined ? `\n  <style>${fontCss}${A.css.join("")}</style>` : ""}
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="20" fill="url(#bg)" stroke="${c.border}"/>
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="20" fill="url(#glow)"/>
   ${parts.join("\n  ")}
@@ -443,26 +484,26 @@ export function render(d, { theme = "dark", t } = {}) {
  * A standalone link button. SVGs inside <img> are never clickable on GitHub,
  * so each link is its own small image wrapped in <a> in the README.
  */
-export function renderButton(link, { theme = "dark" } = {}) {
+export function renderButton(link, { theme = "dark", fontCss = "" } = {}) {
   const c = THEMES[theme] ?? THEMES.dark;
   const color = link.color ?? c.accent;
-  const w = Math.ceil(48 + textWidth(link.label, 15) * 1.08 + 40);
+  const w = Math.ceil(48 + textWidth(link.label, 15) + 40);
   const h = 44;
   const glyph = BRANDS[link.icon]
     ? `<g transform="translate(15 13) scale(0.75)" fill="#fff">${BRANDS[link.icon]}</g>`
     : `<g transform="translate(15 13) scale(1.125)" fill="#fff">${ICONS[link.icon] ?? ICONS.globe}</g>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" font-family="'Segoe UI', Ubuntu, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="${esc(link.label)}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" font-family="${FB}" role="img" aria-label="${esc(link.label)}">
   <title>${esc(link.label)}</title>
   <defs>
     <linearGradient id="b" x1="0" x2="1"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="${c.accent2}"/></linearGradient>
     <linearGradient id="s" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <clipPath id="r"><rect width="${w}" height="${h}" rx="22"/></clipPath>
   </defs>
-  <style>@keyframes sh{0%,55%{transform:translateX(-70px)}100%{transform:translateX(${w + 10}px)}}.sh{animation:sh 4.5s ease-in-out infinite}</style>
+  <style>${fontCss}@keyframes sh{0%,55%{transform:translateX(-70px)}100%{transform:translateX(${w + 10}px)}}.sh{animation:sh 4.5s ease-in-out infinite}</style>
   <rect x=".75" y=".75" width="${w - 1.5}" height="${h - 1.5}" rx="21.25" fill="${c.panel}" stroke="url(#b)" stroke-width="1.5"/>
   <circle cx="24" cy="22" r="15" fill="${color}"/>
   ${glyph}
-  <text x="48" y="27.5" font-size="15" font-weight="700" fill="${c.text}">${esc(link.label)}</text>
+  <text x="48" y="27.5" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(link.label)}</text>
   <path d="M${w - 26} 26l8-8m-6 0h6v6" fill="none" stroke="${c.muted}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
   <g clip-path="url(#r)"><rect class="sh" width="60" height="${h}" fill="url(#s)"/></g>
 </svg>`;

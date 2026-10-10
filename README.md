@@ -31,7 +31,7 @@ profile-forge works differently:
 | Stats | Stars, all-time commits, PRs, issues, code reviews, repos contributed to, followers, repositories |
 | Streak | Total contributions, current streak and longest streak with date ranges (a day with zero contributions *today* does not break the streak) |
 | Top languages | Animated stacked bar and legend, with configurable `size_weight` / `count_weight` ranking |
-| Trophies | The same tiers and thresholds as github-profile-trophy (SSS … C), plus secret trophies |
+| Trophies | Same look, tiers and thresholds as github-profile-trophy (SSS … C), plus secret trophies |
 | Heatmap | The last 53 weeks of contributions |
 
 All-time commits are added up from `contributionsCollection` year by year through GraphQL, so profile-forge doesn't need the REST commit search.
@@ -144,6 +144,7 @@ node src/cli.js --user <login> --tz Europe/Rome --png --gif
 ```
 
 - **PNG**: the final frame rendered at 2× with [resvg](https://github.com/yisibl/resvg-js).
+- **Fonts**: the SVG embeds Inter and Space Grotesk. resvg cannot read the embedded woff2 files, so PNG/GIF use your system fonts unless Inter and Space Grotesk are installed locally.
 - **GIF**: the card's animation rendered frame by frame (15 fps, holds 3 s on the last frame) and encoded with [gifenc](https://github.com/mattdesl/gifenc).
 
 Every animated element is described once as a (delay, duration, from → to) value. The SVG turns that into CSS keyframes, and the PNG/GIF export samples the same timeline as static frames, so all three outputs always match.
@@ -153,7 +154,7 @@ Run `node src/cli.js --help` to see every flag.
 ## How the numbers are computed
 
 - **Rank:** `1 − Σwᵢ·cdf(xᵢ/medianᵢ) / Σwᵢ`, using exponential CDFs for commits (median 1000, w=2), PRs (50, w=3), issues (25, w=1) and reviews (2, w=1), and log-normal CDFs for stars (50, w=4) and followers (10, w=1). The result is mapped to S / A+ / A / A- / B+ / B / B- / C+ / C at the 1 / 12.5 / 25 / … / 100 percentile thresholds.
-- **Trophies:** Stars, Commits, Followers, Issues, PRs, Repos, Reviews and Experience, each with eight tiers (SSS → C). Secret trophies appear only once earned: Rainbow (10+ languages), Village Elder (10+ years), Jack of all Trades (3+ orgs), Joined 2020, and All-S.
+- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with eight tiers (SSS → C), drawn like github-profile-trophy (cup, laurel for S/A ranks, extra cups for SS/SSS; `darkhub` palette in dark mode, `default` in light mode). Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, and AllSuperRank.
 - **Streak:** computed from your daily contribution calendar across every year since you joined, in the configured time zone.
 
 ## Development
@@ -168,6 +169,7 @@ src/stats.js    rank, languages, streak, trophies (pure functions)
 src/render.js   SVG renderer + themes + animation timeline
 src/export.js   PNG/GIF export (optional deps)
 src/cli.js      CLI entry point (used by action.yml)
+fonts/          Inter + Space Grotesk (OFL), embedded into the SVG as data URIs
 ```
 
 `reference/` is git-ignored. It's the place to clone the original projects if you want to study them.

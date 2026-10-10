@@ -95,14 +95,10 @@ const TROPHIES = [
     ["God Committer", "Deep Committer", "Super Committer", "Ultra Committer", "Hyper Committer", "High Committer", "Middle Committer", "First Commit"]],
   ["Followers", "followers", [1000, 400, 200, 100, 50, 20, 10, 1],
     ["Super Celebrity", "Ultra Celebrity", "Hyper Celebrity", "Famous User", "Active User", "Dynamic User", "Many Friends", "First Friend"]],
-  ["Issues", "issues", [1000, 500, 200, 100, 50, 20, 10, 1],
-    ["God Issuer", "Deep Issuer", "Super Issuer", "Ultra Issuer", "Hyper Issuer", "High Issuer", "Middle Issuer", "First Issue"]],
-  ["PRs", "prs", [1000, 500, 200, 100, 50, 20, 10, 1],
+  ["PullRequest", "prs", [1000, 500, 200, 100, 50, 20, 10, 1],
     ["God Puller", "Deep Puller", "Super Puller", "Ultra Puller", "Hyper Puller", "High Puller", "Middle Puller", "First Pull"]],
-  ["Repos", "repos", [50, 45, 40, 35, 30, 20, 10, 1],
+  ["Repositories", "repos", [50, 45, 40, 35, 30, 20, 10, 1],
     ["God Repo Creator", "Deep Repo Creator", "Super Repo Creator", "Ultra Repo Creator", "Hyper Repo Creator", "High Repo Creator", "Middle Repo Creator", "First Repository"]],
-  ["Reviews", "reviews", [70, 57, 45, 30, 20, 8, 3, 1],
-    ["God Reviewer", "Deep Reviewer", "Super Reviewer", "Ultra Reviewer", "Hyper Reviewer", "Active Reviewer", "Intermediate Reviewer", "New Reviewer"]],
   ["Experience", "experience", [70, 55, 40, 28, 18, 11, 6, 2],
     ["Seasoned Veteran", "Grandmaster", "Master Dev", "Expert Dev", "Experienced Dev", "Intermediate Dev", "Junior Dev", "Newbie"]],
 ];
@@ -117,11 +113,11 @@ export function trophies(s) {
     return { title, rank, label: i === -1 ? "Unknown" : labels[i], score: key === "experience" ? s.years : score, progress };
   });
   const secret = [
-    [s.languageCount >= 10, "Rainbow", "Rainbow Lang User"],
-    [s.years >= 10, "Elder", "Village Elder"],
-    [s.organizations >= 3, "Orgs", "Jack of all Trades"],
-    [s.firstYear === 2020, "2020", "Everything started..."],
-    [list.every((t) => t.rank.startsWith("S")), "AllSuper", "S Rank Hacker"],
+    [s.languageCount >= 10, "MultiLanguage", "Rainbow Lang User"],
+    [s.years >= 10, "LongTimeUser", "Village Elder"],
+    [s.organizations >= 3, "Organizations", "Jack of all Trades"],
+    [s.firstYear === 2020, "Joined2020", "Everything started..."],
+    [list.every((t) => t.rank.startsWith("S")), "AllSuperRank", "S Rank Hacker"],
   ];
   for (const [ok, title, label] of secret) if (ok) list.push({ title, rank: "SECRET", label, score: null, progress: 1 });
   return list;

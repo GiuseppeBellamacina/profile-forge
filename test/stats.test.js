@@ -40,11 +40,11 @@ test("trophies: tiers and secret trophies", () => {
   assert.equal(rank.Stars, "S");
   assert.equal(rank.Commits, "SSS");
   assert.equal(rank.Followers, "?");
-  assert.equal(rank.Issues, "C");
-  assert.equal(rank.PRs, "A");
+  assert.equal(rank.Issues, undefined);
+  assert.equal(rank.PullRequest, "A");
   assert.equal(rank.Experience, "A");
-  assert.ok(rank.Rainbow && rank.Orgs);
-  assert.ok(!rank.Elder);
+  assert.ok(rank.MultiLanguage && rank.Organizations);
+  assert.ok(!rank.LongTimeUser);
 });
 
 test("render: static frame has no CSS animation and nothing hidden; animated has keyframes", () => {
