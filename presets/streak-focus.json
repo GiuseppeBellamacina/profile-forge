@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": { "dark": "crimson", "light": "everforest-light" },
+  "card": { "background": { "pattern": "dots" } },
+  "layout": ["header", "streak", "heatmap"],
+  "header": { "facts": ["currentStreak", "longestStreak", "bestDay", "busiestWeekday"], "rankIcon": "level" },
+  "streak": { "excludeDays": ["Sat", "Sun"], "dateFormat": "M j[, Y]", "title": "Consistency" },
+  "heatmap": { "weekStart": "mon" }
+}

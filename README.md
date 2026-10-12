@@ -79,6 +79,8 @@ All-time commits are added up from `contributionsCollection` year by year throug
 
 ## Configuration (`config.json`)
 
+> **Full guide with pictures for every option: [GUIDE.md](GUIDE.md).** Ready-made configs to copy are in [`presets/`](presets).
+
 Put a `config.json` at the root of your profile repo and the action picks it up (`profile.json` still works as a fallback, with the same content keys). **Everything is optional.** Add `"$schema"` for autocompletion and validation in your editor; mistakes (unknown key, bad enum, bad hex) fail with a message naming the key. A full example is in [`examples/config.json`](examples/config.json), and `node src/cli.js --init` writes a small one.
 
 **Precedence:** action inputs / CLI flags › `config.json` › built-in defaults. Action inputs are empty by default, so an empty input never overrides your file.
@@ -119,6 +121,17 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
   "includePrivate": false
 }
 ```
+
+### Presets
+
+Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
+
+<table>
+<tr>
+<td><img src="docs/presets/dashboard-dark.png" alt="dashboard preset"></td>
+<td><img src="docs/presets/cyberpunk-dark.png" alt="cyberpunk preset"></td>
+</tr>
+</table>
 
 ### Themes
 
@@ -258,6 +271,7 @@ src/stats.js    rank, languages, streak, trophies (pure functions)
 src/render.js   SVG renderer + themes + animation timeline
 src/export.js   PNG/GIF export (optional deps)
 src/cli.js      CLI entry point (used by action.yml)
+scripts/        demo.js (render a config with demo data), gen-docs.js (regenerate docs/guide + docs/presets)
 fonts/          Inter + Space Grotesk (OFL), embedded into the SVG as data URIs
 ```
 

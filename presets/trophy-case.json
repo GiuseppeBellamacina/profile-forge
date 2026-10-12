@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": { "dark": "outrun", "light": "dayfox" },
+  "card": { "background": { "pattern": "grid" } },
+  "layout": ["header", "trophies", "heatmap"],
+  "header": { "facts": ["stars", "followers", "longestStreak"], "rankIcon": "percentile" },
+  "trophies": { "extra": ["Issues", "Reviews"], "columns": 5, "marginW": 16, "marginH": 16, "title": "Hall of fame" },
+  "heatmap": { "weeks": 26, "legend": false }
+}

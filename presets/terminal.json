@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": { "dark": "hacker", "light": "solarized-light" },
+  "card": { "radius": 4, "background": { "pattern": "grid", "glow": false } },
+  "layout": ["header", "languages", ["stats", "streak"], "heatmap"],
+  "header": { "avatar": "hide", "facts": ["contributionsThisYear", "busiestWeekday", "stars", "followers"], "rankIcon": "level" },
+  "languages": { "layout": "compact", "count": 6 },
+  "stats": { "icons": false, "textBold": false, "lineHeight": 28, "title": "$ stats" },
+  "streak": { "title": "$ streak", "dateFormat": "Y-m-d" },
+  "heatmap": { "weekStart": "mon" }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "title": "Full-stack engineer",
+  "about": [
+    "I build developer tools and data pipelines, mostly in **Python** and **Rust**.",
+    "Open to interesting problems, good code review and a bit of compiler hacking."
+  ],
+  "workingOn": [
+    { "title": "forge-api", "description": "Fast, typed REST layer", "url": "https://github.com/your-login/forge-api" },
+    { "title": "fast-core", "description": "A tiny Rust runtime", "url": "https://github.com/your-login/fast-core" }
+  ],
+  "links": [
+    { "label": "Portfolio", "url": "https://example.com", "icon": "globe", "color": "#7aa2f7" },
+    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/your-login", "icon": "linkedin", "color": "#0A66C2" }
+  ],
+  "techStack": [
+    { "category": "Languages", "items": [
+      { "name": "Python", "image": "assets/img/python.svg" },
+      { "name": "JavaScript", "image": "assets/img/javascript.svg" }
+    ] },
+    { "category": "Data & ML", "items": [
+      { "name": "NumPy", "image": "assets/img/numpy.svg" },
+      { "name": "Pandas", "image": "assets/img/pandas.svg" },
+      { "name": "PyTorch", "image": "assets/img/pytorch.svg" }
+    ] },
+    { "category": "Tooling", "items": [
+      { "name": "Git", "image": "assets/img/git.svg" },
+      { "name": "Docker", "image": "assets/img/docker.svg" },
+      { "name": "Linux", "image": "assets/img/linux.svg" },
+      { "name": "FastAPI", "image": "assets/img/fastapi.svg" }
+    ] }
+  ],
+  "themes": { "dark": "catppuccin-mocha", "light": "catppuccin-latte" },
+  "layout": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
+  "header": { "avatar": "rounded" },
+  "stats": { "numberFormat": "short" },
+  "languages": { "layout": "bar", "count": 8, "hide": ["Jupyter Notebook"] },
+  "trophies": { "ranks": ["-C"] }
+}

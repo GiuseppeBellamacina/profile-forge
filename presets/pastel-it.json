@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "locale": "it",
+  "timezone": "Europe/Rome",
+  "themes": { "dark": "catppuccin-macchiato", "light": "catppuccin-latte" },
+  "card": { "radius": 32, "background": { "pattern": "diagonal" } },
+  "layout": ["header", ["languages", "stats"], "streak", "heatmap"],
+  "header": { "avatar": "rounded", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"] },
+  "languages": { "layout": "donut-vertical", "count": 6 },
+  "stats": { "numberFormat": "short", "lineHeight": 32 },
+  "streak": { "excludeDays": ["Sun"], "dateFormat": "j M[ Y]" },
+  "heatmap": { "cell": "round", "weekStart": "mon" }
+}
