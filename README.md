@@ -79,6 +79,8 @@ All-time commits are added up from `contributionsCollection` year by year throug
 
 ## Configuration (`config.json`)
 
+> **Prefer clicking?** Use the **[web configurator](https://giuseppebellamacina.github.io/profile-forge/)**: live preview, then publish config, workflow and assets to your repo.
+>
 > **Full guide with pictures for every option: [GUIDE.md](GUIDE.md).** Ready-made configs to copy are in [`presets/`](presets).
 
 Put a `config.json` at the root of your profile repo and the action picks it up (`profile.json` still works as a fallback, with the same content keys). **Everything is optional.** Add `"$schema"` for autocompletion and validation in your editor; mistakes (unknown key, bad enum, bad hex) fail with a message naming the key. A full example is in [`examples/config.json`](examples/config.json), and `node src/cli.js --init` writes a small one.
