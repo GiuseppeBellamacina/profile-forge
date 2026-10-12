@@ -11,12 +11,15 @@ async function gql(token, query, variables = {}) {
   return json.data;
 }
 
-const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryPrivacy) {
+const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryPrivacy, $extras: Boolean = false) {
   user(login: $login) {
     name login avatarUrl createdAt
     followers { totalCount }
     organizations { totalCount }
     pullRequests { totalCount }
+    mergedPrs: pullRequests(states: MERGED) @include(if: $extras) { totalCount }
+    discussionsStarted: repositoryDiscussions @include(if: $extras) { totalCount }
+    discussionsAnswered: repositoryDiscussionComments(onlyAnswers: true) @include(if: $extras) { totalCount }
     openIssues: issues(states: OPEN) { totalCount }
     closedIssues: issues(states: CLOSED) { totalCount }
     repositoriesContributedTo(first: 1, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, REPOSITORY]) { totalCount }
@@ -24,7 +27,7 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
-        isFork stargazerCount createdAt
+        name isFork stargazerCount createdAt
         languages(first: 10, orderBy: { field: SIZE, direction: DESC }) { edges { size node { name color } } }
       }
     }
@@ -34,20 +37,20 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
 /** "YYYY-MM-DD" for now in the given IANA time zone. */
 export const todayIn = (tz) => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
 
-export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC" }) {
+export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC", startingYear = null, extras = false }) {
   const privacy = includePrivate ? null : "PUBLIC";
-  let data = await gql(token, USER_QUERY, { login, privacy });
+  let data = await gql(token, USER_QUERY, { login, privacy, extras });
   const user = data.user;
   if (!user) throw new Error(`User "${login}" not found`);
   const repos = [...user.repositories.nodes];
   let page = user.repositories.pageInfo;
   while (page.hasNextPage) {
-    data = await gql(token, USER_QUERY, { login, privacy, after: page.endCursor });
+    data = await gql(token, USER_QUERY, { login, privacy, extras, after: page.endCursor });
     repos.push(...data.user.repositories.nodes);
     page = data.user.repositories.pageInfo;
   }
 
-  const firstYear = new Date(user.createdAt).getUTCFullYear();
+  const firstYear = Math.max(new Date(user.createdAt).getUTCFullYear(), startingYear ?? 0);
   const today = todayIn(tz);
   const thisYear = Number(today.slice(0, 4));
   const years = Array.from({ length: thisYear - firstYear + 1 }, (_, i) => firstYear + i);
@@ -64,8 +67,10 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   const calendar = new Map();
   let commits = 0;
   let reviews = 0;
-  for (const y of yearly) {
-    commits += y.totalCommitContributions + y.restrictedContributionsCount;
+  const commitsByYear = {};
+  for (const [i, y] of yearly.entries()) {
+    commitsByYear[firstYear + i] = y.totalCommitContributions + y.restrictedContributionsCount;
+    commits += commitsByYear[firstYear + i];
     reviews += y.totalPullRequestReviewContributions;
     for (const w of y.contributionCalendar.weeks)
       for (const d of w.contributionDays) if (d.date <= today) calendar.set(d.date, d.contributionCount);
@@ -90,8 +95,14 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     repoCount: user.repositories.totalCount,
     stars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     commits,
+    commitsByYear,
     reviews,
+    mergedPrs: user.mergedPrs?.totalCount ?? 0,
+    discussionsStarted: user.discussionsStarted?.totalCount ?? 0,
+    discussionsAnswered: user.discussionsAnswered?.totalCount ?? 0,
     repos: repos.map((r) => ({
+      name: r.name,
+      stars: r.stargazerCount,
       isFork: r.isFork,
       languages: r.languages.edges.map((e) => ({ name: e.node.name, color: e.node.color, size: e.size })),
     })),

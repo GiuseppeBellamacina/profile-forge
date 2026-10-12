@@ -75,29 +75,100 @@ All-time commits are added up from `contributionsCollection` year by year throug
    ```
 
 3. Run the workflow once from the **Actions** tab (`workflow_dispatch`).
+4. Customize everything (themes, sections, layout, colors, language…) in a `config.json` next to it: see [Configuration](#configuration-configjson).
 
-### Full-README mode (`profile.json`)
+## Configuration (`config.json`)
 
-You can turn the card into your *whole* README: an About section, a "Working on" list, and a tech-stack carousel that loops endlessly. To do that, add a `profile.json` to your profile repo and pass `config: profile.json` to the action.
+Put a `config.json` at the root of your profile repo and the action picks it up (`profile.json` still works as a fallback, with the same content keys). **Everything is optional.** Add `"$schema"` for autocompletion and validation in your editor; mistakes (unknown key, bad enum, bad hex) fail with a message naming the key. A full example is in [`examples/config.json`](examples/config.json), and `node src/cli.js --init` writes a small one.
+
+**Precedence:** action inputs / CLI flags › `config.json` › built-in defaults. Action inputs are empty by default, so an empty input never overrides your file.
 
 ```jsonc
 {
-  "title": "AI Engineer",                       // shown next to @login
-  "about": ["Paragraph one…", "Paragraph two…"],  // wrapped automatically, **bold** markers are stripped
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+
+  // Content (turns the card into your whole README)
+  "title": "AI Engineer",                          // shown next to @login
+  "about": ["Paragraph one…", "Paragraph two…"],    // wrapped automatically, **bold** markers are stripped
   "workingOn": [{ "title": "Project", "description": "One line", "url": "https://…" }],
-  "links": [                                    // rendered as separate clickable buttons
-    { "label": "Portfolio", "url": "https://…", "icon": "globe", "color": "#7aa2f7" },
-    { "label": "LinkedIn", "url": "https://…", "icon": "linkedin", "color": "#0A66C2" }
-  ],
-  "techStack": [                                // flattened and shuffled on every run
-    { "category": "Languages", "items": [{ "name": "Python", "image": "assets/img/python.svg" }] }
-  ]
+  "links": [{ "label": "LinkedIn", "url": "https://…", "icon": "linkedin", "color": "#0A66C2" }],
+  "techStack": [{ "category": "Languages", "items": [{ "name": "Python", "image": "assets/img/python.svg" }] }],
+
+  // Look
+  "locale": "it",                                   // en it es fr de pt-br ja zh
+  "timezone": "Europe/Rome",
+  "themes": { "dark": "catppuccin-mocha", "light": "catppuccin-latte" },
+  "customThemes": { "mine": { "base": "dark", "icon_color": "ff4d5e" } },
+  "colors": { "icon_color": "ff4d5e" },             // global overrides; "colorsByTheme": { "dark": { … } } per slot
+  "card": { "radius": 20, "hideBorder": false, "animations": true,
+            "background": { "gradient": "35,4158d0,c850c0,ffcc70", "pattern": "dots", "glow": true } },
+  "layout": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
+
+  // Sections (each key below is optional)
+  "header":    { "avatar": "circle", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" },
+  "stats":     { "hide": ["issues"], "show": ["prsMerged"], "numberFormat": "short", "numberPrecision": 1, "icons": true,
+                 "textBold": true, "lineHeight": 30, "title": null, "commitsYear": null, "excludeRepos": [] },
+  "streak":    { "hide": [], "mode": "daily", "excludeDays": ["Sun"], "startingYear": null, "dateFormat": "M j[, Y]",
+                 "shortNumbers": false, "excludeDaysLabel": true, "title": null },
+  "languages": { "layout": "donut", "count": 8, "hide": ["html"], "excludeRepos": [], "hideProgress": false,
+                 "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0, "title": null },
+  "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-C"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
+                 "noBg": false, "noFrame": false, "extra": ["Issues", "Reviews"], "title": null },
+  "heatmap":   { "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
+  "export":    { "png": false, "gif": false },
+  "includePrivate": false
 }
 ```
 
-- **Images** are paths relative to `profile.json`. They are embedded in the SVG as data URIs (svg, png, jpg, webp, gif). resvg can't decode webp, so webp images show up only in the SVG, not in the PNG/GIF exports.
+### Themes
+
+`themes` is a list (`["dracula", "nord"]` → `profile-forge-dracula.svg`, …) **or** a `{ slot: theme }` map. With a map, the file name follows the slot, so your README `<picture>` never changes when you swap themes:
+
+```json
+{ "themes": { "dark": "dracula", "light": "gruvbox-light" } }
+```
+
+Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord`, `monokai`, `gruvbox`, `gruvbox-light`, `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `solarized-dark`, `solarized-light`, `rose-pine`, `one-dark`, `synthwave`, `radical`, `ocean`, `crimson`, `material-palenight`, `nightowl`, `cobalt2`, `shades-of-purple`, `ayu-mirage`, `aura`, `aura-dark`, `horizon`, `everforest-dark`, `everforest-light`, `kanagawa-paper`, `nightfox`, `dawnfox`, `dayfox`, `carbonfox`, `oceanic-next`, `midnight-purple`, `merko`, `matrix`, `hacker`, `neon`, `outrun`, `vue-dark`, `discord`, `ambient-gradient`, `sunset-gradient`. Previews: [`docs/themes/`](docs/themes).
+
+**Colors.** Overrides use the names of the original projects. Values are hex with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`):
+
+| Key | Colors |
+|---|---|
+| `bg_color`, `panel_color`, `border_color` | card background, panels, borders |
+| `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
+| `icon_color`, `ring_color` | icons / accent, second accent (rank ring, gradients) |
+| `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
+| `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | per-element streak colors |
+| `bg_gradient` | `"angle,color1,color2,..."` for the card background |
+
+`customThemes` lets you save a palette: `{ "name": { "base": "<built-in or custom theme>", ...overrides } }` and use `"name"` in `themes`.
+
+### Layout
+
+`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`. A nested pair puts two **half-width** sections side by side, and a half-width section on its own is centered. Half-width sections are `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout. `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`) are skipped.
+
+### Options, by section
+
+Names follow the three projects the card is built on. A `—` means the original has no equivalent.
+
+| Section | Option | Original | Meaning |
+|---|---|---|---|
+| card | `radius`, `hideBorder`, `animations`, `background.*` | `border_radius`, `hide_border`, `disable_animations`, `bg_color` gradients | corners, border, CSS animation, gradient / `dots` `grid` `diagonal` pattern / glow |
+| header | `avatar`, `facts`, `rankIcon` | `rank_icon`, `hide_rank` | `circle` `rounded` `hide`; up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers`; ring shows `level`, `percentile` or the `github` mark |
+| stats | `hide`, `show`, `icons`, `numberFormat`, `numberPrecision`, `textBold`, `lineHeight`, `title`, `commitsYear`, `excludeRepos` | `hide`, `show`, `show_icons`, `number_format`, `number_precision`, `text_bold`, `line_height`, `custom_title`, `commits_year`, `exclude_repo` | `show` adds `prsMerged`, `prsMergedPercentage`, `discussionsStarted`, `discussionsAnswered` (extra GraphQL calls, only when requested) |
+| streak | `hide`, `mode`, `excludeDays`, `startingYear`, `dateFormat`, `shortNumbers`, `excludeDaysLabel`, `title` | `hide_*_streak`, `mode`, `exclude_days`, `starting_year`, `date_format`, `short_numbers` | `weekly` counts Sunday–Saturday weeks; excluded days neither extend nor break a streak; `[...]` in `dateFormat` is hidden for the current year |
+| languages | `layout`, `count`, `hide`, `excludeRepos`, `hideProgress`, `statsFormat`, `sizeWeight`, `countWeight`, `title` | `layout`, `langs_count`, `hide`, `exclude_repo`, `hide_progress`, `stats_format`, `size_weight`, `count_weight` | `bar` `compact` `donut` `donut-vertical` `pie`; `bytes` shows sizes instead of percentages; score = `bytes^sizeWeight × repos^countWeight` |
+| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `noBg`, `noFrame`, `extra`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies |
+| heatmap | `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | grid size and shape, Monday start, legend and month labels |
+| root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
+
+Not ported: `card_width` / `card_height` (the card is fixed at 1000 px wide), `cache_seconds` and `type=png|json` (the output is a static file; use `export.png` / `export.gif`).
+
+### Images, carousel and links
+
+- **Images** are paths relative to `config.json`. They are embedded in the SVG as data URIs (svg, png, jpg, webp, gif). resvg can't decode webp, so webp images show up only in the SVG, not in the PNG/GIF exports.
 - **The carousel** is reshuffled in random order every time the card is generated (daily with the cron). Row 1 scrolls left and row 2 scrolls right. A static SVG can't reshuffle per page view, because GitHub doesn't run scripts in README images.
-- **Links:** GitHub shows README SVGs through `<img>`, which is never clickable inside, so links are not drawn on the card. Each link instead gets its own animated button, written to `<output_dir>/buttons/<label>-<theme>.svg`. Wrap each button in a link:
+- **Links:** GitHub shows README SVGs through `<img>`, which is never clickable inside, so links are not drawn on the card. Each link instead gets its own animated button, written to `<output_dir>/buttons/<label>-<slot>.svg`. Wrap each button in a link:
 
   ```html
   <a href="https://linkedin.com/in/you"><picture>
@@ -115,23 +186,38 @@ The default `github.token` can only see public data. To include private contribu
 1. Create a **classic** personal access token with the `read:user` and `repo` scopes.
 2. Add it to your profile repo as the secret `PROFILE_FORGE_TOKEN`.
 
-Private *repositories* still don't count toward stars, languages or repo count unless you also set `include_private: true`.
+Private *repositories* still don't count toward stars, languages or repo count unless you also set `includePrivate: true`.
 
 ### Action inputs
+
+Inputs mirror the config keys and override them when set. Anything not listed here can be set with `set` (one `path=value` per line):
+
+```yaml
+- uses: GiuseppeBellamacina/profile-forge@v1
+  with:
+    token: ${{ secrets.PROFILE_FORGE_TOKEN || github.token }}
+    themes: dracula,gruvbox-light
+    set: |
+      languages.layout=donut
+      stats.numberFormat=short
+```
 
 | Input | Default | Description |
 |---|---|---|
 | `username` | repo owner | Login to render |
 | `token` | `github.token` | GraphQL token |
-| `config` | – | Path to `profile.json` (full-README mode) |
+| `config` | auto | Path to config (`config.json`, then `profile.json`) |
 | `output_dir` | `assets` | Output folder |
-| `name` | `profile-forge` | File base name, giving `<name>-<theme>.svg` |
-| `themes` | `dark,light` | Themes to render |
-| `timezone` | `UTC` | IANA zone that decides what "today" is for streaks |
-| `size_weight` | `1` | Language score = `bytes^size_weight × repos^count_weight` |
-| `count_weight` | `0` | See above. Setting `0.01` / `0.4` ranks languages mostly by how many repos use them |
-| `hide` | – | Comma-separated languages to hide, e.g. `html,css` |
-| `include_private` | `false` | Include private repos in stars, languages and repo count |
+| `name` | `profile-forge` | File base name, giving `<name>-<slot>.svg` |
+| `set` | – | Any config key, one `path=value` per line |
+| `themes`, `locale`, `timezone`, `colors` | – | `themes`, `locale`, `timezone`, `colors` |
+| `size_weight`, `count_weight`, `hide` | – | `languages.sizeWeight`, `languages.countWeight`, `languages.hide` |
+| `include_private` | – | `true` to include private repos |
+| `hide_sections`, `hide_stats`, `hide_trophies`, `hide_streak` | – | `hideSections`, `stats.hide`, `trophies.hideTitles`, `streak.hide` |
+| `hide_border`, `border_radius`, `disable_animations` | – | `card.hideBorder`, `card.radius`, `card.animations` (inverted) |
+| `show_icons`, `number_format`, `stats_title`, `rank_icon` | – | `stats.icons`, `stats.numberFormat`, `stats.title`, `header.rankIcon` |
+| `date_format`, `exclude_days`, `streak_title` | – | `streak.dateFormat`, `streak.excludeDays`, `streak.title` |
+| `trophy_rank`, `trophy_columns`, `trophy_rows`, `trophy_margin`, `trophy_title`, `no_frame`, `no_bg` | – | the matching `trophies.*` keys |
 
 ## Local CLI, PNG and GIF
 
@@ -139,7 +225,7 @@ Private *repositories* still don't count toward stars, languages or repo count u
 git clone https://github.com/GiuseppeBellamacina/profile-forge && cd profile-forge
 npm install                      # only needed for --png / --gif
 export GITHUB_TOKEN=$(gh auth token)
-node src/cli.js --user <login> --tz Europe/Rome --png --gif
+node src/cli.js --user <login> --tz Europe/Rome --png --gif   # reads ./config.json if present
 # -> out/profile-forge-{dark,light}.{svg,png,gif}
 ```
 
@@ -149,7 +235,7 @@ node src/cli.js --user <login> --tz Europe/Rome --png --gif
 
 Every animated element is described once as a (delay, duration, from → to) value. The SVG turns that into CSS keyframes, and the PNG/GIF export samples the same timeline as static frames, so all three outputs always match.
 
-Run `node src/cli.js --help` to see every flag.
+Flags override `config.json`. Any config key can be set with `--set path=value` (repeatable), e.g. `node src/cli.js --user <login> --set languages.layout=donut --set stats.numberFormat=short`. Values starting with `-` need the `=` form: `--trophy-rank=-C`. `--print-config` shows the effective configuration, `--init` writes a starter `config.json`. Run `node src/cli.js --help` to see every flag.
 
 ## How the numbers are computed
 
@@ -164,6 +250,9 @@ npm test     # node:test, zero deps
 ```
 
 ```
+src/config.js   config.json schema: defaults, validation, normalization
+src/themes.js   built-in themes, color overrides, custom themes
+src/i18n.js     label dictionaries (en it es fr de pt-br ja zh)
 src/github.js   GraphQL fetching (profile, repos, per-year calendars)
 src/stats.js    rank, languages, streak, trophies (pure functions)
 src/render.js   SVG renderer + themes + animation timeline

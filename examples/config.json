@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+
+  "title": "AI Engineer",
+  "about": ["Paragraph one…", "Paragraph two…"],
+  "workingOn": [{ "title": "Project", "description": "One line", "url": "https://example.com" }],
+  "links": [{ "label": "Portfolio", "url": "https://example.com", "icon": "globe", "color": "#7aa2f7" }],
+  "techStack": [{ "category": "Languages", "items": [{ "name": "Python", "image": "assets/img/python.svg" }] }],
+
+  "locale": "en",
+  "timezone": "Europe/Rome",
+  "themes": { "dark": "catppuccin-mocha", "light": "catppuccin-latte" },
+  "customThemes": { "mine": { "base": "dark", "icon_color": "ff4d5e", "ring_color": "ff8a5c" } },
+  "colorsByTheme": { "dark": { "title_color": "cdd6f4" } },
+
+  "card": { "radius": 20, "hideBorder": false, "background": { "pattern": "dots", "glow": true } },
+  "layout": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
+
+  "header": { "avatar": "circle", "facts": ["contributionsThisYear", "bestDay", "topLanguage"], "rankIcon": "level" },
+  "stats": { "numberFormat": "short", "show": ["prsMerged", "discussionsStarted"], "hide": ["issues"] },
+  "streak": { "mode": "daily", "dateFormat": "M j[, Y]", "excludeDays": [] },
+  "languages": { "layout": "bar", "count": 8, "hide": ["html", "css"] },
+  "trophies": { "ranks": ["-C"], "extra": ["Reviews"], "marginW": 12 },
+  "heatmap": { "weeks": 53, "cell": "square", "weekStart": "sun" }
+}

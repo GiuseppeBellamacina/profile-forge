@@ -1,9 +1,11 @@
 name: profile-forge
-description: Generate one animated all-in-one GitHub profile card (rank, stats, streaks, languages, trophies, heatmap).
+description: Generate one animated all-in-one GitHub profile card (rank, stats, streaks, languages, trophies, heatmap). Configure it with a config.json in your repo.
 author: GiuseppeBellamacina
 branding:
   icon: award
   color: purple
+# Every input except username/token/output_dir/name is optional and left empty by default:
+# an empty input never overrides config.json. Precedence: inputs > config.json > built-in defaults.
 inputs:
   username:
     description: GitHub login to render
@@ -12,32 +14,104 @@ inputs:
     description: Token for the GraphQL API. Use a PAT (read:user, repo) to include private contributions.
     default: ${{ github.token }}
   config:
-    description: Optional profile.json (about, workingOn, links, techStack) to turn the card into a full README
+    description: Path to config.json (default - config.json, then profile.json, in the workspace root)
     default: ""
   output_dir:
     description: Where to write the SVG files
     default: assets
   name:
-    description: File base name (-> <name>-<theme>.svg)
+    description: File base name (-> <name>-<slot>.svg)
     default: profile-forge
+  set:
+    description: 'Any config.json key, one "path=value" per line, e.g. languages.layout=donut'
+    default: ""
   themes:
-    description: Comma-separated themes (dark, light)
-    default: dark,light
+    description: Comma-separated themes, e.g. dark,light or dracula,nord
+    default: ""
+  locale:
+    description: "Card language: en, it, es, fr, de, pt-br, ja, zh"
+    default: ""
   timezone:
     description: IANA time zone used to decide "today" for streaks
-    default: UTC
+    default: ""
+  colors:
+    description: 'Color overrides, e.g. "bg_color=0d1117,icon_color=ff79c6"'
+    default: ""
   size_weight:
     description: Language ranking exponent on bytes
-    default: "1"
+    default: ""
   count_weight:
     description: Language ranking exponent on repo count
-    default: "0"
+    default: ""
   hide:
     description: Comma-separated languages to hide
     default: ""
   include_private:
-    description: Include private repos in stars/languages/repo count (needs PAT)
-    default: "false"
+    description: '"true" to include private repos in stars/languages/repo count (needs PAT)'
+    default: ""
+  hide_sections:
+    description: "Comma-separated sections to hide: rank, header, about, workingOn, stats, streak, languages, trophies, heatmap, techStack"
+    default: ""
+  hide_stats:
+    description: "Comma-separated stat rows to hide: stars, commits, prs, issues, reviews, contributed, followers, repos"
+    default: ""
+  hide_trophies:
+    description: "Comma-separated trophies to hide, e.g. Stars,Followers"
+    default: ""
+  hide_border:
+    description: '"true" to remove the card border'
+    default: ""
+  no_frame:
+    description: '"true" to draw trophies without their frame'
+    default: ""
+  no_bg:
+    description: '"true" to draw trophies without background'
+    default: ""
+  disable_animations:
+    description: '"true" for static SVGs (no CSS animation)'
+    default: ""
+  border_radius:
+    description: Card corner radius
+    default: ""
+  show_icons:
+    description: '"false" to hide the icons next to each stat'
+    default: ""
+  number_format:
+    description: "long (1,234) or short (1.2k) numbers in the stats panel"
+    default: ""
+  stats_title:
+    description: Custom title for the stats panel
+    default: ""
+  rank_icon:
+    description: "Rank ring content: level, percentile or github"
+    default: ""
+  hide_streak:
+    description: "Comma-separated streak columns to hide: total, current, longest"
+    default: ""
+  date_format:
+    description: 'Streak date format, PHP-style, e.g. "M j[, Y]" ([...] is hidden for the current year)'
+    default: ""
+  exclude_days:
+    description: "Weekdays that neither extend nor break a streak, e.g. Sun,Sat"
+    default: ""
+  streak_title:
+    description: Custom title for the streak panel
+    default: ""
+  trophy_rank:
+    description: "Trophy ranks to show, e.g. S,A,SECRET; prefix with - to drop (-C)"
+    default: ""
+  trophy_columns:
+    description: Trophies per row (0 = all in one row)
+    default: ""
+  trophy_rows:
+    description: Max trophy rows (0 = no limit)
+    default: ""
+  trophy_margin:
+    description: Gap between trophies in px
+    default: ""
+  trophy_title:
+    description: Custom title for the trophies panel
+    default: ""
 runs:
   using: composite
   steps:
@@ -47,16 +121,53 @@ runs:
         PF_USER: ${{ inputs.username }}
         PF_OUT: ${{ inputs.output_dir }}
         PF_NAME: ${{ inputs.name }}
-        PF_THEMES: ${{ inputs.themes }}
+        PF_CONFIG: ${{ inputs.config }}
+        PF_SET: ${{ inputs.set }}
+        PF_THEME: ${{ inputs.themes }}
+        PF_LOCALE: ${{ inputs.locale }}
         PF_TZ: ${{ inputs.timezone }}
+        PF_COLORS: ${{ inputs.colors }}
         PF_SW: ${{ inputs.size_weight }}
         PF_CW: ${{ inputs.count_weight }}
         PF_HIDE: ${{ inputs.hide }}
         PF_PRIVATE: ${{ inputs.include_private }}
-        PF_CONFIG: ${{ inputs.config }}
+        PF_HIDE_SECTIONS: ${{ inputs.hide_sections }}
+        PF_HIDE_STATS: ${{ inputs.hide_stats }}
+        PF_HIDE_TROPHIES: ${{ inputs.hide_trophies }}
+        PF_HIDE_BORDER: ${{ inputs.hide_border }}
+        PF_NO_FRAME: ${{ inputs.no_frame }}
+        PF_NO_BG: ${{ inputs.no_bg }}
+        PF_NO_ANIMATION: ${{ inputs.disable_animations }}
+        PF_BORDER_RADIUS: ${{ inputs.border_radius }}
+        PF_SHOW_ICONS: ${{ inputs.show_icons }}
+        PF_NUMBER_FORMAT: ${{ inputs.number_format }}
+        PF_STATS_TITLE: ${{ inputs.stats_title }}
+        PF_RANK_ICON: ${{ inputs.rank_icon }}
+        PF_HIDE_STREAK: ${{ inputs.hide_streak }}
+        PF_DATE_FORMAT: ${{ inputs.date_format }}
+        PF_EXCLUDE_DAYS: ${{ inputs.exclude_days }}
+        PF_STREAK_TITLE: ${{ inputs.streak_title }}
+        PF_TROPHY_RANK: ${{ inputs.trophy_rank }}
+        PF_TROPHY_COLUMNS: ${{ inputs.trophy_columns }}
+        PF_TROPHY_ROWS: ${{ inputs.trophy_rows }}
+        PF_TROPHY_MARGIN: ${{ inputs.trophy_margin }}
+        PF_TROPHY_TITLE: ${{ inputs.trophy_title }}
       run: |
-        args=(--user "$PF_USER" --out "$PF_OUT" --name "$PF_NAME" --theme "$PF_THEMES" --tz "$PF_TZ"
-              --size-weight "$PF_SW" --count-weight "$PF_CW" --hide "$PF_HIDE")
-        [ "$PF_PRIVATE" = "true" ] && args+=(--include-private)
-        [ -n "$PF_CONFIG" ] && args+=(--config "$PF_CONFIG")
+        args=(--user "$PF_USER" --out "$PF_OUT" --name "$PF_NAME")
+        # --flag=value form: values may start with "-" (e.g. trophy_rank "-C"). Empty inputs are skipped.
+        opt() { if [ -n "$2" ]; then args+=("$1=$2"); fi; }
+        sw() { if [ "$2" = "true" ]; then args+=("$1"); fi; }
+        opt --config "$PF_CONFIG"; opt --theme "$PF_THEME"; opt --locale "$PF_LOCALE"; opt --tz "$PF_TZ"; opt --colors "$PF_COLORS"
+        opt --size-weight "$PF_SW"; opt --count-weight "$PF_CW"; opt --hide "$PF_HIDE"
+        opt --hide-sections "$PF_HIDE_SECTIONS"; opt --hide-stats "$PF_HIDE_STATS"; opt --hide-trophies "$PF_HIDE_TROPHIES"
+        opt --border-radius "$PF_BORDER_RADIUS"; opt --show-icons "$PF_SHOW_ICONS"; opt --number-format "$PF_NUMBER_FORMAT"
+        opt --stats-title "$PF_STATS_TITLE"; opt --rank-icon "$PF_RANK_ICON"; opt --hide-streak "$PF_HIDE_STREAK"
+        opt --date-format "$PF_DATE_FORMAT"; opt --exclude-days "$PF_EXCLUDE_DAYS"; opt --streak-title "$PF_STREAK_TITLE"
+        opt --trophy-rank "$PF_TROPHY_RANK"; opt --trophy-columns "$PF_TROPHY_COLUMNS"; opt --trophy-rows "$PF_TROPHY_ROWS"
+        opt --trophy-margin "$PF_TROPHY_MARGIN"; opt --trophy-title "$PF_TROPHY_TITLE"
+        sw --include-private "$PF_PRIVATE"; sw --hide-border "$PF_HIDE_BORDER"; sw --no-frame "$PF_NO_FRAME"
+        sw --no-bg "$PF_NO_BG"; sw --no-animation "$PF_NO_ANIMATION"
+        while IFS= read -r line; do
+          if [ -n "$line" ]; then args+=("--set=$line"); fi
+        done <<< "$PF_SET"
         node "$GITHUB_ACTION_PATH/src/cli.js" "${args[@]}"

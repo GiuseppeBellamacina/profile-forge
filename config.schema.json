@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "profile-forge config.json",
+  "description": "Everything is optional. Flags / action inputs override this file; unset keys use the defaults shown.",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "str": { "type": "string" },
+    "strs": { "type": "array", "items": { "type": "string" } },
+    "hex": { "type": "string", "pattern": "^#?([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$" },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Color overrides. Hex with or without #. bg_gradient is \"angle,color1,color2,...\".",
+      "properties": {
+        "bg_color": { "$ref": "#/definitions/hex" }, "panel_color": { "$ref": "#/definitions/hex" }, "border_color": { "$ref": "#/definitions/hex" },
+        "text_color": { "$ref": "#/definitions/hex" }, "muted_color": { "$ref": "#/definitions/hex" }, "title_color": { "$ref": "#/definitions/hex" },
+        "icon_color": { "$ref": "#/definitions/hex" }, "ring_color": { "$ref": "#/definitions/hex" }, "fire_color": { "$ref": "#/definitions/hex" },
+        "track_color": { "$ref": "#/definitions/hex" }, "stroke_color": { "$ref": "#/definitions/hex" },
+        "currStreakNum": { "$ref": "#/definitions/hex" }, "sideNums": { "$ref": "#/definitions/hex" }, "currStreakLabel": { "$ref": "#/definitions/hex" },
+        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" },
+        "bg_gradient": { "type": "string" }
+      }
+    },
+    "section": { "enum": ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"] }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "user": { "type": ["string", "null"], "description": "GitHub login (the action defaults to the repo owner)." },
+    "title": { "type": ["string", "null"], "description": "Shown next to @login." },
+    "about": { "$ref": "#/definitions/strs", "description": "Paragraphs for the About panel (**bold** markers are stripped)." },
+    "workingOn": {
+      "type": "array",
+      "items": { "type": "object", "required": ["title"], "properties": { "title": { "type": "string" }, "description": { "type": "string" }, "url": { "type": "string" } } }
+    },
+    "links": {
+      "type": "array",
+      "description": "Rendered as separate clickable buttons in <output_dir>/buttons/.",
+      "items": { "type": "object", "required": ["label", "url"], "properties": { "label": { "type": "string" }, "url": { "type": "string" }, "icon": { "type": "string" }, "color": { "type": "string" } } }
+    },
+    "techStack": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["category", "items"],
+        "properties": { "category": { "type": "string" }, "items": { "type": "array", "items": { "type": "object", "required": ["name", "image"], "properties": { "name": { "type": "string" }, "image": { "type": "string" } } } } }
+      }
+    },
+    "locale": { "enum": ["en", "it", "es", "fr", "de", "pt-br", "ja", "zh"], "default": "en" },
+    "timezone": { "type": "string", "default": "UTC", "description": "IANA zone that decides what \"today\" is for streaks." },
+    "includePrivate": { "type": "boolean", "default": false },
+    "themes": {
+      "description": "A list of theme names, or { slot: theme }. A slot decides the file name (profile-forge-<slot>.svg), so { \"dark\": \"dracula\", \"light\": \"gruvbox-light\" } keeps the README <picture> unchanged.",
+      "oneOf": [{ "type": "array", "items": { "type": "string" } }, { "type": "object", "additionalProperties": { "type": "string" } }],
+      "default": ["dark", "light"]
+    },
+    "customThemes": {
+      "type": "object",
+      "description": "Your own themes: { name: { base: <theme>, ...color overrides } }, usable in `themes`.",
+      "additionalProperties": { "allOf": [{ "$ref": "#/definitions/colors" }, { "properties": { "base": { "type": "string" } } }] }
+    },
+    "colors": { "$ref": "#/definitions/colors" },
+    "colorsByTheme": { "type": "object", "description": "Color overrides per theme slot.", "additionalProperties": { "$ref": "#/definitions/colors" } },
+    "card": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "radius": { "type": "number", "minimum": 0, "maximum": 60, "default": 20 },
+        "hideBorder": { "type": "boolean", "default": false },
+        "animations": { "type": "boolean", "default": true },
+        "background": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "gradient": { "type": ["string", "null"], "description": "angle,color1,color2,... e.g. 35,4158d0,c850c0,ffcc70" },
+            "pattern": { "enum": ["none", "dots", "grid", "diagonal"], "default": "none" },
+            "glow": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "layout": {
+      "type": "array",
+      "description": "Section order. A nested pair puts two half-width sections (stats, streak, languages with donut/pie) side by side.",
+      "items": { "oneOf": [{ "$ref": "#/definitions/section" }, { "type": "array", "maxItems": 2, "items": { "$ref": "#/definitions/section" } }] },
+      "default": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"]
+    },
+    "hideSections": { "type": "array", "items": { "enum": ["rank", "header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"] } },
+    "header": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "avatar": { "enum": ["circle", "rounded", "hide"], "default": "circle" },
+        "facts": { "type": "array", "maxItems": 4, "items": { "enum": ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"] }, "default": ["contributionsThisYear", "bestDay", "busiestWeekday"] },
+        "rankIcon": { "enum": ["level", "percentile", "github"], "default": "level" }
+      }
+    },
+    "stats": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "hide": { "type": "array", "items": { "enum": ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"] } },
+        "show": { "type": "array", "description": "Extra rows.", "items": { "enum": ["prsMerged", "prsMergedPercentage", "discussionsStarted", "discussionsAnswered"] } },
+        "icons": { "type": "boolean", "default": true },
+        "numberFormat": { "enum": ["long", "short"], "default": "long" },
+        "numberPrecision": { "enum": [0, 1, 2, null], "description": "Fixed decimals for short numbers." },
+        "textBold": { "type": "boolean", "default": true },
+        "lineHeight": { "type": "number", "minimum": 18, "maximum": 60, "default": 30 },
+        "commitsYear": { "type": ["integer", "null"], "description": "Count commits of this year only." },
+        "excludeRepos": { "$ref": "#/definitions/strs" }
+      }
+    },
+    "streak": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "hide": { "type": "array", "items": { "enum": ["total", "current", "longest"] } },
+        "mode": { "enum": ["daily", "weekly"], "default": "daily" },
+        "excludeDays": { "type": "array", "items": { "enum": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] } },
+        "startingYear": { "type": ["integer", "null"], "description": "First year counted (>= 2005)." },
+        "dateFormat": { "type": ["string", "null"], "description": "PHP-style (d j m n M F y Y); text in [...] is hidden for the current year, e.g. \"M j[, Y]\"." },
+        "shortNumbers": { "type": "boolean", "default": false },
+        "excludeDaysLabel": { "type": "boolean", "default": true }
+      }
+    },
+    "languages": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "layout": { "enum": ["bar", "compact", "donut", "donut-vertical", "pie"], "default": "bar" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 20, "default": 8, "description": "Charts (donut/pie) show at most 10 in the legend." },
+        "hide": { "$ref": "#/definitions/strs" },
+        "excludeRepos": { "$ref": "#/definitions/strs" },
+        "hideProgress": { "type": "boolean", "default": false },
+        "statsFormat": { "enum": ["percentages", "bytes"], "default": "percentages" },
+        "sizeWeight": { "type": "number", "default": 1 },
+        "countWeight": { "type": "number", "default": 0 }
+      }
+    },
+    "trophies": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "titles": { "$ref": "#/definitions/strs", "description": "Only these trophies (aliases: Star, Commit, Follower, Issue, PR, Repo, Review, Duration, Orgs...)." },
+        "hideTitles": { "$ref": "#/definitions/strs" },
+        "ranks": { "$ref": "#/definitions/strs", "description": "Only these ranks (SSS SS S AAA AA A B C ? SECRET). A \"-\" prefix drops one, e.g. -C." },
+        "hideRanks": { "$ref": "#/definitions/strs" },
+        "columns": { "type": "integer", "minimum": -1, "maximum": 12, "default": 0, "description": "0 or -1 = all in one row." },
+        "rows": { "type": "integer", "minimum": 0, "maximum": 10, "default": 0, "description": "0 = no limit." },
+        "marginW": { "type": "integer", "minimum": 0, "default": 12 },
+        "marginH": { "type": "integer", "minimum": 0, "default": 12 },
+        "noBg": { "type": "boolean", "default": false },
+        "noFrame": { "type": "boolean", "default": false },
+        "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." }
+      }
+    },
+    "heatmap": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "weeks": { "type": "integer", "minimum": 4, "maximum": 53, "default": 53 },
+        "cell": { "enum": ["square", "round"], "default": "square" },
+        "weekStart": { "enum": ["sun", "mon"], "default": "sun" },
+        "legend": { "type": "boolean", "default": true },
+        "monthLabels": { "type": "boolean", "default": true }
+      }
+    },
+    "export": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "png": { "type": "boolean", "default": false }, "gif": { "type": "boolean", "default": false } }
+    }
+  }
+}

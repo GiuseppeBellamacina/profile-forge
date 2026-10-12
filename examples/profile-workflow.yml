@@ -20,7 +20,7 @@ jobs:
           # Optional: a classic PAT (read:user + repo) to count private contributions.
           token: ${{ secrets.PROFILE_FORGE_TOKEN || github.token }}
           output_dir: assets
-          timezone: Europe/Rome
+          # Everything else lives in config.json at the root of this repo (see README).
 
       - name: Commit if changed
         run: |

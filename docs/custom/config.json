@@ -1,0 +1,12 @@
+{
+  "locale": "it",
+  "themes": { "dark": "catppuccin-mocha", "light": "catppuccin-latte" },
+  "card": { "background": { "pattern": "dots" } },
+  "header": { "facts": ["contributionsThisYear", "topLanguage", "currentStreak"], "rankIcon": "percentile" },
+  "layout": ["header", ["languages", "streak"], "stats", "trophies", "heatmap"],
+  "languages": { "layout": "donut", "count": 8 },
+  "stats": { "numberFormat": "short", "show": ["prsMerged", "discussionsStarted"] },
+  "streak": { "excludeDays": ["Sat", "Sun"], "dateFormat": "j M[ Y]" },
+  "trophies": { "ranks": ["-C"], "extra": ["Reviews"], "columns": 5 },
+  "heatmap": { "cell": "round", "weekStart": "mon" }
+}

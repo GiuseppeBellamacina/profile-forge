@@ -1,17 +1,8 @@
 import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
-
-export const THEMES = {
-  dark: {
-    bg1: "#1a1b26", bg2: "#13141c", panel: "#1f2335", border: "#2f334d", text: "#c0caf5", muted: "#7c83a8",
-    accent: "#7aa2f7", accent2: "#bb9af7", fire: "#ff9e64", track: "#2f334d",
-    heat: ["#24283b", "#2e3f6e", "#3d5aa8", "#5a80dc", "#7dcfff"],
-  },
-  light: {
-    bg1: "#ffffff", bg2: "#f3f5f9", panel: "#f8f9fc", border: "#dde2ea", text: "#1f2328", muted: "#626b78",
-    accent: "#0969da", accent2: "#8250df", fire: "#e36209", track: "#e3e7ee",
-    heat: ["#ebedf0", "#c2dbfb", "#80b6f4", "#3d8ae6", "#0a5cc4"],
-  },
-};
+import { normalize } from "./config.js";
+import { intlTag, translator } from "./i18n.js";
+import { trophyMatches } from "./stats.js";
+import { parseColors, resolveTheme } from "./themes.js";
 
 /** Total timeline length in seconds; GIF frames sample t∈[0,1] over it. */
 /** Body and display font stacks; Inter / Space Grotesk are embedded via @font-face when available. */
@@ -25,9 +16,26 @@ const easeOut = (x) => 1 - (1 - x) ** 3;
 const r3 = (x) => +x.toFixed(3);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const trunc = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
-const num = (n) => n.toLocaleString("en-US");
-const fmtDate = (d, year = true) =>
-  d ? new Date(d + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", ...(year && { year: "numeric" }), timeZone: "UTC" }) : "";
+/** 6626 -> "6.6k" (precision null = up to 1 decimal, else fixed digits). */
+const short = (n, precision = null) => {
+  const [v, u] = n >= 1e6 ? [n / 1e6, "M"] : n >= 1e3 ? [n / 1e3, "k"] : [n, ""];
+  return u ? `${precision == null ? +v.toFixed(1) : v.toFixed(precision)}${u}` : String(n);
+};
+/** 1234567 -> "1.2M", up to trillions. */
+const shortBig = (n) => {
+  const u = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]].find(([f]) => n >= f);
+  return u ? `${+(n / u[0]).toFixed(1)}${u[1]}` : String(n);
+};
+const bytes = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} kB`);
+/** Tiny PHP-style date format (d j m n M F y Y); "[...]" is dropped when the date is in the current year. */
+const phpDate = (iso, fmt, nowYear, tag) => {
+  const [Y, m, d] = iso.split("-").map(Number);
+  const month = (style) => new Date(Date.UTC(Y, m - 1, 1)).toLocaleDateString(tag, { month: style, timeZone: "UTC" });
+  const t = { d: String(d).padStart(2, "0"), j: d, m: String(m).padStart(2, "0"), n: m, M: month("short"), F: month("long"), y: String(Y).slice(2), Y };
+  return fmt.replace(/\[(.*?)\]/g, (_, x) => (Y === nowYear ? "" : x)).replace(/[djmnMFyY]/g, (key) => t[key]);
+};
+/** Localized weekday name; i = 0 for Sunday. */
+const weekday = (tag, i, style = "long") => new Date(Date.UTC(2024, 0, 7 + i)).toLocaleDateString(tag, { weekday: style, timeZone: "UTC" });
 const icon = (name, x, y, size, fill) =>
   `<g transform="translate(${x} ${y}) scale(${size / 16})" fill="${fill}">${ICONS[name]}</g>`;
 
@@ -94,28 +102,69 @@ function animator(t) {
 const panel = (x, y, w, h, c) =>
   `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${c.panel}" stroke="${c.border}"/>`;
 const heading = (x, y, text, c, extra = "") =>
-  `<text x="${x}" y="${y}" font-size="12" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.muted}">${esc(text)}${extra}</text>`;
+  `<text x="${x}" y="${y}" font-size="12" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.title}">${esc(text)}${extra}</text>`;
+const sub = (c, text) => `<tspan dx="6" font-weight="400" letter-spacing="0" fill="${c.muted}">· ${esc(text)}</tspan>`;
 
-function header(d, c, A) {
-  const joined = new Date(d.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
-  const facts = [
-    ["zap", `${num(d.facts.thisYear)} contributions in ${d.days.at(-1)[0].slice(0, 4)}`],
-    ["flame", `Best day: ${num(d.facts.bestDay[1])} on ${fmtDate(d.facts.bestDay[0])}`],
-    ["calendar", `Most active on ${d.facts.busiestWeekday}s`],
-  ];
+/**
+ * Every section is { w, h, top, nx, draw(H) }: w = 940 (full) or 460 (half, can share a row), h = natural height,
+ * top/nx = the absolute y/x origin it draws at (the layout engine translates it), draw(H) = svg for a panel of height H.
+ */
+function headerSection(d, X) {
+  const { c, A, k, tr, tag, num, fmtDate } = X;
+  const hs = k.header;
+  const showAvatar = hs.avatar !== "hide";
+  const nx = showAvatar ? 172 : 40;
+  const joined = new Date(d.createdAt).toLocaleDateString(tag, { month: "short", year: "numeric", timeZone: "UTC" });
+  const FACTS = {
+    contributionsThisYear: ["zap", tr("inYear", { n: num(d.facts.thisYear), y: d.days.at(-1)[0].slice(0, 4) })],
+    bestDay: ["flame", tr("bestDay", { n: num(d.facts.bestDay[1]), d: fmtDate(d.facts.bestDay[0]) })],
+    busiestWeekday: ["calendar", tr("mostActive", { d: weekday(tag, d.facts.busiestWeekdayIndex) })],
+    currentStreak: ["flame", tr("curFact", { n: num(d.streak.current.length) })],
+    longestStreak: ["flame", tr("longFact", { n: num(d.streak.longest.length) })],
+    topLanguage: ["code", tr("topLang", { l: d.languages.top[0]?.name ?? "–" })],
+    stars: ["star", tr("starsFact", { n: num(d.stats.stars) })],
+    followers: ["people", tr("followersFact", { n: num(d.stats.followers) })],
+  };
+  const facts = hs.facts.map((f) => FACTS[f]);
   const C = 2 * Math.PI * 50;
   const progress = 100 - d.rank.percentile;
-  return `
-  <g${A.a(0, 0.6, { o: 0, s: 0.6 }, {}, [92, 90])}>
-    <circle cx="92" cy="90" r="58" fill="none" stroke="url(#grad)" stroke-width="3"/>
-    <clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>
-    <image href="${d.avatar}" x="40" y="38" width="104" height="104" clip-path="url(#av)" preserveAspectRatio="xMidYMid slice"/>
+  const pct = hs.rankIcon === "percentile";
+  const gh = hs.rankIcon === "github";
+  const avatar = () =>
+    hs.avatar === "rounded"
+      ? `<rect x="34" y="32" width="116" height="116" rx="30" fill="none" stroke="url(#grad)" stroke-width="3"/>
+    <clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>`
+      : `<circle cx="92" cy="90" r="58" fill="none" stroke="url(#grad)" stroke-width="3"/>
+    <clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`;
+  const rank = () => `<g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
+    <circle cx="900" cy="90" r="50" fill="none" stroke="${c.track}" stroke-width="8"/>
+    <circle cx="900" cy="90" r="50" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round"
+      stroke-dasharray="${r3(C)}" transform="rotate(-90 900 90)"${A.a(0.5, 1.4, { dash: C }, { dash: (C * (100 - progress)) / 100 })}/>
+    ${
+      pct
+        ? `<text x="900" y="97" text-anchor="middle" font-size="22" font-weight="700" font-family="${FD}" fill="${c.text}">${r3(d.rank.percentile).toFixed(1)}%</text>
+    <text x="900" y="115" text-anchor="middle" font-size="10" fill="${c.muted}">${esc(tr("rankLabel", { l: d.rank.level }))}</text>`
+        : `${gh ? icon("github", 882, 70, 36, c.text) : `<text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="${FD}" fill="${c.text}">${d.rank.level}</text>`}
+    <text x="900" y="${gh ? 122 : 117}" text-anchor="middle" font-size="10" fill="${c.muted}">${esc(tr("top", { p: r3(d.rank.percentile).toFixed(1) }))}</text>`
+    }
   </g>
+  <text x="900" y="162" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.muted}"${A.a(0.6, 0.5, { o: 0 })}>${esc(tr("rank"))}</text>`;
+  return {
+    w: 940, h: 170, top: 0, nx: 30,
+    draw: () => `
+  ${
+    showAvatar
+      ? `<g${A.a(0, 0.6, { o: 0, s: 0.6 }, {}, [92, 90])}>
+    ${avatar()}
+    <image href="${d.avatar}" x="40" y="38" width="104" height="104" clip-path="url(#av)" preserveAspectRatio="xMidYMid slice"/>
+  </g>`
+      : ""
+  }
   <g${A.a(0.15, 0.6, { o: 0, ty: 12 })}>
-    <text x="172" y="78" font-size="32" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(trunc(d.name, 24))}</text>
-    <text x="172" y="106" font-size="16" font-weight="600" fill="${c.accent}">@${esc(d.login)}${d.config?.title ? `<tspan dx="4" font-weight="400" fill="${c.muted}">· ${esc(d.config.title)}</tspan>` : ""}</text>
-    ${icon("history", 172, 122, 14, c.muted)}
-    <text x="193" y="134" font-size="13" fill="${c.muted}">Joined ${joined} · ${d.years} ${d.years === 1 ? "year" : "years"} on GitHub</text>
+    <text x="${nx}" y="78" font-size="32" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(trunc(d.name, showAvatar ? 24 : 30))}</text>
+    <text x="${nx}" y="106" font-size="16" font-weight="600" fill="${c.accent}">@${esc(d.login)}${k.title ? `<tspan dx="4" font-weight="400" fill="${c.muted}">· ${esc(k.title)}</tspan>` : ""}</text>
+    ${icon("history", nx, 122, 14, c.muted)}
+    <text x="${nx + 21}" y="134" font-size="13" fill="${c.muted}">${esc(tr("joined", { d: joined, n: tr(d.years === 1 ? "year" : "years", { n: d.years }) }))}</text>
   </g>
   ${facts
     .map(
@@ -125,94 +174,187 @@ function header(d, c, A) {
   </g>`,
     )
     .join("")}
-  <g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
-    <circle cx="900" cy="90" r="50" fill="none" stroke="${c.track}" stroke-width="8"/>
-    <circle cx="900" cy="90" r="50" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round"
-      stroke-dasharray="${r3(C)}" transform="rotate(-90 900 90)"${A.a(0.5, 1.4, { dash: C }, { dash: (C * (100 - progress)) / 100 })}/>
-    <text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="${FD}" fill="${c.text}">${d.rank.level}</text>
-    <text x="900" y="117" text-anchor="middle" font-size="10" fill="${c.muted}">top ${r3(d.rank.percentile).toFixed(1)}%</text>
-  </g>
-  <text x="900" y="162" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.muted}"${A.a(0.6, 0.5, { o: 0 })}>RANK</text>`;
+  ${X.showRank ? rank() : ""}`,
+  };
 }
 
-function statsPanel(d, c, A) {
+function statsSection(d, X) {
+  const { c, A, k, tr, num } = X;
+  const o = k.stats;
   const s = d.stats;
-  const items = [
-    ["star", "Total Stars", s.stars],
-    ["commit", "Total Commits", s.commits],
-    ["pr", "Pull Requests", s.prs],
-    ["issue", "Issues", s.issues],
-    ["review", "Code Reviews", s.reviews],
-    ["org", "Contributed to", s.contributedTo],
-    ["people", "Followers", s.followers],
-    ["repo", "Repositories", s.repos],
-  ];
-  return `
-  <g${A.a(0.4, 0.5, { o: 0 })}>${panel(30, 184, 460, 168, c)}${heading(50, 210, "STATS", c)}</g>
+  const base = [
+    ["star", "stars", s.stars], ["commit", "commits", s.commits], ["pr", "prs", s.prs], ["issue", "issues", s.issues],
+    ["review", "reviews", s.reviews], ["org", "contributed", s.contributedTo], ["people", "followers", s.followers], ["repo", "repos", s.repos],
+  ].filter(([, id]) => !o.hide.has(id));
+  const extra = [
+    ["pr", "prsMerged", s.prsMerged], ["pr", "prsMergedPercentage", s.prsMergedPercentage],
+    ["issue", "discussionsStarted", s.discussionsStarted], ["review", "discussionsAnswered", s.discussionsAnswered],
+  ].filter(([, id]) => o.show.has(id.toLowerCase()));
+  const items = [...base, ...extra];
+  const fmt = (id, v) => (id === "prsMergedPercentage" ? `${v.toFixed(1)}%` : o.numberFormat === "short" ? short(v, o.numberPrecision) : num(v));
+  const rows = Math.max(1, Math.ceil(items.length / 2));
+  const lh = o.lineHeight;
+  const gap = o.icons ? 24 : 0;
+  return {
+    w: 460, top: 184, nx: 30, h: Math.max(120, 78 + (rows - 1) * lh),
+    draw: (H) => `
+  <g${A.a(0.4, 0.5, { o: 0 })}>${panel(30, 184, 460, H, c)}${heading(50, 210, o.title ?? tr("stats"), c)}</g>
   ${items
-    .map(([ic, label, value], i) => {
+    .map(([ic, id, value], i) => {
       const x = 50 + (i % 2) * 225;
-      const y = 240 + Math.floor(i / 2) * 30;
+      const y = 240 + Math.floor(i / 2) * lh;
       return `<g${A.a(0.55 + i * 0.07, 0.45, { o: 0, ty: 8 })}>
-    ${icon(ic, x, y - 12, 15, c.accent)}
-    <text x="${x + 24}" y="${y}" font-size="13.5" fill="${c.muted}">${label}</text>
-    <text x="${x + 200}" y="${y}" text-anchor="end" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${num(value)}</text>
+    ${o.icons ? icon(ic, x, y - 12, 15, c.accent) : ""}
+    <text x="${x + gap}" y="${y}" font-size="13.5" font-weight="${o.textBold ? 600 : 400}" fill="${c.muted}">${esc(tr(id))}</text>
+    <text x="${x + 200}" y="${y}" text-anchor="end" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${fmt(id, value)}</text>
   </g>`;
     })
-    .join("")}`;
+    .join("")}`,
+  };
 }
 
-function streakPanel(d, c, A) {
+function streakSection(d, X) {
+  const { c, A, k, tr, tag, num, fmtDate } = X;
+  const o = k.streak;
   const { total, current, longest, first } = d.streak;
-  const range = (s) => (s.length ? `${fmtDate(s.start, false)} – ${fmtDate(s.end)}` : "No streak yet");
-  const col = (x, delay, value, label, sub, color) => `<g${A.a(delay, 0.5, { o: 0, ty: 10 })}>
-    <text x="${x}" y="${value.big ? 278 : 276}" text-anchor="middle" font-size="${value.big ? 30 : 26}" font-weight="700" font-family="${FD}" fill="${color}">${value.text}</text>
-    <text x="${x}" y="326" text-anchor="middle" font-size="13" font-weight="600" fill="${color === c.fire ? c.fire : c.text}">${label}</text>
-    <text x="${x}" y="343" text-anchor="middle" font-size="11" fill="${c.muted}">${sub}</text>
+  const year = Number(d.days.at(-1)[0].slice(0, 4));
+  const f = (x, y = true) => (o.dateFormat ? phpDate(x, o.dateFormat, year, tag) : fmtDate(x, y));
+  const range = (s) => (s.length ? `${f(s.start, false)} – ${f(s.end)}` : tr("noStreak"));
+  const since = !first ? "" : o.dateFormat ? `${f(first)} – ${tr("present")}` : `${fmtDate(first, false)} ${first.slice(0, 4)} – ${tr("present")}`;
+  const nfmt = (n) => (o.shortNumbers ? shortBig(n) : num(n));
+  const unit = o.mode === "weekly" ? `<tspan font-size="13" font-weight="600" dx="3">${esc(tr("weeks"))}</tspan>` : "";
+  const cols = [
+    ["total", 0.8, { text: nfmt(total) }, tr("totalContrib"), since, c.streakSideNums, c.streakSideLabels],
+    ["current", 1.0, { text: nfmt(current.length) + unit, big: true }, tr("current"), range(current), c.streakCurrNum, c.streakCurrLabel],
+    ["longest", 1.1, { text: nfmt(longest.length) + unit }, tr("longest"), range(longest), c.streakSideNums, c.streakSideLabels],
+  ].filter((x) => !o.hide.has(x[0]));
+  const n = cols.length;
+  if (!n) return null;
+  const col = (x, delay, value, label, text, numColor, labelColor) => `<g${A.a(delay, 0.5, { o: 0, ty: 10 })}>
+    <text x="${x}" y="${value.big ? 278 : 276}" text-anchor="middle" font-size="${value.big ? 30 : 26}" font-weight="700" font-family="${FD}" fill="${numColor}">${value.text}</text>
+    <text x="${x}" y="326" text-anchor="middle" font-size="13" font-weight="600" fill="${labelColor}">${esc(label)}</text>
+    <text x="${x}" y="343" text-anchor="middle" font-size="11" fill="${c.streakDates}">${esc(text)}</text>
   </g>`;
-  return `
-  <g${A.a(0.6, 0.5, { o: 0 })}>${panel(510, 184, 460, 168, c)}${heading(530, 210, "STREAK", c)}
-    <line x1="663" y1="222" x2="663" y2="340" stroke="${c.border}"/><line x1="817" y1="222" x2="817" y2="340" stroke="${c.border}"/>
+  const dividers = Array.from({ length: n - 1 }, (_, i) => {
+    const x = r3(510 + (460 * (i + 1)) / n);
+    return `<line x1="${x}" y1="222" x2="${x}" y2="340" stroke="${c.streakStroke}"/>`;
+  }).join("");
+  const days = [...o.excludeDays].sort().map((i) => weekday(tag, i, "short")).join(", ");
+  return {
+    w: 460, top: 184, nx: 510, h: 168,
+    draw: (H) => `
+  <g${A.a(0.6, 0.5, { o: 0 })}>${panel(510, 184, 460, H, c)}${heading(530, 210, o.title ?? tr("streak"), c)}${dividers}
+    ${o.excludeDays.size && o.excludeDaysLabel ? `<text x="950" y="210" text-anchor="end" font-size="10" fill="${c.streakExcl}">${esc(tr("excluding", { days }))}</text>` : ""}
   </g>
-  ${col(587, 0.8, { text: num(total) }, "Total Contributions", first ? `${fmtDate(first, false)} ${first.slice(0, 4)} – Present` : "", c.text)}
-  <g${A.a(0.9, 0.6, { o: 0, s: 0.6 }, {}, [740, 266])}>
-    <circle cx="740" cy="266" r="38" fill="none" stroke="${c.fire}" stroke-width="4" opacity="0.9"/>
-    <circle cx="740" cy="228" r="12" fill="${c.panel}"/>
-    ${icon("flame", 731, 219, 18, c.fire)}
-  </g>
-  ${col(740, 1.0, { text: num(current.length), big: true }, "Current Streak", range(current), c.fire)}
-  ${col(893, 1.1, { text: num(longest.length) }, "Longest Streak", range(longest), c.text)}`;
+  <g transform="translate(0 ${r3((H - 168) / 2)})">${cols
+    .map(([key, delay, value, label, text, nc, lc], i) => {
+      const x = r3(510 + (460 * (i + 0.5)) / n);
+      const ring =
+        key === "current"
+          ? `<g${A.a(0.9, 0.6, { o: 0, s: 0.6 }, {}, [x, 266])}>
+    <circle cx="${x}" cy="266" r="38" fill="none" stroke="${c.fire}" stroke-width="4" opacity="0.9"/>
+    <circle cx="${x}" cy="228" r="12" fill="${c.panel}"/>
+    ${icon("flame", r3(x - 9), 219, 18, c.fire)}
+  </g>`
+          : "";
+      return ring + col(x, delay, value, label, text, nc, lc);
+    })
+    .join("")}</g>`,
+  };
 }
 
-function languagesPanel(d, c, A) {
+const arc = (cx, cy, r, a0, a1) => {
+  const p = (a) => `${r3(cx + r * Math.cos(a))} ${r3(cy + r * Math.sin(a))}`;
+  return `${p(a0)} A ${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p(a1)}`;
+};
+
+function languagesSection(d, X) {
+  const { c, A, k, tr } = X;
+  const o = k.languages;
   const { top, total } = d.languages;
-  let x = 50;
-  const segs = top
-    .map((l) => {
-      const w = (l.percent / 100) * 900;
-      const r = `<rect x="${r3(x)}" y="414" width="${r3(w + 0.5)}" height="12" fill="${l.color}"/>`;
-      x += w;
-      return r;
-    })
-    .join("");
-  return `
-  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, 940, 112, c)}${heading(50, 398, "TOP LANGUAGES", c, `<tspan dx="6" font-weight="400" letter-spacing="0">· ${total} used</tspan>`)}</g>
-  <clipPath id="bar"><rect x="50" y="414" width="900" height="12" rx="6"/></clipPath>
-  <rect x="50" y="414" width="900" height="12" rx="6" fill="${c.track}"/>
-  <g clip-path="url(#bar)"><g${A.a(1.1, 1.0, { sx: 0 }, {}, [50, 420])}>${segs}</g></g>
-  ${top
-    .map((l, i) => {
-      const lx = 50 + (i % 4) * 228;
-      const ly = 452 + Math.floor(i / 4) * 22;
-      return `<g${A.a(1.3 + i * 0.06, 0.4, { o: 0 })}>
-    <circle cx="${lx + 5}" cy="${ly - 4}" r="5" fill="${l.color}"/>
-    <text x="${lx + 16}" y="${ly}" font-size="13" fill="${c.text}">${esc(trunc(l.name, 18))} <tspan fill="${c.muted}">${l.percent.toFixed(1)}%</tspan></text>
-  </g>`;
-    })
-    .join("")}`;
+  if (!top.length) return null;
+  const value = (l) => (o.hideProgress ? "" : o.statsFormat === "bytes" ? bytes(l.size) : `${l.percent.toFixed(1)}%`);
+  const label = (l, x, y, size, max) =>
+    `<text x="${x}" y="${y}" font-size="${size}" fill="${c.text}">${esc(trunc(l.name, max))}${value(l) ? ` <tspan fill="${c.muted}">${value(l)}</tspan>` : ""}</text>`;
+  const title = heading(50, 398, o.title ?? tr("languages"), c, sub(c, tr("used", { n: total })));
+  const dot = (l, x, y) => `<circle cx="${x + 5}" cy="${y - 4}" r="5" fill="${l.color}"/>`;
+
+  if (o.layout === "bar" || o.layout === "compact") {
+    const compact = o.layout === "compact";
+    const cols = compact ? 5 : 4;
+    const rows = Math.ceil(top.length / cols);
+    const bar = !o.hideProgress;
+    const y0 = bar ? 452 : 424;
+    const bh = compact ? 8 : 12;
+    const h = bar ? 90 + (rows - 1) * 22 : 58 + (rows - 1) * 22;
+    return {
+      w: 940, top: 372, nx: 30, h,
+      draw: (H) => {
+        let x = 50;
+        const segs = top.map((l) => {
+          const w = (l.percent / 100) * 900;
+          const r = `<rect x="${r3(x)}" y="414" width="${r3(w + 0.5)}" height="${bh}" fill="${l.color}"/>`;
+          x += w;
+          return r;
+        }).join("");
+        return `
+  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, 940, H, c)}${title}</g>
+  ${bar ? `<clipPath id="bar"><rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}"/></clipPath>
+  <rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}" fill="${c.track}"/>
+  <g clip-path="url(#bar)"><g${A.a(1.1, 1.0, { sx: 0 }, {}, [50, 420])}>${segs}</g></g>` : ""}
+  ${top.map((l, i) => {
+    const lx = 50 + (i % cols) * (900 / cols);
+    const ly = y0 + Math.floor(i / cols) * 22;
+    return `<g${A.a(1.3 + i * 0.06, 0.4, { o: 0 })}>${dot(l, lx, ly)}${label(l, lx + 16, ly, compact ? 12 : 13, compact ? 14 : 18)}</g>`;
+  }).join("")}`;
+      },
+    };
+  }
+
+  // Half-width charts: donut / pie (legend on the right) and donut-vertical (legend below).
+  const vertical = o.layout === "donut-vertical";
+  const shown = top.slice(0, 10);
+  const pie = o.layout === "pie";
+  const R = 56;
+  const rows = Math.ceil(shown.length / 2);
+  const h = vertical ? 208 + (rows - 1) * 22 : 168;
+  const cx = vertical ? 260 : 120;
+  const cy = vertical ? 372 + 54 + R : 372 + 100;
+  const chart = () => {
+    let a = -Math.PI / 2;
+    return top.map((l) => {
+      const span = (l.percent / 100) * Math.PI * 2;
+      const a0 = a;
+      a += span;
+      if (l.percent >= 99.9) return pie ? `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${l.color}"/>` : `<circle cx="${cx}" cy="${cy}" r="${R - 12}" fill="none" stroke="${l.color}" stroke-width="24"/>`;
+      return pie
+        ? `<path d="M${cx} ${cy} L${arc(cx, cy, R, a0, a)} Z" fill="${l.color}" stroke="${c.panel}" stroke-width="1.5"/>`
+        : `<path d="M${arc(cx, cy, R - 12, a0, a)}" fill="none" stroke="${l.color}" stroke-width="24"/>`;
+    }).join("");
+  };
+  return {
+    w: 460, top: 372, nx: 30, h,
+    draw: (H) => {
+      const two = shown.length > 5 || vertical;
+      const legend = shown.map((l, i) => {
+        const col = two ? i % 2 : 0;
+        const row = two ? Math.floor(i / 2) : i;
+        const lx = vertical ? 60 + col * 200 : 215 + col * 140;
+        const ly = (vertical ? cy + R + 28 : 372 + 56) + row * 22;
+        return `<g${A.a(1.3 + i * 0.06, 0.4, { o: 0 })}>${dot(l, lx, ly)}${label(l, lx + 16, ly, 12, vertical ? 18 : 9)}</g>`;
+      }).join("");
+      return `
+  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, 460, H, c)}${title}</g>
+  <g${A.a(1.1, 0.9, { o: 0, s: 0.6 }, {}, [cx, cy])}>${chart()}${pie ? "" : `<text x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="18" font-weight="700" font-family="${FD}" fill="${c.text}">${total}</text>`}</g>
+  ${legend}`;
+    },
+  };
 }
 
-// Trophy palettes from github-profile-trophy: "darkhub" for dark, "default" for light.
+// Trophy palettes from github-profile-trophy: "darkhub" for dark themes, "default" for light ones, and the matching named palettes.
+const TP = (title, text, laurel, bar, [s, a, b, def], sec, circle = "#f0f6fb", rt = "#0d1117") => ({
+  title, text, circle, laurel, bar, secret: [...sec, sec[1]], S: [s, s, rt], A: [a, a, rt], B: [b, b, rt], other: [def, def, rt],
+});
 const TROPHY_THEMES = {
   dark: {
     title: "#c9d1d9", text: "#8b949e", circle: "#f0f6fb", laurel: "#178600", bar: "#ff79c6",
@@ -224,6 +366,15 @@ const TROPHY_THEMES = {
     secret: ["red", "fuchsia", "blue", "fuchsia"], S: ["#FAD200", "#C8A090", "#886000"], A: ["#B0B0B0", "#9090C0", "#505050"],
     B: ["#A18D66", "#816D96", "#412D06"], other: ["#777", "#333", "#333"],
   },
+  nord: TP("#81a1c1", "#eceff4", "#a3be8c", "#81a1c1", ["#ebcb8b", "#8fbcbb", "#d08770", "#5e81ac"], ["#bf616a", "#b48ead", "#81a1c1"], "#d8dee9"),
+  monokai: TP("#f92672", "#ffffff", "#a6e22e", "#f92672", ["#e6db74", "#66d9ef", "#fd971f", "#75715e"], ["#f92672", "#ae81ff", "#66d9ef"], "#fff"),
+  gruvbox: TP("#ebdbb2", "#98971a", "#689d6a", "#fabd26", ["#fabd2f", "#83a598", "#d65d0e", "#928374"], ["#fb4934", "#d3869b", "#458588"], "#ebdbb2"),
+  dracula: TP("#ff79c6", "#f8f8f2", "#50fa7b", "#ff79c6", ["#ffb86c", "#8be9fd", "#ff5555", "#6272a4"], ["#ff5555", "#ff79c6", "#bd93f9"], "#f8f8f2"),
+  radical: TP("#fe428e", "#a9fef7", "#50fa7b", "#fe428e", ["#ffce32", "#8df7b5", "#ea3f25", "#1e65f5"], ["#ff5555", "#ff15d9", "#1e65f5"], "#eeeeee"),
+  discord: TP("#7289da", "#ffffff", "#57f287", "#5865f2", ["#fee75c", "#eb459e", "#ed4245", "#5865f2"], ["#ed4245", "#57f287", "#5865f2"], "#ffffff"),
+  aura: TP("#ffffff", "#dbffe6", "#a9fcca", "#715df5", ["#8e57ff", "#7c71f5", "#226a80", "#5e8c2a"], ["#c273ff", "#c273ff", "#c273ff"], "#ffffff"),
+  "one-dark": TP("#e5c07b", "#e06c75", "#98c379", "#e5c07b", ["#e5c07b", "#56b6c2", "#c678dd", "#abb2bf"], ["#e06c75", "#c678dd", "#61afef"], "#ffffff"),
+  matrix: TP("#00cc00", "#00cc00", "#178600", "#00ff00", ["#ffd700", "#c0c0c0", "#b08d57", "#b08d57"], ["#ffd700", "#ffffff", "#ffd700"], "#002200", "#000000"),
 };
 const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` : `${n}pt`);
 
@@ -253,40 +404,63 @@ function trophy(tr, tt, theme) {
   };
 }
 
-function trophiesPanel(d, c, A, theme) {
-  const tt = TROPHY_THEMES[theme] ?? TROPHY_THEMES.dark;
-  const list = d.trophies;
-  const gap = 12;
-  const s = Math.min(110, (920 - gap * (list.length - 1)) / list.length);
-  const x0 = 30 + (940 - (list.length * s + gap * (list.length - 1))) / 2;
-  const defs = [];
-  const cards = list
-    .map((tr, i) => {
-      const x = x0 + i * (s + gap);
-      const { defs: g, body } = trophy(tr, tt, theme);
-      defs.push(g);
-      return `<g${A.a(1.45 + i * 0.08, 0.5, { o: 0, s: 0.6 }, {}, [r3(x + s / 2), r3(542 + s / 2)])}>
-    <svg x="${r3(x)}" y="542" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">
-      <rect x="0.5" y="0.5" rx="4.5" width="109" height="109" fill="${c.bg1}" stroke="${c.border}"/>
+function trophiesSection(d, X) {
+  const { c, A, k, tr, theme } = X;
+  const o = k.trophies;
+  const tt = TROPHY_THEMES[theme] ?? TROPHY_THEMES[c.base];
+  let list = d.trophies.filter(
+    (t) =>
+      (!o.titles.size || trophyMatches(t.title, o.titles)) &&
+      !trophyMatches(t.title, o.hideTitles) &&
+      (!o.ranks.size || o.ranks.has(t.rank)) &&
+      !o.hideRanks.has(t.rank),
+  );
+  if (!list.length) return null;
+  const cols = o.columns > 0 ? Math.min(list.length, o.columns) : list.length;
+  if (o.rows) list = list.slice(0, cols * o.rows);
+  const rows = Math.ceil(list.length / cols);
+  const gx = o.marginW;
+  const gy = o.marginH;
+  const s = Math.min(110, (920 - gx * (cols - 1)) / cols);
+  return {
+    w: 940, top: 504, nx: 30, h: Math.round(58 + rows * s + (rows - 1) * gy),
+    draw: (H) => {
+      const defs = [];
+      const cards = list
+        .map((tr_, i) => {
+          const row = Math.floor(i / cols);
+          const inRow = Math.min(cols, list.length - row * cols);
+          const x = 30 + (940 - (inRow * s + gx * (inRow - 1))) / 2 + (i % cols) * (s + gx);
+          const y = 542 + row * (s + gy);
+          const { defs: g, body } = trophy(tr_, tt, theme);
+          defs.push(g);
+          return `<g${A.a(1.45 + i * 0.08, 0.5, { o: 0, s: 0.6 }, {}, [r3(x + s / 2), r3(y + s / 2)])}>
+    <svg x="${r3(x)}" y="${r3(y)}" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">
+      <rect x="0.5" y="0.5" rx="4.5" width="109" height="109" fill="${o.noBg ? "none" : c.bg1}" stroke="${o.noFrame ? "none" : c.border}"/>
       ${body}
-      <g${A.a(1.8 + i * 0.08, 0.9, { sx: 0 }, {}, [15, 102])}><rect x="15" y="101" rx="1" width="${r3(80 * tr.progress)}" height="3.2" fill="${tt.bar}"/></g>
+      <g${A.a(1.8 + i * 0.08, 0.9, { sx: 0 }, {}, [15, 102])}><rect x="15" y="101" rx="1" width="${r3(80 * tr_.progress)}" height="3.2" fill="${tt.bar}"/></g>
     </svg>
   </g>`;
-    })
-    .join("");
-  return `<defs>${defs.join("")}</defs>
-  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, 940, 168, c)}${heading(50, 530, "TROPHIES", c)}</g>
+        })
+        .join("");
+      return `<defs>${defs.join("")}</defs>
+  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, 940, H, c)}${heading(50, 530, o.title ?? tr("trophies"), c)}</g>
   ${cards}`;
+    },
+  };
 }
 
-function heatmapPanel(d, c, A) {
+function heatmapSection(d, X) {
+  const { c, A, k, tr, tag, num } = X;
+  const o = k.heatmap;
   const counts = new Map(d.days);
   const today = new Date(d.days.at(-1)[0] + "T00:00:00Z");
+  const startDow = o.weekStart === "mon" ? 1 : 0;
   const start = new Date(today);
-  start.setUTCDate(start.getUTCDate() - today.getUTCDay() - 52 * 7);
+  start.setUTCDate(start.getUTCDate() - ((today.getUTCDay() - startDow + 7) % 7) - (o.weeks - 1) * 7);
   const weeks = [];
   let lastYear = 0;
-  for (let w = 0; w < 53; w++) {
+  for (let w = 0; w < o.weeks; w++) {
     const days = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(start);
@@ -304,33 +478,43 @@ function heatmapPanel(d, c, A) {
   const step = 16.8;
   const x0 = 78;
   const y0 = 722;
+  const rx = o.cell === "round" ? 6.75 : 3;
   let month = "";
-  const months = weeks
-    .map((wk, w) => {
-      const m = wk[0] && new Date(wk[0][0] + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
-      if (!m || m === month) return "";
-      month = m;
-      return w > 50 ? "" : `<text x="${r3(x0 + w * step)}" y="${y0 - 8}" font-size="10" fill="${c.muted}">${m}</text>`;
-    })
-    .join("");
-  return `
-  <g${A.a(1.7, 0.5, { o: 0 })}>${panel(30, 674, 940, 180, c)}${heading(50, 698, "CONTRIBUTIONS", c, `<tspan dx="6" font-weight="400" letter-spacing="0">· ${num(lastYear)} in the last year</tspan>`)}
+  const months = o.monthLabels
+    ? weeks
+        .map((wk, w) => {
+          const m = wk[0] && new Date(wk[0][0] + "T00:00:00Z").toLocaleDateString(tag, { month: "short", timeZone: "UTC" });
+          if (!m || m === month) return "";
+          month = m;
+          return w > o.weeks - 3 ? "" : `<text x="${r3(x0 + w * step)}" y="${y0 - 8}" font-size="10" fill="${c.muted}">${esc(m)}</text>`;
+        })
+        .join("")
+    : "";
+  return {
+    w: 940, top: 674, nx: 30, h: 180,
+    draw: (H) => `
+  <g${A.a(1.7, 0.5, { o: 0 })}>${panel(30, 674, 940, H, c)}${heading(50, 698, tr("contributions"), c, sub(c, tr("lastYear", { n: num(lastYear) })))}
     ${months}
-    ${["Mon", "Wed", "Fri"].map((t, i) => `<text x="50" y="${r3(y0 + (1 + i * 2) * step + 10)}" font-size="10" fill="${c.muted}">${t}</text>`).join("")}
+    ${[1, 3, 5].map((wd) => `<text x="50" y="${r3(y0 + ((wd - startDow + 7) % 7) * step + 10)}" font-size="10" fill="${c.muted}">${esc(weekday(tag, wd, "short"))}</text>`).join("")}
   </g>
   ${weeks
     .map(
       (wk, w) =>
         `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
-          .map(([key, n, i]) => `<rect x="${r3(x0 + w * step)}" y="${r3(y0 + i * step)}" width="13.5" height="13.5" rx="3" fill="${c.heat[level(n)]}"><title>${n} on ${key}</title></rect>`)
+          .map(([key, n, i]) => `<rect x="${r3(x0 + w * step)}" y="${r3(y0 + i * step)}" width="13.5" height="13.5" rx="${rx}" fill="${c.heat[level(n)]}"><title>${n} · ${key}</title></rect>`)
           .join("")}</g>`,
     )
     .join("")}
-  <g${A.a(2.4, 0.5, { o: 0 })}>
-    <text x="840" y="698" text-anchor="end" font-size="10" fill="${c.muted}">Less</text>
-    ${c.heat.map((h, i) => `<rect x="${846 + i * 16}" y="688" width="12" height="12" rx="3" fill="${h}"/>`).join("")}
-    <text x="930" y="698" font-size="10" fill="${c.muted}">More</text>
-  </g>`;
+  ${
+    o.legend
+      ? `<g${A.a(2.4, 0.5, { o: 0 })}>
+    <text x="840" y="698" text-anchor="end" font-size="10" fill="${c.muted}">${esc(tr("less"))}</text>
+    ${c.heat.map((h, i) => `<rect x="${846 + i * 16}" y="688" width="12" height="12" rx="${rx > 3 ? 6 : 3}" fill="${h}"/>`).join("")}
+    <text x="930" y="698" font-size="10" fill="${c.muted}">${esc(tr("more"))}</text>
+  </g>`
+      : ""
+  }`,
+  };
 }
 
 // Text layout without font metrics: per-character width estimate (em units) for a Segoe-UI-like sans.
@@ -357,126 +541,180 @@ function wrap(text, size, maxW) {
 }
 const plain = (s) => s.replace(/\*\*|__/g, "");
 
-function aboutPanel(d, c, A) {
+function aboutSection(d, X) {
+  const { c, A, k, tr } = X;
   const size = 14.5;
   const lh = 22;
   const gap = 10;
   let y = 66;
-  const paras = d.config.about
-    .map((p, i) => {
-      const lines = wrap(plain(p), size, 900);
-      const g = `<g${A.a(0.1 + i * 0.12, 0.5, { o: 0, ty: 8 })}>${lines
-        .map((l, k) => `<text x="50" y="${y + k * lh}" font-size="${size}" fill="${c.text}">${esc(l)}</text>`)
-        .join("")}</g>`;
-      y += lines.length * lh + gap;
-      return g;
-    })
-    .join("");
+  const paras = k.about.map((p) => {
+    const lines = wrap(plain(p), size, 900);
+    const top = y;
+    y += lines.length * lh + gap;
+    return { lines, top };
+  });
   const h = y - gap - lh + 26;
-  return [`<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, 940, h, c)}${icon("person", 50, 18, 14, c.accent)}${heading(72, 30, "ABOUT ME", c)}</g>${paras}`, h];
+  return {
+    w: 940, top: 0, nx: 30, h,
+    draw: (H) => `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, 940, H, c)}${icon("person", 50, 18, 14, c.accent)}${heading(72, 30, tr("about"), c)}</g>${paras
+      .map(
+        ({ lines, top }, i) => `<g${A.a(0.1 + i * 0.12, 0.5, { o: 0, ty: 8 })}>${lines
+          .map((l, n) => `<text x="50" y="${top + n * lh}" font-size="${size}" fill="${c.text}">${esc(l)}</text>`)
+          .join("")}</g>`,
+      )
+      .join("")}`,
+  };
 }
 
-function workingPanel(d, c, A) {
-  const items = d.config.workingOn;
+function workingSection(d, X) {
+  const { c, A, k, tr } = X;
+  const items = k.workingOn;
   const gap = 14;
   const cw = (900 - gap * (items.length - 1)) / items.length;
   const icons = ["rocket", "zap", "flame", "code"];
-  const cards = items
-    .map((it, i) => {
-      const x = 50 + i * (cw + gap);
-      const desc = it.description ? wrap(plain(it.description), 12.5, cw - 62).slice(0, 2) : [];
-      const url = it.url ? it.url.replace(/^https?:\/\/(www\.)?/, "") : "";
-      return `<g${A.a(0.15 + i * 0.1, 0.5, { o: 0, ty: 10 })}>
+  return {
+    w: 940, top: 0, nx: 30, h: 160,
+    draw: (H) => {
+      const cards = items
+        .map((it, i) => {
+          const x = 50 + i * (cw + gap);
+          const desc = it.description ? wrap(plain(it.description), 12.5, cw - 62).slice(0, 2) : [];
+          const url = it.url ? it.url.replace(/^https?:\/\/(www\.)?/, "") : "";
+          return `<g${A.a(0.15 + i * 0.1, 0.5, { o: 0, ty: 10 })}>
     <rect x="${r3(x)}" y="46" width="${r3(cw)}" height="96" rx="12" fill="${c.bg1}" stroke="${c.border}"/>
     <circle cx="${r3(x + 26)}" cy="72" r="15" fill="url(#grad)" opacity="0.2"/>
     ${icon(icons[i % icons.length], r3(x + 18), 64, 16, c.accent)}
     <text x="${r3(x + 50)}" y="77" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(plain(it.title), 15, cw - 62))}</text>
-    ${desc.map((l, k) => `<text x="${r3(x + 50)}" y="${98 + k * 16}" font-size="12.5" fill="${c.muted}">${esc(l)}</text>`).join("")}
+    ${desc.map((l, n) => `<text x="${r3(x + 50)}" y="${98 + n * 16}" font-size="12.5" fill="${c.muted}">${esc(l)}</text>`).join("")}
     ${url ? `<text x="${r3(x + 50)}" y="132" font-size="11" fill="${c.accent2}">${esc(fit(url, 11, cw - 62))}</text>` : ""}
   </g>`;
-    })
-    .join("");
-  return [`<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, 940, 160, c)}${icon("rocket", 50, 18, 14, c.accent)}${heading(72, 30, "WORKING ON", c)}</g>${cards}`, 160];
+        })
+        .join("");
+      return `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, 940, H, c)}${icon("rocket", 50, 18, 14, c.accent)}${heading(72, 30, tr("working"), c)}</g>${cards}`;
+    },
+  };
 }
 
 /** Two endless marquee rows of tech logos (order shuffled at generation time), moving in opposite directions. */
-function carousel(d, c, A, defs) {
-  const items = d.config.stack;
+function stackSection(d, X) {
+  const { c, A, k, tr, defs } = X;
+  const items = k.stack ?? [];
+  if (!items.length) return null;
   const half = Math.ceil(items.length / 2);
   const rows = [items.slice(0, half), items.slice(half)].filter((r) => r.length);
   const step = 84;
   const speed = 28; // px per second
-  for (const it of items) defs.push(`<image id="${it.id}" href="${it.data}" width="40" height="40"/>`);
-  const body = rows
-    .map((row, r) => {
-      let list = row;
-      while (list.length * step < 960) list = list.concat(row);
-      const w = list.length * step;
-      const tile = (it, x) =>
-        `<g transform="translate(${r3(x)} 0)"><rect width="72" height="72" rx="14" fill="${c.bg1}" stroke="${c.border}"/><use href="#${it.id}" x="16" y="7"/><text x="36" y="63" text-anchor="middle" font-size="9.5" fill="${c.muted}">${esc(fit(it.name, 9.5, 66))}</text></g>`;
-      const y = 54 + r * 84;
-      if (A.t !== undefined) {
-        // Static frame: only tiles inside the panel (resvg also crashes on fully off-canvas <use> copies).
-        const off = (A.t * DURATION * speed) % w;
-        const tx = r % 2 ? off - w : -off;
-        const tiles = [...list, ...list].map((it, k) => [it, tx + k * step]).filter(([, x]) => x > -step && x < 920);
-        return `<g transform="translate(50 ${y})">${tiles.map(([it, x]) => tile(it, x)).join("")}</g>`;
-      }
-      defs.push(`<g id="row${r}">${list.map((it, k) => tile(it, k * step)).join("")}</g>`);
-      const [from, to] = r % 2 ? [-w, 0] : [0, -w];
-      A.css.push(`@keyframes m${r}{from{transform:translateX(${from}px)}to{transform:translateX(${to}px)}}.m${r}{animation:m${r} ${r3(w / speed)}s linear infinite}`);
-      return `<g transform="translate(50 ${y})"><g class="m${r}"><use href="#row${r}"/><use href="#row${r}" x="${w}"/></g></g>`;
-    })
-    .join("");
   const h = 54 + rows.length * 84 + 6;
-  defs.push(
-    `<linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".06" stop-color="#fff"/><stop offset=".94" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`,
-    `<mask id="fm" maskUnits="userSpaceOnUse" x="30" y="0" width="940" height="${h}"><rect x="31" y="40" width="938" height="${h - 44}" fill="url(#fade)"/></mask>`,
-  );
-  return [
-    `<g${A.a(0, 0.6, { o: 0 })}>${panel(30, 0, 940, h, c)}${icon("tools", 50, 18, 14, c.accent)}${heading(72, 30, "TECH STACK", c, `<tspan dx="6" font-weight="400" letter-spacing="0">· ${items.length} tools</tspan>`)}
-    <g mask="url(#fm)">${body}</g></g>`,
-    h,
-  ];
+  return {
+    w: 940, top: 0, nx: 30, h,
+    draw: (H) => {
+      for (const it of items) defs.push(`<image id="${it.id}" href="${it.data}" width="40" height="40"/>`);
+      const body = rows
+        .map((row, r) => {
+          let list = row;
+          while (list.length * step < 960) list = list.concat(row);
+          const w = list.length * step;
+          const tile = (it, x) =>
+            `<g transform="translate(${r3(x)} 0)"><rect width="72" height="72" rx="14" fill="${c.bg1}" stroke="${c.border}"/><use href="#${it.id}" x="16" y="7"/><text x="36" y="63" text-anchor="middle" font-size="9.5" fill="${c.muted}">${esc(fit(it.name, 9.5, 66))}</text></g>`;
+          const y = 54 + r * 84;
+          if (A.t !== undefined) {
+            // Static frame: only tiles inside the panel (resvg also crashes on fully off-canvas <use> copies).
+            const off = (A.t * DURATION * speed) % w;
+            const tx = r % 2 ? off - w : -off;
+            const tiles = [...list, ...list].map((it, n) => [it, tx + n * step]).filter(([, x]) => x > -step && x < 920);
+            return `<g transform="translate(50 ${y})">${tiles.map(([it, x]) => tile(it, x)).join("")}</g>`;
+          }
+          defs.push(`<g id="row${r}">${list.map((it, n) => tile(it, n * step)).join("")}</g>`);
+          const [from, to] = r % 2 ? [-w, 0] : [0, -w];
+          A.css.push(`@keyframes m${r}{from{transform:translateX(${from}px)}to{transform:translateX(${to}px)}}.m${r}{animation:m${r} ${r3(w / speed)}s linear infinite}`);
+          return `<g transform="translate(50 ${y})"><g class="m${r}"><use href="#row${r}"/><use href="#row${r}" x="${w}"/></g></g>`;
+        })
+        .join("");
+      defs.push(
+        `<linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".06" stop-color="#fff"/><stop offset=".94" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`,
+        `<mask id="fm" maskUnits="userSpaceOnUse" x="30" y="0" width="940" height="${h}"><rect x="31" y="40" width="938" height="${h - 44}" fill="url(#fade)"/></mask>`,
+      );
+      return `<g${A.a(0, 0.6, { o: 0 })}>${panel(30, 0, 940, H, c)}${icon("tools", 50, 18, 14, c.accent)}${heading(72, 30, tr("stack"), c, sub(c, tr("tools", { n: items.length })))}
+    <g mask="url(#fm)">${body}</g></g>`;
+    },
+  };
 }
 
-/** Render the full card. opts.t undefined = animated SVG, number = static frame at that progress. */
-export function render(d, { theme = "dark", t, fontCss = "" } = {}) {
-  const c = THEMES[theme] ?? THEMES.dark;
+/**
+ * Render the full card. d: summarize() output; k: normalized config (src/config.js).
+ * opts.t undefined = animated SVG, number = static frame at that progress.
+ */
+export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), colors } = {}) {
+  const c = resolveTheme(theme, colors ?? k.colors);
+  if (t === undefined && !k.card.animations) t = 1;
   const A = animator(t);
-  const cfg = d.config ?? {};
+  const tag = intlTag(k.locale);
   const defs = [];
+  const X = {
+    c, A, k, theme, defs, tag, tr: translator(k.locale), showRank: !k.hideSections.has("rank"),
+    num: (n) => n.toLocaleString(tag),
+    fmtDate: (iso, year = true) =>
+      iso ? new Date(iso + "T00:00:00Z").toLocaleDateString(tag, { month: "short", day: "numeric", ...(year && { year: "numeric" }), timeZone: "UTC" }) : "",
+  };
+  const hasTop = k.about.length || k.workingOn.length;
+  const DT = { header: 0, about: 0.4, workingOn: 0.8, techStack: 2.9 };
+  const BUILD = {
+    header: headerSection,
+    about: (...a) => k.about.length && aboutSection(...a),
+    workingOn: (...a) => k.workingOn.length && workingSection(...a),
+    stats: statsSection,
+    streak: streakSection,
+    languages: languagesSection,
+    trophies: trophiesSection,
+    heatmap: heatmapSection,
+    techStack: stackSection,
+  };
   const parts = [];
   let y = 0;
-  // Original sections use absolute coordinates (top = their y in the stats-only layout); shift them to the cursor.
-  const place = (svg, h, top = 0) => {
-    parts.push(`<g transform="translate(0 ${r3(y - top)})">${svg}</g>`);
-    y += h + 20;
+  for (const row of k.layout) {
+    const secs = row.map((id) => ({ id, s: BUILD[id](d, X) })).filter((x) => x.s);
+    // Two half-width sections share a row; anything else stacks.
+    const groups = secs.length === 2 && secs.every((x) => x.s.w === 460) ? [secs] : secs.map((x) => [x]);
+    for (const g of groups) {
+      const H = Math.max(...g.map((x) => x.s.h));
+      g.forEach(({ id, s }, i) => {
+        const slot = g.length === 2 ? (i ? 510 : 30) : s.w === 460 ? 270 : 30;
+        A.dt = DT[id] ?? (hasTop ? 0.6 : 0);
+        parts.push(`<g transform="translate(${r3(slot - s.nx)} ${r3(y - s.top)})">${s.draw(H)}</g>`);
+      });
+      y += H + 20;
+    }
+  }
+  const SH = y + 8;
+  const bg = k.card.background;
+  const grad = (bg.gradient ? parseColors({ bg_gradient: bg.gradient }).bg_gradient : c.bgGradient)?.split(",");
+  const bgFill = grad
+    ? `<linearGradient id="bg" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(${Number(grad[0]) - 90} .5 .5)">${grad
+        .slice(1)
+        .map((col, i, a) => `<stop offset="${r3(i / (a.length - 1))}" stop-color="${col}"/>`)
+        .join("")}</linearGradient>`
+    : `<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.bg1}"/><stop offset="1" stop-color="${c.bg2}"/></linearGradient>`;
+  const PATTERNS = {
+    dots: `<pattern id="pat" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="${c.muted}" opacity="0.3"/></pattern>`,
+    grid: `<pattern id="pat" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${c.muted}" stroke-opacity="0.15"/></pattern>`,
+    diagonal: `<pattern id="pat" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 12L12 0" stroke="${c.muted}" stroke-opacity="0.15"/></pattern>`,
   };
-  place(header(d, c, A), 170);
-  if (cfg.about?.length) (A.dt = 0.4), place(...aboutPanel(d, c, A));
-  if (cfg.workingOn?.length) (A.dt = 0.8), place(...workingPanel(d, c, A));
-  A.dt = cfg.about || cfg.workingOn ? 0.6 : 0;
-  place(statsPanel(d, c, A) + streakPanel(d, c, A), 168, 184);
-  place(languagesPanel(d, c, A), 112, 372);
-  place(trophiesPanel(d, c, A, theme), 168, 504);
-  place(heatmapPanel(d, c, A), 180, 674);
-  if (cfg.stack?.length) (A.dt = 2.9), place(...carousel(d, c, A, defs));
-  A.dt = 0;
-  const H = y + 8;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
+  const card = (fill, stroke = "none") => `<rect x="0.5" y="0.5" width="${W - 1}" height="${SH - 1}" rx="${k.card.radius}" fill="${fill}" stroke="${stroke}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${SH}" viewBox="0 0 ${W} ${SH}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
   <title>${esc(d.name)} (@${esc(d.login)}) — GitHub profile</title>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.bg1}"/><stop offset="1" stop-color="${c.bg2}"/></linearGradient>
+    ${bgFill}
     <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.accent}"/><stop offset="1" stop-color="${c.accent2}"/></linearGradient>
     <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b9a"/><stop offset=".5" stop-color="#b48cff"/><stop offset="1" stop-color="#4fd1ff"/></linearGradient>
     <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="850" cy="0" r="650"><stop offset="0" stop-color="${c.accent2}" stop-opacity="0.18"/><stop offset="1" stop-color="${c.accent2}" stop-opacity="0"/></radialGradient>
+    ${PATTERNS[bg.pattern] ?? ""}
     ${defs.join("\n    ")}
-  </defs>${t === undefined ? `\n  <style>${fontCss}${A.css.join("")}</style>` : ""}
-  <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="20" fill="url(#bg)" stroke="${c.border}"/>
-  <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="20" fill="url(#glow)"/>
+  </defs>${fontCss || A.css.length ? `\n  <style>${fontCss}${A.css.join("")}</style>` : ""}
+  ${card("url(#bg)", k.card.hideBorder ? "none" : c.border)}
+  ${bg.glow ? card("url(#glow)") : ""}
+  ${PATTERNS[bg.pattern] ? card("url(#pat)") : ""}
   ${parts.join("\n  ")}
-  <text x="${W - 30}" y="${H - 16}" text-anchor="end" font-size="10" fill="${c.muted}">Generated by profile-forge · ${d.days.at(-1)[0]}</text>
+  <text x="${W - 30}" y="${SH - 16}" text-anchor="end" font-size="10" fill="${c.muted}">${esc(X.tr("generated"))} · ${d.days.at(-1)[0]}</text>
 </svg>`;
 }
 
@@ -484,8 +722,8 @@ export function render(d, { theme = "dark", t, fontCss = "" } = {}) {
  * A standalone link button. SVGs inside <img> are never clickable on GitHub,
  * so each link is its own small image wrapped in <a> in the README.
  */
-export function renderButton(link, { theme = "dark", fontCss = "" } = {}) {
-  const c = THEMES[theme] ?? THEMES.dark;
+export function renderButton(link, { theme = "dark", fontCss = "", colors } = {}) {
+  const c = resolveTheme(theme, colors);
   const color = link.color ?? c.accent;
   const w = Math.ceil(48 + textWidth(link.label, 15) + 40);
   const h = 44;
