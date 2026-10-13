@@ -1,6 +1,7 @@
 import { BRANDS, ICONS } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
+import { drawFrame, frameFor } from "./frames.js";
 import { isTop, levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
 import { trophyMatches } from "./stats.js";
@@ -150,12 +151,18 @@ function headerSection(d, X) {
   const progress = 100 - d.rank.percentile;
   const pct = hs.rankIcon === "percentile";
   const gh = hs.rankIcon === "github";
-  const avatar = () =>
-    hs.avatar === "rounded"
-      ? `<rect x="34" y="32" width="116" height="116" rx="30" fill="none" stroke="url(#grad)" stroke-width="3"/>
-    <clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>`
-      : `<circle cx="92" cy="90" r="58" fill="none" stroke="url(#grad)" stroke-width="3"/>
-    <clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`;
+  // the frame around the avatar: the classic gradient ring, or one of the decorations (frames.js); "auto" follows the level
+  const rounded = hs.avatar === "rounded";
+  const frameKind = frameFor(hs.frame, d.rank.level);
+  const frame = () => {
+    if (frameKind === "none") return "";
+    if (frameKind === "ring" && hs.frame === "ring" && !c.frame) return rounded
+      ? `<rect x="34" y="32" width="116" height="116" rx="30" fill="none" stroke="url(#grad)" stroke-width="3"/>`
+      : `<circle cx="92" cy="90" r="58" fill="none" stroke="url(#grad)" stroke-width="3"/>`;
+    return drawFrame(frameKind, { shape: rounded ? "rounded" : "circle", color: c.frame ?? levelColor(c, d.rank.level), c, A, level: d.rank.level, motion: hs.frameAnimation });
+  };
+  const avatar = () => `${frame()}
+    ${rounded ? `<clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>` : `<clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`}`;
   const top = isTop(d.rank.level);
   // the top 1%: a pulsing halo, a light that runs around the ring and sparkles that twinkle (plain CSS loops)
   const topRing = () => {

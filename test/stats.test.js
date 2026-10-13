@@ -357,3 +357,32 @@ test("trophies: styles, visible parts, padding and alignment", () => {
   assert.throws(() => normalize({ trophies: { parts: ["title", "shine"] } }), /trophies\.parts/);
   assert.throws(() => normalize({ trophies: { style: "trident" } }), /trophies\.style/);
 });
+
+test("avatar frames: every frame draws, auto follows the level, shapes and static frames work", async () => {
+  const { FRAMES, AUTO_FRAME } = await import("../src/frames.js");
+  const view = (header, level = "A", t, colors) => {
+    const [d, k] = make({ layout: ["header"], header, ...(colors && { colors }) });
+    d.rank = { level, percentile: 20 };
+    return render(d, { k, t });
+  };
+  const plain = view({ frame: "none" });
+  assert.ok(!view({ frame: "none" }).includes('stroke="url(#grad)" stroke-width="3"'), "none: no ring");
+  assert.ok(view({}).includes('stroke="url(#grad)" stroke-width="3"'), "the classic gradient ring is the default");
+  const seen = new Set();
+  for (const frame of FRAMES.filter((f) => !["none", "ring", "auto"].includes(f))) {
+    for (const avatar of ["circle", "rounded"]) {
+      const svg = view({ frame, avatar });
+      assert.ok(svg.length > plain.length, `${frame} (${avatar}) adds something`);
+      assert.ok(!svg.includes("NaN"), `${frame} (${avatar}) has no NaN coordinates`);
+    }
+    seen.add(view({ frame }).length);
+  }
+  assert.ok(seen.size > 8, "the frames look different from each other");
+  assert.deepEqual(Object.keys(AUTO_FRAME), ["E", "D", "C", "B", "A", "S", "S+"]);
+  assert.equal(view({ frame: "auto" }, "E").length, plain.length, "E: no frame");
+  assert.ok(view({ frame: "auto" }, "S+").includes("stroke-dasharray=\"30 22\""), "S+: the aurora");
+  assert.ok(view({ frame: "flames" }, "A", undefined, { frameColor: "00ff88" }).includes("#00ff88"), "frameColor overrides the level colour");
+  assert.ok(!/@keyframes lp/.test(view({ frame: "aurora" }, "S", 1)) && !/@keyframes lp/.test(view({ frame: "neon", frameAnimation: "none" }, "S")), "static frames and 'none' do not move");
+  assert.throws(() => normalize({ header: { frame: "gold" } }), /header\.frame/);
+  assert.throws(() => normalize({ header: { frameAnimation: "wobble" } }), /header\.frameAnimation/);
+});

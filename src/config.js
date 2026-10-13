@@ -19,7 +19,7 @@ export const DEFAULTS = {
   layout: ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
   hideSections: [],
   grid: null, // [{ section, cols, height? }]: free 6-column grid instead of `layout` (see GUIDE)
-  header: { avatar: "circle", facts: ["contributionsThisYear", "bestDay", "busiestWeekday"], rankIcon: "level" },
+  header: { avatar: "circle", frame: "ring", frameAnimation: "default", facts: ["contributionsThisYear", "bestDay", "busiestWeekday"], rankIcon: "level" },
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
@@ -31,7 +31,7 @@ export const DEFAULTS = {
 const FACTS = ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"];
 const ENUMS = {
   locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal"],
-  "header.avatar": ["circle", "rounded", "hide"], "header.rankIcon": ["level", "percentile", "github"],
+  "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankIcon": ["level", "percentile", "github"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
   "trophies.style": ["cup", "medal", "shield", "gem", "letter"], "trophies.align": ["center", "left"],
