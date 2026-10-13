@@ -268,7 +268,7 @@ const arc = (cx, cy, r, a0, a1) => {
   return `${p(a0)} A ${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p(a1)}`;
 };
 
-function languagesSection(d, X) {
+function languagesSection(d, X, half = false) {
   const { c, A, k, tr } = X;
   const o = k.languages;
   const { top, total } = d.languages;
@@ -281,29 +281,31 @@ function languagesSection(d, X) {
 
   if (o.layout === "bar" || o.layout === "compact") {
     const compact = o.layout === "compact";
-    const cols = compact ? 5 : 4;
+    const W = half ? 460 : 940; // bar layouts are full width unless paired with another section
+    const IW = W - 40;
+    const cols = half ? 2 : compact ? 5 : 4;
     const rows = Math.ceil(top.length / cols);
     const bar = !o.hideProgress;
     const y0 = bar ? 452 : 424;
     const bh = compact ? 8 : 12;
     const h = bar ? 90 + (rows - 1) * 22 : 58 + (rows - 1) * 22;
     return {
-      w: 940, top: 372, nx: 30, h,
+      w: W, top: 372, nx: 30, h,
       draw: (H) => {
         let x = 50;
         const segs = top.map((l) => {
-          const w = (l.percent / 100) * 900;
+          const w = (l.percent / 100) * IW;
           const r = `<rect x="${r3(x)}" y="414" width="${r3(w + 0.5)}" height="${bh}" fill="${l.color}"/>`;
           x += w;
           return r;
         }).join("");
         return `
-  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, 940, H, c)}${title}</g>
-  ${bar ? `<clipPath id="bar"><rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}"/></clipPath>
-  <rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}" fill="${c.track}"${A.a(1.0, 0.5, { o: 0 })}/>
+  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, W, H, c)}${title}</g>
+  ${bar ? `<clipPath id="bar"><rect x="50" y="414" width="${IW}" height="${bh}" rx="${bh / 2}"/></clipPath>
+  <rect x="50" y="414" width="${IW}" height="${bh}" rx="${bh / 2}" fill="${c.track}"${A.a(1.0, 0.5, { o: 0 })}/>
   <g clip-path="url(#bar)"><g${A.a(1.1, 1.0, { sx: 0 }, {}, [50, 420])}>${segs}</g></g>` : ""}
   ${top.map((l, i) => {
-    const lx = 50 + (i % cols) * (900 / cols);
+    const lx = 50 + (i % cols) * (IW / cols);
     const ly = y0 + Math.floor(i / cols) * 22;
     return `<g${A.a(1.3 + i * 0.06, 0.4, { o: 0 })}>${dot(l, lx, ly)}${label(l, lx + 16, ly, compact ? 12 : 13, compact ? 14 : 18)}</g>`;
   }).join("")}`;
@@ -404,8 +406,9 @@ function trophy(tr, tt, theme) {
   };
 }
 
-function trophiesSection(d, X) {
+function trophiesSection(d, X, half = false) {
   const { c, A, k, tr, theme } = X;
+  const W = half ? 460 : 940;
   const o = k.trophies;
   const tt = TROPHY_THEMES[theme] ?? TROPHY_THEMES[c.base];
   let list = d.trophies.filter(
@@ -416,21 +419,21 @@ function trophiesSection(d, X) {
       !o.hideRanks.has(t.rank),
   );
   if (!list.length) return null;
-  const cols = o.columns > 0 ? Math.min(list.length, o.columns) : list.length;
+  const cols = o.columns > 0 ? Math.min(list.length, o.columns) : half ? Math.min(list.length, 4) : list.length;
   if (o.rows) list = list.slice(0, cols * o.rows);
   const rows = Math.ceil(list.length / cols);
   const gx = o.marginW;
   const gy = o.marginH;
-  const s = Math.min(110, (920 - gx * (cols - 1)) / cols);
+  const s = Math.min(110, (W - 20 - gx * (cols - 1)) / cols);
   return {
-    w: 940, top: 504, nx: 30, h: Math.round(58 + rows * s + (rows - 1) * gy),
+    w: W, top: 504, nx: 30, h: Math.round(58 + rows * s + (rows - 1) * gy),
     draw: (H) => {
       const defs = [];
       const cards = list
         .map((tr_, i) => {
           const row = Math.floor(i / cols);
           const inRow = Math.min(cols, list.length - row * cols);
-          const x = 30 + (940 - (inRow * s + gx * (inRow - 1))) / 2 + (i % cols) * (s + gx);
+          const x = 30 + (W - (inRow * s + gx * (inRow - 1))) / 2 + (i % cols) * (s + gx);
           const y = 542 + row * (s + gy);
           const { defs: g, body } = trophy(tr_, tt, theme);
           defs.push(g);
@@ -444,15 +447,18 @@ function trophiesSection(d, X) {
         })
         .join("");
       return `<defs>${defs.join("")}</defs>
-  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, 940, H, c)}${heading(50, 530, o.title ?? tr("trophies"), c)}</g>
+  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, W, H, c)}${heading(50, 530, o.title ?? tr("trophies"), c)}</g>
   ${cards}`;
     },
   };
 }
 
-function heatmapSection(d, X) {
+function heatmapSection(d, X, half = false) {
   const { c, A, k, tr, tag, num } = X;
-  const o = k.heatmap;
+  const o0 = k.heatmap;
+  const W = half ? 460 : 940;
+  // half width: only the most recent weeks that fit, and no month-count subtitle
+  const o = half ? { ...o0, weeks: Math.min(o0.weeks, 23) } : o0;
   const counts = new Map(d.days);
   const today = new Date(d.days.at(-1)[0] + "T00:00:00Z");
   const startDow = o.weekStart === "mon" ? 1 : 0;
@@ -491,9 +497,9 @@ function heatmapSection(d, X) {
         .join("")
     : "";
   return {
-    w: 940, top: 674, nx: 30, h: 180,
+    w: W, top: 674, nx: 30, h: 180,
     draw: (H) => `
-  <g${A.a(1.7, 0.5, { o: 0 })}>${panel(30, 674, 940, H, c)}${heading(50, 698, tr("contributions"), c, sub(c, tr("lastYear", { n: num(lastYear) })))}
+  <g${A.a(1.7, 0.5, { o: 0 })}>${panel(30, 674, W, H, c)}${heading(50, 698, tr("contributions"), c, half ? "" : sub(c, tr("lastYear", { n: num(lastYear) })))}
     ${months}
     ${[1, 3, 5].map((wd) => `<text x="50" y="${r3(y0 + ((wd - startDow + 7) % 7) * step + 10)}" font-size="10" fill="${c.muted}">${esc(weekday(tag, wd, "short"))}</text>`).join("")}
   </g>
@@ -508,9 +514,9 @@ function heatmapSection(d, X) {
   ${
     o.legend
       ? `<g${A.a(2.4, 0.5, { o: 0 })}>
-    <text x="840" y="698" text-anchor="end" font-size="10" fill="${c.muted}">${esc(tr("less"))}</text>
-    ${c.heat.map((h, i) => `<rect x="${846 + i * 16}" y="688" width="12" height="12" rx="${rx > 3 ? 6 : 3}" fill="${h}"/>`).join("")}
-    <text x="930" y="698" font-size="10" fill="${c.muted}">${esc(tr("more"))}</text>
+    <text x="${840 + W - 940}" y="698" text-anchor="end" font-size="10" fill="${c.muted}">${esc(tr("less"))}</text>
+    ${c.heat.map((h, i) => `<rect x="${846 + W - 940 + i * 16}" y="688" width="12" height="12" rx="${rx > 3 ? 6 : 3}" fill="${h}"/>`).join("")}
+    <text x="${930 + W - 940}" y="698" font-size="10" fill="${c.muted}">${esc(tr("more"))}</text>
   </g>`
       : ""
   }`,
@@ -541,22 +547,23 @@ function wrap(text, size, maxW) {
 }
 const plain = (s) => s.replace(/\*\*|__/g, "");
 
-function aboutSection(d, X) {
+function aboutSection(d, X, half = false) {
   const { c, A, k, tr } = X;
+  const W = half ? 460 : 940;
   const size = 14.5;
   const lh = 22;
   const gap = 10;
   let y = 66;
   const paras = k.about.map((p) => {
-    const lines = wrap(plain(p), size, 900);
+    const lines = wrap(plain(p), size, W - 40);
     const top = y;
     y += lines.length * lh + gap;
     return { lines, top };
   });
   const h = y - gap - lh + 26;
   return {
-    w: 940, top: 0, nx: 30, h,
-    draw: (H) => `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, 940, H, c)}${icon("person", 50, 18, 14, c.accent)}${heading(72, 30, tr("about"), c)}</g>${paras
+    w: W, top: 0, nx: 30, h,
+    draw: (H) => `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, H, c)}${icon("person", 50, 18, 14, c.accent)}${heading(72, 30, tr("about"), c)}</g>${paras
       .map(
         ({ lines, top }, i) => `<g${A.a(0.1 + i * 0.12, 0.5, { o: 0, ty: 8 })}>${lines
           .map((l, n) => `<text x="50" y="${top + n * lh}" font-size="${size}" fill="${c.text}">${esc(l)}</text>`)
@@ -566,38 +573,43 @@ function aboutSection(d, X) {
   };
 }
 
-function workingSection(d, X) {
+function workingSection(d, X, half = false) {
   const { c, A, k, tr } = X;
   const items = k.workingOn;
   const gap = 14;
-  const cw = (900 - gap * (items.length - 1)) / items.length;
+  const W = half ? 460 : 940;
+  // half width: the cards stack vertically instead of sitting side by side
+  const cw = half ? W - 40 : (W - 40 - gap * (items.length - 1)) / items.length;
+  const stepY = 96 + 12;
   const icons = ["rocket", "zap", "flame", "code"];
   return {
-    w: 940, top: 0, nx: 30, h: 160,
+    w: W, top: 0, nx: 30, h: half ? 46 + items.length * stepY - 12 + 18 : 160,
     draw: (H) => {
       const cards = items
         .map((it, i) => {
-          const x = 50 + i * (cw + gap);
+          const x = half ? 50 : 50 + i * (cw + gap);
+          const dy = half ? i * stepY : 0;
           const desc = it.description ? wrap(plain(it.description), 12.5, cw - 62).slice(0, 2) : [];
           const url = it.url ? it.url.replace(/^https?:\/\/(www\.)?/, "") : "";
-          return `<g${A.a(0.15 + i * 0.1, 0.5, { o: 0, ty: 10 })}>
+          return `<g${A.a(0.15 + i * 0.1, 0.5, { o: 0, ty: 10 })}><g transform="translate(0 ${dy})">
     <rect x="${r3(x)}" y="46" width="${r3(cw)}" height="96" rx="12" fill="${c.bg1}" stroke="${c.border}"/>
     <circle cx="${r3(x + 26)}" cy="72" r="15" fill="url(#grad)" opacity="0.2"/>
     ${icon(icons[i % icons.length], r3(x + 18), 64, 16, c.accent)}
     <text x="${r3(x + 50)}" y="77" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(plain(it.title), 15, cw - 62))}</text>
     ${desc.map((l, n) => `<text x="${r3(x + 50)}" y="${98 + n * 16}" font-size="12.5" fill="${c.muted}">${esc(l)}</text>`).join("")}
     ${url ? `<text x="${r3(x + 50)}" y="132" font-size="11" fill="${c.accent2}">${esc(fit(url, 11, cw - 62))}</text>` : ""}
-  </g>`;
+  </g></g>`;
         })
         .join("");
-      return `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, 940, H, c)}${icon("rocket", 50, 18, 14, c.accent)}${heading(72, 30, tr("working"), c)}</g>${cards}`;
+      return `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, H, c)}${icon("rocket", 50, 18, 14, c.accent)}${heading(72, 30, tr("working"), c)}</g>${cards}`;
     },
   };
 }
 
 /** Two endless marquee rows of tech logos (order shuffled at generation time), moving in opposite directions. */
-function stackSection(d, X) {
+function stackSection(d, X, narrow = false) {
   const { c, A, k, tr, defs } = X;
+  const W = narrow ? 460 : 940;
   const items = k.stack ?? [];
   if (!items.length) return null;
   const half = Math.ceil(items.length / 2);
@@ -606,13 +618,13 @@ function stackSection(d, X) {
   const speed = 28; // px per second
   const h = 54 + rows.length * 84 + 6;
   return {
-    w: 940, top: 0, nx: 30, h,
+    w: W, top: 0, nx: 30, h,
     draw: (H) => {
       for (const it of items) defs.push(`<image id="${it.id}" href="${it.data}" width="40" height="40"/>`);
       const body = rows
         .map((row, r) => {
           let list = row;
-          while (list.length * step < 960) list = list.concat(row);
+          while (list.length * step < W + 20) list = list.concat(row);
           const w = list.length * step;
           const tile = (it, x) =>
             `<g transform="translate(${r3(x)} 0)"><rect width="72" height="72" rx="14" fill="${c.bg1}" stroke="${c.border}"/><use href="#${it.id}" x="16" y="7"/><text x="36" y="63" text-anchor="middle" font-size="9.5" fill="${c.muted}">${esc(fit(it.name, 9.5, 66))}</text></g>`;
@@ -621,7 +633,7 @@ function stackSection(d, X) {
             // Static frame: only tiles inside the panel (resvg also crashes on fully off-canvas <use> copies).
             const off = (A.t * DURATION * speed) % w;
             const tx = r % 2 ? off - w : -off;
-            const tiles = [...list, ...list].map((it, n) => [it, tx + n * step]).filter(([, x]) => x > -step && x < 920);
+            const tiles = [...list, ...list].map((it, n) => [it, tx + n * step]).filter(([, x]) => x > -step && x < W - 20);
             return `<g transform="translate(50 ${y})">${tiles.map(([it, x]) => tile(it, x)).join("")}</g>`;
           }
           defs.push(`<g id="row${r}">${list.map((it, n) => tile(it, n * step)).join("")}</g>`);
@@ -632,9 +644,9 @@ function stackSection(d, X) {
         .join("");
       defs.push(
         `<linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".06" stop-color="#fff"/><stop offset=".94" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`,
-        `<mask id="fm" maskUnits="userSpaceOnUse" x="30" y="0" width="940" height="${h}"><rect x="31" y="40" width="938" height="${h - 44}" fill="url(#fade)"/></mask>`,
+        `<mask id="fm" maskUnits="userSpaceOnUse" x="30" y="0" width="${W}" height="${h}"><rect x="31" y="40" width="${W - 2}" height="${h - 44}" fill="url(#fade)"/></mask>`,
       );
-      return `<g${A.a(0, 0.6, { o: 0 })}>${panel(30, 0, 940, H, c)}${icon("tools", 50, 18, 14, c.accent)}${heading(72, 30, tr("stack"), c, sub(c, tr("tools", { n: items.length })))}
+      return `<g${A.a(0, 0.6, { o: 0 })}>${panel(30, 0, W, H, c)}${icon("tools", 50, 18, 14, c.accent)}${heading(72, 30, tr("stack"), c, sub(c, tr("tools", { n: items.length })))}
     <g mask="url(#fm)">${body}</g></g>`;
     },
   };
@@ -672,7 +684,13 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   };
   const parts = [];
   let y = 0;
-  const built = k.layout.map((row) => row.map((id) => ({ id, s: BUILD[id](d, X) })).filter((x) => x.s)).filter((r) => r.length);
+  // A row of two is built at half width; if one of them turns out empty, the other is rebuilt at full width.
+  const built = k.layout
+    .map((row) => {
+      const secs = row.map((id) => ({ id, s: BUILD[id](d, X, row.length === 2) })).filter((x) => x.s);
+      return secs.length === 1 && row.length === 2 ? [{ id: secs[0].id, s: BUILD[secs[0].id](d, X, false) }] : secs;
+    })
+    .filter((r) => r.length);
   const step = built.length > 1 ? Math.min(0.4, 2.2 / (built.length - 1)) : 0;
   for (const [ri, secs] of built.entries()) {
     // Two half-width sections share a row; anything else stacks.

@@ -78,7 +78,7 @@
     },
     "layout": {
       "type": "array",
-      "description": "Section order. A nested pair puts two half-width sections (stats, streak, languages with donut/pie) side by side.",
+      "description": "Section order. A nested pair puts two sections side by side at half width (any two except header).",
       "items": { "oneOf": [{ "$ref": "#/definitions/section" }, { "type": "array", "maxItems": 2, "items": { "$ref": "#/definitions/section" } }] },
       "default": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"]
     },
