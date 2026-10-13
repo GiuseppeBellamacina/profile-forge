@@ -238,7 +238,7 @@ test("sectionBoxes: reports where sections land, matching the grid packing", asy
   assert.deepEqual([by.stats.x, by.stats.w, by.trophies.x, by.trophies.w], [30, 460, 510, 460]);
   assert.equal(by.heatmap.x, 30, "heatmap falls under the short stats card");
   assert.ok(by.heatmap.y < by.trophies.y + by.trophies.h);
-  assert.equal(height, Math.max(...boxes.map((b) => b.y + b.h)) + 28, "card height = lowest edge + gutter + bottom margin");
+  assert.equal(height, Math.max(...boxes.map((b) => b.y + b.h)) + 54, "card height = lowest edge + gutter + bottom margin");
 });
 
 test("grid: height makes a card taller, never shorter than its content", async () => {
@@ -298,4 +298,18 @@ test("snake: eaten days fade out over their empty-day look instead of being cove
   const svg = render(d, { k });
   assert.ok(/<path[^>]*style="animation:ce\d+_\d+ /.test(svg), "the coloured day itself fades");
   assert.ok(!/opacity="0" style="animation:ce/.test(svg), "no cover shapes are drawn over the days");
+});
+
+test("margins: room under the last card, and the first card never sits on the border without a header", async () => {
+  const { sectionBoxes } = await import("../src/render.js");
+  const boxes = (layout) => { const [d, k] = make({ layout }); return sectionBoxes(d, { k }); };
+  const withHeader = boxes(["header", "stats"]);
+  const without = boxes(["stats", "streak"]);
+  assert.equal(withHeader.boxes[0].y, 0, "the header keeps its own padding");
+  assert.equal(without.boxes[0].y, 30, "no header: the first card starts 30px down");
+  const last = withHeader.boxes.at(-1);
+  assert.equal(withHeader.height - (last.y + last.h), 54);
+  const grid = (g) => { const [d, k] = make({ grid: g }); return sectionBoxes(d, { k }).boxes; };
+  assert.equal(grid([{ section: "stats", cols: 3 }])[0].y, 30);
+  assert.equal(grid([{ section: "header" }, { section: "stats", cols: 3 }])[0].y, 0);
 });
