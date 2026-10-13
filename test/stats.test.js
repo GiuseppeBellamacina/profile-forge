@@ -283,3 +283,12 @@ test("heatmap shapes: each kind draws its own element, mixed is stable, the snak
   assert.throws(() => normalize({ heatmap: { cell: "star" } }), /heatmap\.cell/);
   assert.throws(() => normalize({ heatmap: { snakePath: "zigzag" } }), /heatmap\.snakePath/);
 });
+
+test("snake triangles alternate like the grid: they turn half a turn per cell; other shapes do not turn", () => {
+  const snake = (cell) => {
+    const [d, k] = make({ layout: ["heatmap"], heatmap: { mode: "snake", cell } });
+    return render(d, { k });
+  };
+  assert.ok(/rotate\(\d+deg\)/.test(snake("triangle")));
+  assert.ok(!/rotate\(/.test(snake("round")));
+});

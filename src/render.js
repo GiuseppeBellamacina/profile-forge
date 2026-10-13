@@ -580,25 +580,29 @@ function heatmapSection(d, X, W = 940) {
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));
     // the snake is made of the same shape as the days (a full moon for moons; round for the random mix)
     const kind = o.cell === "mixed" ? "round" : o.cell;
-    const seg = (k, attrs) => cellShape(kind, 0, 0, c.snake, { lvl: 4, up: true, dim: c.snake, rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * 0.1)}" ${attrs}`);
+    // triangles alternate up / down from cell to cell like the grid: a segment turns half a turn at every step
+    const tri = kind === "triangle";
+    const upAt = (j) => (route[j].w + route[j].i) % 2 === 0;
+    const seg = (k, attrs, up = true) => cellShape(kind, 0, 0, c.snake, { lvl: 4, up, dim: c.snake, rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * 0.1)}" ${attrs}`);
     if (A.t !== undefined) {
       // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
-      return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return seg(k, `transform="translate(${r3(p.x)} ${r3(p.y)})"`); }).join("");
+      return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return seg(k, `transform="translate(${r3(p.x)} ${r3(p.y)})"`, upAt(SNAKE_LEN - k)); }).join("");
     }
     const T = r3((last + SNAKE_LEN) * DT + SNAKE_PAUSE);
     const pct = (t) => r3((t / T) * 100);
     const delay = r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5); // after the grid has faded in
     const corners = pts.map((_, j) => j).filter((j) => {
+      if (tri) return true; // one keyframe per cell, to turn the triangle at each step
       if (j === 0 || j === last) return true;
       const d1 = [pts[j].x - pts[j - 1].x, pts[j].y - pts[j - 1].y].map(Math.round).join();
       const d2 = [pts[j + 1].x - pts[j].x, pts[j + 1].y - pts[j].y].map(Math.round).join();
       return d1 !== d2;
     });
-    const at = (j) => `transform:translate(${r3(pts[j].x)}px,${r3(pts[j].y)}px)`;
+    const at = (j) => `transform:translate(${r3(pts[j].x)}px,${r3(pts[j].y)}px)${tri ? ` rotate(${180 * j + (upAt(0) ? 0 : 180)}deg)` : ""}`;
     // one route for the head; every body segment plays the same keyframes a little later (the same loop, shifted)
     A.css.push(`@keyframes sn{${corners.map((j) => `${pct(j * DT)}%{${at(j)}}`).join("")}${pct(last * DT)}%,100%{${at(last)}}}`);
     let body = "";
-    for (let k = 0; k < SNAKE_LEN; k++) body += seg(k, `style="animation:sn ${T}s linear ${r3(delay + k * DT)}s infinite"`);
+    for (let k = 0; k < SNAKE_LEN; k++) body += seg(k, `style="${tri ? "transform-origin:6.75px 6.75px;" : ""}animation:sn ${T}s linear ${r3(delay + k * DT)}s infinite"`);
     const run = (name) => `animation:${name} ${T}s linear ${delay}s infinite`;
     let covers = "";
     weeks.forEach((wk, w) => {
