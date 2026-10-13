@@ -402,3 +402,15 @@ test("options that were removed are ignored, unknown ones are still rejected", (
   assert.equal(normalize({ trophies: { style: "gem", padding: 24 } }).trophies.padding, 24);
   assert.throws(() => normalize({ trophies: { stile: "gem" } }), /Unknown config key "trophies\.stile"/);
 });
+
+test("level colours: the same distinct palette in every theme, overridable", async () => {
+  const { parseColors, resolveTheme, THEME_NAMES } = await import("../src/themes.js");
+  const fields = ["lvE", "lvD", "lvC", "lvB", "lvA", "lvS", "lvTop"];
+  for (const name of THEME_NAMES()) {
+    const c = resolveTheme(name);
+    assert.equal(new Set(fields.map((f) => c[f])).size, 7, `${name}: seven different level colours`);
+  }
+  assert.equal(resolveTheme("matrix").lvD, resolveTheme("dracula").lvD, "not tied to the theme");
+  assert.equal(resolveTheme("dark", parseColors({ levelS: "112233" })).lvS, "#112233");
+  assert.notEqual(resolveTheme("light").lvA, resolveTheme("dark").lvA, "light themes are a little darker");
+});
