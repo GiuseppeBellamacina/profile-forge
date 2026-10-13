@@ -546,6 +546,7 @@ Not ported from the original projects: `card_width` / `card_height` (the card is
   "card": { "radius": 20, "hideBorder": false, "animations": true,
             "background": { "gradient": null, "pattern": "none", "glow": true } },
   "layout": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
+  "grid": null,
   "hideSections": [],
   "header": { "avatar": "circle", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" },
   "stats": { "title": null, "hide": [], "show": [], "icons": true, "numberFormat": "long", "numberPrecision": null,
