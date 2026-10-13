@@ -167,7 +167,6 @@
         "marginH": { "type": "number", "minimum": 0, "maximum": 60, "default": 14 },
         "padding": { "type": "number", "minimum": 0, "maximum": 60, "default": 20, "description": "Space between the panel edge and the trophies." },
         "align": { "enum": ["center", "left"], "default": "center" },
-        "style": { "enum": ["cup", "medal", "shield", "gem", "letter"], "default": "cup", "description": "The picture on each trophy. The level colours it (colors.levelE ... levelTop)." },
         "parts": { "type": "array", "items": { "enum": ["title", "label", "score", "bar"] }, "default": ["title", "label", "score", "bar"], "description": "Which texts and the progress bar to show on each trophy." },
         "noBg": { "type": "boolean", "default": false },
         "noFrame": { "type": "boolean", "default": false },
