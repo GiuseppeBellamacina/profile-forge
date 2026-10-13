@@ -65,7 +65,7 @@ const THEMES = {
   "oceanic-next": dv("dark", "#1b2b34", "#d8dee9", "#6699cc", "#c594c5", "#f99157"),
   "midnight-purple": dv("dark", "#0b0614", "#ffffff", "#9f4bff", "#e879f9", "#f59e0b"),
   merko: dv("dark", "#0a0f0b", "#68b587", "#abd200", "#b7d364", "#ffb454"),
-  matrix: dv("dark", "#000000", "#00cc00", "#00ff41", "#008f11", "#d7ff00"),
+  matrix: dv("dark", "#02140a", "#a6ffb8", "#00ff41", "#00b34a", "#ccff00"),
   hacker: dv("dark", "#000000", "#20c20e", "#20c20e", "#0fa30a", "#8aff00"),
   neon: dv("dark", "#000000", "#ffffff", "#00ead3", "#ff449f", "#fff5b7"),
   outrun: dv("dark", "#141439", "#8080ff", "#ffcc00", "#ff1aff", "#ff7a00"),
