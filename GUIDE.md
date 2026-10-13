@@ -263,6 +263,17 @@ The rank uses the same formula as github-readme-stats (S … C with a "top X%" p
 
 A day with zero contributions *today* does not break the current streak.
 
+**Date format.** `dateFormat` shapes the dates under the three streak blocks (the start of each streak and when your count began). Letters: `d` day `05`, `j` day `5`, `m` month `03`, `n` month `3`, `M` `Mar`, `F` `March`, `y` `26`, `Y` `2026`; month names follow `locale`. Anything inside `[ ]` is shown only when that date's year is not the current one. Plain letters from that list are always replaced, even inside the brackets, so keep other text to symbols and spaces.
+
+| `dateFormat` | A date in 2025 | A date this year |
+|---|---|---|
+| `M j[, Y]` | Jul 27, 2025 | Aug 19 |
+| `j M[ Y]` | 27 Jul 2025 | 19 Aug |
+| `j F Y` | 27 July 2025 | 19 August 2026 |
+| `d/m/Y` | 27/07/2025 | 19/08/2026 |
+| `n/j/y` | 7/27/25 | 8/19/26 |
+| `Y-m-d` | 2025-07-27 | 2026-08-19 |
+
 | default | `mode: "weekly"` | `excludeDays: ["Sat","Sun"]` |
 |---|---|---|
 | <img src="docs/guide/streak-default.png"> | <img src="docs/guide/streak-weekly.png"> | <img src="docs/guide/streak-exclude.png"> |
