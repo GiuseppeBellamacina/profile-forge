@@ -580,7 +580,7 @@ function heatmapSection(d, X, W = 940) {
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));
     // the snake is made of the same shape as the days (a full moon for moons; round for the random mix)
     const kind = o.cell === "mixed" ? "round" : o.cell;
-    // triangles alternate up / down from cell to cell like the grid: a segment turns half a turn at every step
+    // triangles alternate up / down from cell to cell like the grid
     const tri = kind === "triangle";
     const upAt = (j) => (route[j].w + route[j].i) % 2 === 0;
     const seg = (k, attrs, up = true) => cellShape(kind, 0, 0, c.snake, { lvl: 4, up, dim: c.snake, rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * 0.1)}" ${attrs}`);
@@ -598,7 +598,8 @@ function heatmapSection(d, X, W = 940) {
       const d2 = [pts[j + 1].x - pts[j].x, pts[j + 1].y - pts[j].y].map(Math.round).join();
       return d1 !== d2;
     });
-    const at = (j) => `transform:translate(${r3(pts[j].x)}px,${r3(pts[j].y)}px)${tri ? ` rotate(${180 * j + (upAt(0) ? 0 : 180)}deg)` : ""}`;
+    // triangles hop from cell to cell (no sliding or spinning in between) and sit exactly as the grid's triangle there
+    const at = (j) => `transform:translate(${r3(pts[j].x)}px,${r3(pts[j].y)}px)${tri ? ` rotate(${upAt(j) ? 0 : 180}deg);animation-timing-function:step-end` : ""}`;
     // one route for the head; every body segment plays the same keyframes a little later (the same loop, shifted)
     A.css.push(`@keyframes sn{${corners.map((j) => `${pct(j * DT)}%{${at(j)}}`).join("")}${pct(last * DT)}%,100%{${at(last)}}}`);
     let body = "";
