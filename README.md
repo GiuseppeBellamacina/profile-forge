@@ -79,7 +79,7 @@ All-time commits are added up from `contributionsCollection` year by year throug
 
 ## Configuration (`config.json`)
 
-> **Prefer clicking?** Use the **[web configurator](https://giuseppebellamacina.github.io/profile-forge/)**: live preview, then publish config, workflow and assets to your repo.
+> **Prefer clicking?** Use the **[web configurator](https://giuseppebellamacina.github.io/profile-forge-configurator/)** ([source](https://github.com/GiuseppeBellamacina/profile-forge-configurator)): live preview, then publish config, workflow and assets to your repo.
 >
 > **Full guide with pictures for every option: [GUIDE.md](GUIDE.md).** Ready-made configs to copy are in [`presets/`](presets).
 

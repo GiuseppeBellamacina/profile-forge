@@ -76,7 +76,7 @@ const THEMES = {
 };
 
 // Override keys follow the original projects' names where they exist (bg_color, border_color, currStreakNum, ...).
-const COLOR_KEYS = {
+export const COLOR_KEYS = {
   bg_color: ["bg1", "bg2"], panel_color: ["panel"], border_color: ["border"], text_color: ["text"], muted_color: ["muted"],
   icon_color: ["accent"], ring_color: ["accent2"], fire_color: ["fire"], track_color: ["track"],
   title_color: ["title"], stroke_color: ["streakStroke"],

@@ -34,6 +34,15 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
   }
 }`;
 
+// Node and browsers (the web configurator reuses this file).
+const toBase64 = (buf) => {
+  if (typeof Buffer !== "undefined") return Buffer.from(buf).toString("base64");
+  let s = "";
+  const b = new Uint8Array(buf);
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+
 /** "YYYY-MM-DD" for now in the given IANA time zone. */
 export const todayIn = (tz) => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
 
@@ -78,7 +87,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   if (!calendar.has(today)) calendar.set(today, 0);
 
   const avatar = await fetch(`${user.avatarUrl}${user.avatarUrl.includes("?") ? "&" : "?"}s=200`);
-  const avatarData = `data:${avatar.headers.get("content-type") ?? "image/png"};base64,${Buffer.from(await avatar.arrayBuffer()).toString("base64")}`;
+  const avatarData = `data:${avatar.headers.get("content-type") ?? "image/png"};base64,${toBase64(await avatar.arrayBuffer())}`;
 
   const earliest = Math.min(new Date(user.createdAt), ...repos.map((r) => new Date(r.createdAt)));
   return {
