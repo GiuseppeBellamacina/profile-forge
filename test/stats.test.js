@@ -292,3 +292,10 @@ test("snake triangles hop from cell to cell, up or down like the grid cell they 
   assert.ok(/rotate\(180deg\);animation-timing-function:step-end/.test(snake("triangle")) && /rotate\(0deg\)/.test(snake("triangle")));
   assert.ok(!/rotate\(/.test(snake("round")));
 });
+
+test("snake: eaten days fade out over their empty-day look instead of being covered", () => {
+  const [d, k] = make({ layout: ["heatmap"], heatmap: { mode: "snake", cell: "snowflake" } });
+  const svg = render(d, { k });
+  assert.ok(/<path[^>]*style="animation:ce\d+_\d+ /.test(svg), "the coloured day itself fades");
+  assert.ok(!/opacity="0" style="animation:ce/.test(svg), "no cover shapes are drawn over the days");
+});
