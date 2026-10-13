@@ -578,10 +578,12 @@ function heatmapSection(d, X, W = 940) {
     const last = pts.length - 1;
     // a long route is played faster so one loop never takes much longer than half a minute
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));
-    const seg = (k) => `<rect width="13.5" height="13.5" rx="${rx}" fill="${c.snake}" opacity="${r3(1 - k * 0.1)}"`;
+    // the snake is made of the same shape as the days (a full moon for moons; round for the random mix)
+    const kind = o.cell === "mixed" ? "round" : o.cell;
+    const seg = (k, attrs) => cellShape(kind, 0, 0, c.snake, { lvl: 4, up: true, dim: c.snake, rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * 0.1)}" ${attrs}`);
     if (A.t !== undefined) {
       // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
-      return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return `${seg(k)} x="${r3(p.x)}" y="${r3(p.y)}"/>`; }).join("");
+      return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return seg(k, `transform="translate(${r3(p.x)} ${r3(p.y)})"`); }).join("");
     }
     const T = r3((last + SNAKE_LEN) * DT + SNAKE_PAUSE);
     const pct = (t) => r3((t / T) * 100);
@@ -596,7 +598,7 @@ function heatmapSection(d, X, W = 940) {
     // one route for the head; every body segment plays the same keyframes a little later (the same loop, shifted)
     A.css.push(`@keyframes sn{${corners.map((j) => `${pct(j * DT)}%{${at(j)}}`).join("")}${pct(last * DT)}%,100%{${at(last)}}}`);
     let body = "";
-    for (let k = 0; k < SNAKE_LEN; k++) body += `${seg(k)} style="animation:sn ${T}s linear ${r3(delay + k * DT)}s infinite"/>`;
+    for (let k = 0; k < SNAKE_LEN; k++) body += seg(k, `style="animation:sn ${T}s linear ${r3(delay + k * DT)}s infinite"`);
     const run = (name) => `animation:${name} ${T}s linear ${delay}s infinite`;
     let covers = "";
     weeks.forEach((wk, w) => {
