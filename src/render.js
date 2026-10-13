@@ -572,12 +572,27 @@ function heatmapSection(d, X, W = 940) {
   // Every moving part is plain CSS (opacity / transform keyframes), so it also runs inside a README <img>.
   const SNAKE_LEN = 6;
   const SNAKE_PAUSE = 1.5;
-  const snakeSvg = () => {
+  let plan = null; // the route and its timing, computed once per card (inside draw, when the section delay is known)
+  const snakePlan = () => {
+    if (plan) return plan;
     const { pts: route, eaten } = snakeRoute(o.snakePath, weeks, level, SNAKE_LEN);
     const pts = route.map(({ w, i }) => ({ x: x0 + w * step, y: y0 + i * step }));
     const last = pts.length - 1;
     // a long route is played faster so one loop never takes much longer than half a minute
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));
+    const T = r3((last + SNAKE_LEN) * DT + SNAKE_PAUSE);
+    plan = { route, eaten, pts, last, DT, T, pct: (t) => r3((t / T) * 100), delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) }; // after the grid has faded in
+    return plan;
+  };
+  // a day with contributions, drawn on top of its empty-day look and faded out when the snake gets there
+  const snakeDay = (w, i, lvl, title) => {
+    const { eaten, last, DT, T, pct, delay } = snakePlan();
+    const j = eaten.get(`${w},${i}`) ?? last;
+    A.css.push(`@keyframes ce${w}_${i}{0%,${pct(j * DT)}%{opacity:1}${pct(j * DT + 0.1)}%,99.5%{opacity:0}100%{opacity:1}}`);
+    return cell(w, i, 0) + cell(w, i, lvl, title).replace(/^<(\w+)/, `<$1 style="animation:ce${w}_${i} ${T}s linear ${delay}s infinite"`);
+  };
+  const snakeSvg = () => {
+    const { route, pts, last, DT, T, pct, delay } = snakePlan();
     // the snake is made of the same shape as the days (a full moon for moons; round for the random mix)
     const kind = o.cell === "mixed" ? "round" : o.cell;
     // triangles alternate up / down from cell to cell like the grid
@@ -588,9 +603,6 @@ function heatmapSection(d, X, W = 940) {
       // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
       return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return seg(k, `transform="translate(${r3(p.x)} ${r3(p.y)})"`, upAt(SNAKE_LEN - k)); }).join("");
     }
-    const T = r3((last + SNAKE_LEN) * DT + SNAKE_PAUSE);
-    const pct = (t) => r3((t / T) * 100);
-    const delay = r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5); // after the grid has faded in
     const corners = pts.map((_, j) => j).filter((j) => {
       if (tri) return true; // one keyframe per cell, to turn the triangle at each step
       if (j === 0 || j === last) return true;
@@ -604,18 +616,8 @@ function heatmapSection(d, X, W = 940) {
     A.css.push(`@keyframes sn{${corners.map((j) => `${pct(j * DT)}%{${at(j)}}`).join("")}${pct(last * DT)}%,100%{${at(last)}}}`);
     let body = "";
     for (let k = 0; k < SNAKE_LEN; k++) body += seg(k, `style="${tri ? "transform-origin:6.75px 6.75px;" : ""}animation:sn ${T}s linear ${r3(delay + k * DT)}s infinite"`);
-    const run = (name) => `animation:${name} ${T}s linear ${delay}s infinite`;
-    let covers = "";
-    weeks.forEach((wk, w) => {
-      for (const [, n, i] of wk) {
-        if (!n) continue;
-        const j = eaten.get(`${w},${i}`) ?? last;
-        A.css.push(`@keyframes ce${w}_${i}{0%,${pct(j * DT)}%{opacity:0}${pct(j * DT + 0.1)}%,99.5%{opacity:1}100%{opacity:0}}`);
-        covers += cell(w, i, 0, "", o.cell === "snowflake" ? 0.3 : 0.6).replace(/^<(\w+)/, `<$1 opacity="0" style="${run(`ce${w}_${i}`)}"`);
-      }
-    });
     return `<clipPath id="snkclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath>
-  <g clip-path="url(#snkclip)">${covers}${body}</g>`;
+  <g clip-path="url(#snkclip)">${body}</g>`;
   };
   return {
     w: W, top: 674, nx: 30, h: 180,
@@ -628,7 +630,7 @@ function heatmapSection(d, X, W = 940) {
     .map(
       (wk, w) =>
         `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
-          .map(([key, n, i]) => cell(w, i, level(n), `<title>${n} · ${key}</title>`))
+          .map(([key, n, i]) => (o.mode === "snake" && A.t === undefined && n ? snakeDay(w, i, level(n), `<title>${n} · ${key}</title>`) : cell(w, i, level(n), `<title>${n} · ${key}</title>`)))
           .join("")}</g>`,
     )
     .join("")}
