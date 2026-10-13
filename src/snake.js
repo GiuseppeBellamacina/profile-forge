@@ -4,7 +4,7 @@
 // Planned routes (the search runs at every step on the 7 x weeks grid: Dijkstra to the nearest remaining day of the tier
 // being eaten, never into its own body, steering out of dead ends, avoiding days that are not due yet):
 //   smart    quietest days first, then busier ones      busy     the busiest days first, then quieter ones
-//   nearest  always the closest day, whatever its count  wander   one of the closest days, picked with a fixed pseudo-random seed
+//   nearest  always the closest day, whatever its count
 // Fixed routes: sweep (column by column), rows (row by row), spiral (outside in).
 
 const ROWS = 7;
@@ -24,10 +24,8 @@ export function planSnake(weeks, level, len = 6, maxSteps = 1600, order = "quiet
   const eaten = new Map();
   let body = Array.from({ length: len }, (_, k) => key(-1 - k, 3)); // head first
 
-  // the rank decides what is eaten first (lower rank first); "nearest" and "wander" ignore how busy a day was
+  // the rank decides what is eaten first (lower rank first); "nearest" ignores how busy a day was
   const rank = (k) => (order === "busy" ? 5 - tier.get(k) : order === "quiet" ? tier.get(k) : 1);
-  let seed = 20240607;
-  const rnd = () => { seed = (seed + 0x6d2b79f5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const lowest = () => { let m = Infinity; for (const k of uneaten) m = Math.min(m, rank(k)); return m; };
 
   // cheapest routes from the head to every cell, honouring the body (a segment frees its cell after len - idx moves)
@@ -104,7 +102,7 @@ export function planSnake(weeks, level, len = 6, maxSteps = 1600, order = "quiet
     let target = null;
     for (const wantTier of [cur, ...[1, 2, 3, 4].filter((t) => t > cur)]) {
       const reachable = [...uneaten].filter((k) => rank(k) === wantTier && dist.has(k)).sort((a, b) => dist.get(a) - dist.get(b) || (a < b ? -1 : 1));
-      if (reachable.length) { target = order === "wander" ? reachable[Math.floor(rnd() * Math.min(4, reachable.length))] : reachable[0]; break; }
+      if (reachable.length) { target = reachable[0]; break; }
     }
     if (!target) break; // boxed in by its own body: the rest is eaten when the snake leaves
     const next = chooseStep(prev, hk, target);
@@ -193,11 +191,11 @@ export function spiralSnake(weeks) {
   return walk(weeks, cells);
 }
 
-export const SNAKE_PATHS = ["smart", "busy", "nearest", "wander", "sweep", "rows", "spiral"];
+export const SNAKE_PATHS = ["smart", "busy", "nearest", "sweep", "rows", "spiral"];
 /** The route for a `heatmap.snakePath` value. */
 export function snakeRoute(name, weeks, level, len = 6) {
   if (name === "sweep") return sweepSnake(weeks);
   if (name === "rows") return rowsSnake(weeks);
   if (name === "spiral") return spiralSnake(weeks);
-  return planSnake(weeks, level, len, 1600, { smart: "quiet", busy: "busy", nearest: "nearest", wander: "wander" }[name] ?? "quiet");
+  return planSnake(weeks, level, len, 1600, { smart: "quiet", busy: "busy", nearest: "nearest" }[name] ?? "quiet");
 }

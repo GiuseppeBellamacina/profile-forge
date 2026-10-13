@@ -79,11 +79,11 @@ test("busy starts with the busiest days, smart with the quietest", () => {
   assert.ok(smartFirst < smartLast && busyFirst > busyLast);
 });
 
-test("spiral and rows follow their shapes; wander is deterministic", () => {
+test("spiral and rows follow their shapes; the planner is deterministic", () => {
   const weeks = grid(10);
   const spiral = snakeRoute("spiral", weeks, level).pts.slice(1, 13).map((p) => `${p.w},${p.i}`);
   assert.deepEqual(spiral.slice(0, 10), ["0,0", "1,0", "2,0", "3,0", "4,0", "5,0", "6,0", "7,0", "8,0", "9,0"], "along the top edge first");
   assert.equal(spiral[10], "9,1", "then down the right edge");
   assert.deepEqual(snakeRoute("rows", weeks, level).pts.slice(1, 4).map((p) => `${p.w},${p.i}`), ["0,0", "1,0", "2,0"]);
-  assert.deepEqual(snakeRoute("wander", grid(30), level), snakeRoute("wander", grid(30), level));
+  assert.deepEqual(snakeRoute("nearest", grid(30), level), snakeRoute("nearest", grid(30), level));
 });
