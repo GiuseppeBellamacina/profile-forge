@@ -204,3 +204,13 @@ test("examples/config.json is valid", async () => {
   const { DEFAULTS } = await import("../src/config.js");
   for (const key of Object.keys(DEFAULTS)) assert.ok(key in schema.properties, `schema is missing "${key}"`);
 });
+
+test("layout: any two content sections can share a row at half width", () => {
+  const height = (layout) => {
+    const [d, k] = make({ about: ["Hello there"], layout });
+    return Number(/viewBox="0 0 1000 ([\d.]+)"/.exec(render(d, { k, t: 1 }))[1]);
+  };
+  assert.ok(height([["about", "trophies"]]) < height(["about", "trophies"]), "paired rows make the card shorter than stacked ones");
+  assert.ok(height([["heatmap", "languages"]]) < height(["heatmap", "languages"]));
+  assert.equal(height([["about", "workingOn"]]), height(["about"]), "an empty partner leaves the other at full width");
+});

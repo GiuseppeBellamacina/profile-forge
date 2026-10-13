@@ -93,9 +93,9 @@ The `portfolio` preset reads its tech stack icons from `assets/img/` (paths are 
 
 `layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`.
 
-- A **nested pair** puts two half-width sections side by side: `["stats", "streak"]`.
-- Half-width sections are `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout.
-- A half-width section on its own is centered.
+- A **nested pair** puts two sections side by side at half width: `["stats", "streak"]`, `["about", "workingOn"]`, `["trophies", "heatmap"]`. Any two sections can pair except `header`.
+- `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width; on their own they are centered.
+- In a pair, `workingOn` stacks its cards, `trophies` wraps to 4 per row, `heatmap` shows the last 23 weeks, `languages` as a bar uses 2 legend columns. If one of the two has no content, the other takes the full width.
 - `about`, `workingOn` and `techStack` are skipped when they have no content.
 - `hideSections` removes sections (and `"rank"` removes only the ring in the header).
 
