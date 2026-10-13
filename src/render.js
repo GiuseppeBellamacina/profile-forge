@@ -656,8 +656,9 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
     fmtDate: (iso, year = true) =>
       iso ? new Date(iso + "T00:00:00Z").toLocaleDateString(tag, { month: "short", day: "numeric", ...(year && { year: "numeric" }), timeZone: "UTC" }) : "",
   };
-  const hasTop = k.about.length || k.workingOn.length;
-  const DT = { header: 0, about: 0.4, workingOn: 0.8, techStack: 2.9 };
+  // Rows appear one after the other, top to bottom. BASE is the delay each section's own panel already has inside its
+  // draw(); the row offset replaces it. The step shrinks with many rows so the last section still ends before DURATION.
+  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0 };
   const BUILD = {
     header: headerSection,
     about: (...a) => k.about.length && aboutSection(...a),
@@ -671,15 +672,16 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   };
   const parts = [];
   let y = 0;
-  for (const row of k.layout) {
-    const secs = row.map((id) => ({ id, s: BUILD[id](d, X) })).filter((x) => x.s);
+  const built = k.layout.map((row) => row.map((id) => ({ id, s: BUILD[id](d, X) })).filter((x) => x.s)).filter((r) => r.length);
+  const step = built.length > 1 ? Math.min(0.4, 2.2 / (built.length - 1)) : 0;
+  for (const [ri, secs] of built.entries()) {
     // Two half-width sections share a row; anything else stacks.
     const groups = secs.length === 2 && secs.every((x) => x.s.w === 460) ? [secs] : secs.map((x) => [x]);
     for (const g of groups) {
       const H = Math.max(...g.map((x) => x.s.h));
       g.forEach(({ id, s }, i) => {
         const slot = g.length === 2 ? (i ? 510 : 30) : s.w === 460 ? 270 : 30;
-        A.dt = DT[id] ?? (hasTop ? 0.6 : 0);
+        A.dt = ri * step - BASE[id];
         parts.push(`<g transform="translate(${r3(slot - s.nx)} ${r3(y - s.top)})">${s.draw(H)}</g>`);
       });
       y += H + 20;
