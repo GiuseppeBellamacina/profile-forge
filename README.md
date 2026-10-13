@@ -62,12 +62,28 @@ profile-forge works differently:
 | Section | Details |
 |---|---|
 | Header | Avatar, name, account age, contributions this year, best day, most active weekday |
-| Rank | One scale, E, D, C, B, A, S and the top 1% level S+, from your github-readme-stats percentile, drawn as an animated ring |
+| Rank | One scale, E, D, C, B, A, S and the animated top 1% level S+, from your github-readme-stats percentile, as a ring, hexagon or shield with a colour per level |
 | Stats | Stars, all-time commits, PRs, issues, code reviews, repos contributed to, followers, repositories |
 | Streak | Total contributions, current streak and longest streak with date ranges (a day with zero contributions *today* does not break the streak) |
 | Top languages | Animated stacked bar and legend, with configurable `size_weight` / `count_weight` ranking |
-| Trophies | Thresholds of github-profile-trophy mapped to the same levels (E … S, S+), plus secret trophies |
-| Heatmap | The last 53 weeks of contributions |
+| Trophies | The classic cup in the colour of its level (laurel from A, two cups at S, three and a shimmer at S+), plus secret trophies |
+| Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes or moons, or as an animated snake that eats them |
+| Avatar | A frame around it, like Discord avatar decorations (13 styles, most of them animated, or one that follows your level) |
+
+### Levels, trophies and frames
+
+One ranking for the whole card: **E, D, C, B, A, S** and the animated **S+** for the top 1%. The header rank and the trophies use it, with a colour per level (`levelE` … `levelTop`).
+
+<p align="center"><img src="docs/guide/trophies-levels.png" width="92%"></p>
+
+<table>
+<tr>
+<td align="center"><b>Top 1% (S+)</b><br><img src="docs/guide/header-top-animated.svg" width="420"></td>
+<td align="center"><b>Avatar frames</b> (<code>aurora</code>, <code>flames</code>, <code>neon</code>)<br><img src="docs/guide/frame-aurora-animated.svg" width="130"> <img src="docs/guide/frame-flames-animated.svg" width="130"> <img src="docs/guide/frame-neon-animated.svg" width="130"></td>
+</tr>
+</table>
+
+The animated pieces are plain CSS, so they play inside a README image. See the [guide](GUIDE.md#header) for every frame and rank shape, and the [heatmap](GUIDE.md#heatmap) section for the snake.
 
 All-time commits are added up from `contributionsCollection` year by year through GraphQL, so profile-forge doesn't need the REST commit search.
 
@@ -144,7 +160,8 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
   "layout": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
 
   // Sections (each key below is optional)
-  "header":    { "avatar": "circle", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" },
+  "header":    { "avatar": "circle", "frame": "ring", "frameAnimation": "default", "rankStyle": "ring", "rankThickness": 8,
+                 "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" },
   "stats":     { "hide": ["issues"], "show": ["prsMerged"], "numberFormat": "short", "numberPrecision": 1, "icons": true,
                  "textBold": true, "lineHeight": 30, "title": null, "commitsYear": null, "excludeRepos": [] },
   "streak":    { "hide": [], "mode": "daily", "excludeDays": ["Sun"], "startingYear": null, "dateFormat": "M j[, Y]",
@@ -210,12 +227,12 @@ Names follow the three projects the card is built on. A `—` means the original
 | Section | Option | Original | Meaning |
 |---|---|---|---|
 | card | `radius`, `hideBorder`, `animations`, `background.*` | `border_radius`, `hide_border`, `disable_animations`, `bg_color` gradients | corners, border, CSS animation, gradient / `dots` `grid` `diagonal` pattern / glow |
-| header | `avatar`, `facts`, `rankIcon` | `rank_icon`, `hide_rank` | `circle` `rounded` `hide`; up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers`; ring shows `level`, `percentile` or the `github` mark |
+| header | `avatar`, `frame`, `frameAnimation`, `facts`, `rankIcon`, `rankStyle`, `rankThickness` | `rank_icon`, `hide_rank` | `circle` `rounded` `hide`; frame: `ring` `none` `auto` `double` `dashed` `neon` `pixel` `glitch` `laurel` `flames` `sakura` `stars` `halo` `aurora`; up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers`; the rank shows `level`, `percentile` or the `github` mark, as a `ring`, `hexagon` or `shield` |
 | stats | `hide`, `show`, `icons`, `numberFormat`, `numberPrecision`, `textBold`, `lineHeight`, `title`, `commitsYear`, `excludeRepos` | `hide`, `show`, `show_icons`, `number_format`, `number_precision`, `text_bold`, `line_height`, `custom_title`, `commits_year`, `exclude_repo` | `show` adds `prsMerged`, `prsMergedPercentage`, `discussionsStarted`, `discussionsAnswered` (extra GraphQL calls, only when requested) |
 | streak | `hide`, `mode`, `excludeDays`, `startingYear`, `dateFormat`, `shortNumbers`, `excludeDaysLabel`, `title` | `hide_*_streak`, `mode`, `exclude_days`, `starting_year`, `date_format`, `short_numbers` | `weekly` counts Sunday–Saturday weeks; excluded days neither extend nor break a streak; `[...]` in `dateFormat` is hidden for the current year |
 | languages | `layout`, `count`, `hide`, `excludeRepos`, `hideProgress`, `statsFormat`, `sizeWeight`, `countWeight`, `title` | `layout`, `langs_count`, `hide`, `exclude_repo`, `hide_progress`, `stats_format`, `size_weight`, `count_weight` | `bar` `compact` `donut` `donut-vertical` `pie`; `bytes` shows sizes instead of percentages; score = `bytes^sizeWeight × repos^countWeight` |
 | trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `padding`, `align`, `parts`, `noBg`, `noFrame`, `extra`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies |
-| heatmap | `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | grid size and shape, Monday start, legend and month labels |
+| heatmap | `mode`, `snakePath`, `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | `grid` or `snake` (routes `smart` `busy` `nearest` `sweep` `rows` `spiral`); cells `square` `round` `triangle` `snowflake` `moon` `mixed`; grid size, Monday start, legend and month labels |
 | root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
 
 Not ported: `card_width` / `card_height` (the card is fixed at 1000 px wide), `cache_seconds` and `type=png|json` (the output is a static file; use `export.png` / `export.gif`).
