@@ -56,7 +56,7 @@
     "customThemes": {
       "type": "object",
       "description": "Your own themes: { name: { base: <theme>, ...color overrides } }, usable in `themes`.",
-      "additionalProperties": { "allOf": [{ "$ref": "#/definitions/colors" }, { "properties": { "base": { "type": "string" } } }] }
+      "additionalProperties": { "type": "object", "properties": { "base": { "type": "string" }, "bg_gradient": { "type": "string" } }, "additionalProperties": { "$ref": "#/definitions/hex" } }
     },
     "colors": { "$ref": "#/definitions/colors" },
     "colorsByTheme": { "type": "object", "description": "Color overrides per theme slot.", "additionalProperties": { "$ref": "#/definitions/colors" } },
@@ -95,14 +95,14 @@
       "type": "object", "additionalProperties": false,
       "properties": {
         "title": { "type": ["string", "null"] },
-        "hide": { "type": "array", "items": { "enum": ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"] } },
+        "hide": { "type": "array", "description": "Case, - _ and spaces are ignored at runtime (e.g. pull-requests).", "items": { "anyOf": [{ "enum": ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"] }, { "type": "string" }] } },
         "show": { "type": "array", "description": "Extra rows.", "items": { "enum": ["prsMerged", "prsMergedPercentage", "discussionsStarted", "discussionsAnswered"] } },
         "icons": { "type": "boolean", "default": true },
         "numberFormat": { "enum": ["long", "short"], "default": "long" },
         "numberPrecision": { "enum": [0, 1, 2, null], "description": "Fixed decimals for short numbers." },
         "textBold": { "type": "boolean", "default": true },
         "lineHeight": { "type": "number", "minimum": 18, "maximum": 60, "default": 30 },
-        "commitsYear": { "type": ["integer", "null"], "description": "Count commits of this year only." },
+        "commitsYear": { "type": ["integer", "null"], "minimum": 2005, "description": "Count commits of this year only." },
         "excludeRepos": { "$ref": "#/definitions/strs" }
       }
     },
@@ -113,7 +113,7 @@
         "hide": { "type": "array", "items": { "enum": ["total", "current", "longest"] } },
         "mode": { "enum": ["daily", "weekly"], "default": "daily" },
         "excludeDays": { "type": "array", "items": { "enum": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] } },
-        "startingYear": { "type": ["integer", "null"], "description": "First year counted (>= 2005)." },
+        "startingYear": { "type": ["integer", "null"], "minimum": 2005, "description": "First year counted (>= 2005)." },
         "dateFormat": { "type": ["string", "null"], "description": "PHP-style (d j m n M F y Y); text in [...] is hidden for the current year, e.g. \"M j[, Y]\"." },
         "shortNumbers": { "type": "boolean", "default": false },
         "excludeDaysLabel": { "type": "boolean", "default": true }
@@ -129,8 +129,8 @@
         "excludeRepos": { "$ref": "#/definitions/strs" },
         "hideProgress": { "type": "boolean", "default": false },
         "statsFormat": { "enum": ["percentages", "bytes"], "default": "percentages" },
-        "sizeWeight": { "type": "number", "default": 1 },
-        "countWeight": { "type": "number", "default": 0 }
+        "sizeWeight": { "type": "number", "minimum": 0, "maximum": 10, "default": 1 },
+        "countWeight": { "type": "number", "minimum": 0, "maximum": 10, "default": 0 }
       }
     },
     "trophies": {
@@ -143,8 +143,8 @@
         "hideRanks": { "$ref": "#/definitions/strs" },
         "columns": { "type": "integer", "minimum": -1, "maximum": 12, "default": 0, "description": "0 or -1 = all in one row." },
         "rows": { "type": "integer", "minimum": 0, "maximum": 10, "default": 0, "description": "0 = no limit." },
-        "marginW": { "type": "integer", "minimum": 0, "default": 12 },
-        "marginH": { "type": "integer", "minimum": 0, "default": 12 },
+        "marginW": { "type": "number", "minimum": 0, "maximum": 60, "default": 12 },
+        "marginH": { "type": "number", "minimum": 0, "maximum": 60, "default": 12 },
         "noBg": { "type": "boolean", "default": false },
         "noFrame": { "type": "boolean", "default": false },
         "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." }

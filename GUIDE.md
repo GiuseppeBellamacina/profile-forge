@@ -240,7 +240,7 @@ The rank uses the same formula as github-readme-stats (S … C with a "top X%" p
 | `startingYear` | ≥ 2005 | `null` | First year counted |
 | `dateFormat` | PHP-style (`d j m n M F y Y`) | locale | Text inside `[...]` is hidden for the current year, e.g. `"M j[, Y]"` |
 | `shortNumbers` | boolean | `false` | `8.5k` instead of `8,462` |
-| `excludeDaysLabel` | boolean | `true` | Shows "Excludes: Sat, Sun" |
+| `excludeDaysLabel` | boolean | `true` | Shows "Excludes: Sat, Sun". (Not to be confused with the `colors.excludeDaysLabel` *color* of that label.) |
 | `title` | string | translated | Custom panel title |
 
 A day with zero contributions *today* does not break the current streak.

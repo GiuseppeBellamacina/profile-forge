@@ -1,7 +1,9 @@
 // GitHub GraphQL data fetching. Two requests (+ repo pagination), no REST search.
 
-async function gql(token, query, variables = {}) {
-  const res = await fetch("https://api.github.com/graphql", {
+const API = "https://api.github.com/graphql";
+
+async function gql(token, query, variables = {}, endpoint = API) {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: { Authorization: `bearer ${token}`, "Content-Type": "application/json", "User-Agent": "profile-forge" },
     body: JSON.stringify({ query, variables }),
@@ -46,15 +48,15 @@ const toBase64 = (buf) => {
 /** "YYYY-MM-DD" for now in the given IANA time zone. */
 export const todayIn = (tz) => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
 
-export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC", startingYear = null, extras = false }) {
+export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC", startingYear = null, extras = false, endpoint = API }) {
   const privacy = includePrivate ? null : "PUBLIC";
-  let data = await gql(token, USER_QUERY, { login, privacy, extras });
+  let data = await gql(token, USER_QUERY, { login, privacy, extras }, endpoint);
   const user = data.user;
   if (!user) throw new Error(`User "${login}" not found`);
   const repos = [...user.repositories.nodes];
   let page = user.repositories.pageInfo;
   while (page.hasNextPage) {
-    data = await gql(token, USER_QUERY, { login, privacy, extras, after: page.endCursor });
+    data = await gql(token, USER_QUERY, { login, privacy, extras, after: page.endCursor }, endpoint);
     repos.push(...data.user.repositories.nodes);
     page = data.user.repositories.pageInfo;
   }
@@ -71,7 +73,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       }`,
     )
     .join("\n")} } }`;
-  const yearly = Object.values((await gql(token, yearsQuery, { login })).user);
+  const yearly = Object.values((await gql(token, yearsQuery, { login }, endpoint)).user);
 
   const calendar = new Map();
   let commits = 0;

@@ -2,7 +2,15 @@
 
 # profile-forge
 
-**One animated card for your GitHub profile README.** It shows your rank, stats, streaks, top languages, trophies and contribution heatmap.
+**One animated card for your GitHub profile README.** Rank, stats, streaks, top languages, trophies and contribution heatmap, in a single design that never breaks.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![Themes](https://img.shields.io/badge/themes-47-8b5cf6)
+![Locales](https://img.shields.io/badge/languages-8-f59e0b)
+
+[**Web configurator**](https://giuseppebellamacina.github.io/profile-forge-configurator/) · [**Quick start**](#quick-start-github-action) · [**Full guide**](GUIDE.md) · [**Presets**](presets) · [**Themes**](docs/themes)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/profile-forge-dark.svg">
@@ -10,6 +18,33 @@
 </picture>
 
 </div>
+
+<details>
+<summary><b>Table of contents</b></summary>
+
+- [Why](#why)
+- [What's on the card](#whats-on-the-card)
+- [Quick start (GitHub Action)](#quick-start-github-action)
+- [Configuration](#configuration-configjson)
+- [Local CLI, PNG and GIF](#local-cli-png-and-gif)
+- [How the numbers are computed](#how-the-numbers-are-computed)
+- [Development](#development)
+
+</details>
+
+## How it works
+
+```mermaid
+flowchart LR
+  A[config.json] --> B[GitHub Action<br/>daily cron]
+  C[(GitHub GraphQL API)] --> B
+  B --> D[SVG cards<br/>dark + light]
+  D --> E[commit to your<br/>profile repo]
+  E --> F[README shows<br/>assets/*.svg]
+```
+
+> [!TIP]
+> Don't want to write JSON by hand? The [web configurator](https://giuseppebellamacina.github.io/profile-forge-configurator/) gives you a live preview of your own profile, then commits the config and workflow to your repo after a GitHub sign-in.
 
 ## Why
 
@@ -19,7 +54,7 @@ profile-forge works differently:
 
 - **Everything in one card.** Your rank, stats, streaks, languages, trophies and heatmap share one design.
 - **No server.** A scheduled GitHub Action in your profile repo writes the SVG and commits it, so the image can't break from someone else's rate limit.
-- **Your own token.** It can count private contributions when you give it a PAT.
+- **Your own token.** It can count private contributions when you give it a PAT (stored as a repo secret, never in the page).
 - **No dependencies needed to generate the card.** You only need Node ≥ 20. PNG and GIF export are optional extras.
 
 ## What's on the card
@@ -119,12 +154,15 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
   "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-C"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
                  "noBg": false, "noFrame": false, "extra": ["Issues", "Reviews"], "title": null },
   "heatmap":   { "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
-  "export":    { "png": false, "gif": false },
+  "export":    { "png": false, "gif": false },   // local CLI only, see "Local CLI, PNG and GIF"
   "includePrivate": false
 }
 ```
 
 ### Presets
+
+> [!NOTE]
+> Every preset is a plain `config.json`: copy it, change what you like, done.
 
 Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
 
@@ -244,9 +282,12 @@ node src/cli.js --user <login> --tz Europe/Rome --png --gif   # reads ./config.j
 # -> out/profile-forge-{dark,light}.{svg,png,gif}
 ```
 
+> [!WARNING]
+> `export.png` / `export.gif` need the optional dependencies (`npm install`), which the GitHub Action does not install. Use them from the local CLI only; in the Action they fail with a module-not-found error.
+
 - **PNG**: the final frame rendered at 2× with [resvg](https://github.com/yisibl/resvg-js).
 - **Fonts**: the SVG embeds Inter and Space Grotesk. resvg cannot read the embedded woff2 files, so PNG/GIF use your system fonts unless Inter and Space Grotesk are installed locally.
-- **GIF**: the card's animation rendered frame by frame (15 fps, holds 3 s on the last frame) and encoded with [gifenc](https://github.com/mattdesl/gifenc).
+- **GIF**: the card's animation rendered frame by frame (12 fps, holds 3 s on the last frame) and encoded with [gifenc](https://github.com/mattdesl/gifenc).
 
 Every animated element is described once as a (delay, duration, from → to) value. The SVG turns that into CSS keyframes, and the PNG/GIF export samples the same timeline as static frames, so all three outputs always match.
 
@@ -255,7 +296,7 @@ Flags override `config.json`. Any config key can be set with `--set path=value` 
 ## How the numbers are computed
 
 - **Rank:** `1 − Σwᵢ·cdf(xᵢ/medianᵢ) / Σwᵢ`, using exponential CDFs for commits (median 1000, w=2), PRs (50, w=3), issues (25, w=1) and reviews (2, w=1), and log-normal CDFs for stars (50, w=4) and followers (10, w=1). The result is mapped to S / A+ / A / A- / B+ / B / B- / C+ / C at the 1 / 12.5 / 25 / … / 100 percentile thresholds.
-- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with eight tiers (SSS → C), drawn like github-profile-trophy (cup, laurel for S/A ranks, extra cups for SS/SSS; `darkhub` palette in dark mode, `default` in light mode). Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, and AllSuperRank.
+- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with eight tiers (SSS → C), drawn like github-profile-trophy (cup, laurel for S/A ranks, extra cups for SS/SSS; `darkhub` palette in dark mode, `default` in light mode). Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, AncientUser, OGUser and AllSuperRank (see the [guide](GUIDE.md) for the exact rules).
 - **Streak:** computed from your daily contribution calendar across every year since you joined, in the configured time zone.
 
 ## Development
@@ -276,8 +317,6 @@ src/cli.js      CLI entry point (used by action.yml)
 scripts/        demo.js (render a config with demo data), gen-docs.js (regenerate docs/guide + docs/presets)
 fonts/          Inter + Space Grotesk (OFL), embedded into the SVG as data URIs
 ```
-
-`reference/` is git-ignored. It's the place to clone the original projects if you want to study them.
 
 ## Credits
 

@@ -2,7 +2,7 @@
 // Regenerates every image used by GUIDE.md (docs/guide/*.png) and the preset previews (docs/presets/*.png).
 // Uses deterministic demo data (scripts/demo.js): no token, no network. Needs `npm install`.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -122,7 +122,7 @@ for (const [name, c] of Object.entries(CASES)) {
     const f = join(root, "presets", ".guide-tmp.json");
     writeFileSync(f, JSON.stringify(cwdConfig));
     execFileSync("node", [demo, f, join(root, "docs", "guide", name), ...(light ? [] : ["--slot", "dark"])], { stdio: "inherit" });
-    execFileSync("rm", ["-f", f]);
+    rmSync(f, { force: true });
   } else if (light) render(cwdConfig, join(root, "docs", "guide", name));
   else render(cwdConfig, join(root, "docs", "guide", name), ["--slot", "dark"]);
 }
