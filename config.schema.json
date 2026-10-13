@@ -19,6 +19,7 @@
         "track_color": { "$ref": "#/definitions/hex" }, "stroke_color": { "$ref": "#/definitions/hex" },
         "currStreakNum": { "$ref": "#/definitions/hex" }, "sideNums": { "$ref": "#/definitions/hex" }, "currStreakLabel": { "$ref": "#/definitions/hex" },
         "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" },
+        "levelE": { "$ref": "#/definitions/hex" }, "levelD": { "$ref": "#/definitions/hex" }, "levelC": { "$ref": "#/definitions/hex" }, "levelB": { "$ref": "#/definitions/hex" }, "levelA": { "$ref": "#/definitions/hex" }, "levelS": { "$ref": "#/definitions/hex" }, "levelTop": { "$ref": "#/definitions/hex" },
         "bg_gradient": { "type": "string" }
       }
     },
@@ -154,7 +155,7 @@
         "title": { "type": ["string", "null"] },
         "titles": { "$ref": "#/definitions/strs", "description": "Only these trophies (aliases: Star, Commit, Follower, Issue, PR, Repo, Review, Duration, Orgs...)." },
         "hideTitles": { "$ref": "#/definitions/strs" },
-        "ranks": { "$ref": "#/definitions/strs", "description": "Only these ranks (SSS SS S AAA AA A B C ? SECRET). A \"-\" prefix drops one, e.g. -C." },
+        "ranks": { "$ref": "#/definitions/strs", "description": "Only these ranks (E D C B A S S+ SECRET). A \"-\" prefix drops one, e.g. -E." },
         "hideRanks": { "$ref": "#/definitions/strs" },
         "columns": { "type": "integer", "minimum": -1, "maximum": 12, "default": 0, "description": "0 or -1 = all in one row." },
         "rows": { "type": "integer", "minimum": 0, "maximum": 10, "default": 0, "description": "0 = no limit." },

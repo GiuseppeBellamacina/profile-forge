@@ -62,11 +62,11 @@ profile-forge works differently:
 | Section | Details |
 |---|---|
 | Header | Avatar, name, account age, contributions this year, best day, most active weekday |
-| Rank | The same rank formula as github-readme-stats (S … C, with a "top X%" percentile), drawn as an animated ring |
+| Rank | One scale, E, D, C, B, A, S and the top 1% level S+, from your github-readme-stats percentile, drawn as an animated ring |
 | Stats | Stars, all-time commits, PRs, issues, code reviews, repos contributed to, followers, repositories |
 | Streak | Total contributions, current streak and longest streak with date ranges (a day with zero contributions *today* does not break the streak) |
 | Top languages | Animated stacked bar and legend, with configurable `size_weight` / `count_weight` ranking |
-| Trophies | Same look, tiers and thresholds as github-profile-trophy (SSS … C), plus secret trophies |
+| Trophies | Thresholds of github-profile-trophy mapped to the same levels (E … S, S+), plus secret trophies |
 | Heatmap | The last 53 weeks of contributions |
 
 All-time commits are added up from `contributionsCollection` year by year through GraphQL, so profile-forge doesn't need the REST commit search.
@@ -151,7 +151,7 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
                  "shortNumbers": false, "excludeDaysLabel": true, "title": null },
   "languages": { "layout": "donut", "count": 8, "hide": ["html"], "excludeRepos": [], "hideProgress": false,
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0, "title": null },
-  "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-C"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
+  "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-E"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
                  "noBg": false, "noFrame": false, "extra": ["Issues", "Reviews"], "title": null },
   "heatmap":   { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },   // mode: "snake" = animated snake (snakePath: smart, busy, nearest, sweep, rows, spiral); cell: square, round, triangle, snowflake, moon, mixed
   "export":    { "png": false, "gif": false },   // local CLI only, see "Local CLI, PNG and GIF"
@@ -190,6 +190,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 | `bg_color`, `panel_color`, `border_color` | card background, panels, borders |
 | `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
 | `icon_color`, `ring_color` | icons / accent, second accent (rank ring, gradients) |
+| `levelE` … `levelS`, `levelTop` | the colour of each level (`levelTop` = top 1%) |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | per-element streak colors |
 | `snakeColor` | the heatmap snake |
@@ -292,12 +293,12 @@ node src/cli.js --user <login> --tz Europe/Rome --png --gif   # reads ./config.j
 
 Every animated element is described once as a (delay, duration, from → to) value. The SVG turns that into CSS keyframes, and the PNG/GIF export samples the same timeline as static frames, so all three outputs always match.
 
-Flags override `config.json`. Any config key can be set with `--set path=value` (repeatable), e.g. `node src/cli.js --user <login> --set languages.layout=donut --set stats.numberFormat=short`. Values starting with `-` need the `=` form: `--trophy-rank=-C`. `--print-config` shows the effective configuration, `--init` writes a starter `config.json`. Run `node src/cli.js --help` to see every flag.
+Flags override `config.json`. Any config key can be set with `--set path=value` (repeatable), e.g. `node src/cli.js --user <login> --set languages.layout=donut --set stats.numberFormat=short`. Values starting with `-` need the `=` form: `--trophy-rank=-E`. `--print-config` shows the effective configuration, `--init` writes a starter `config.json`. Run `node src/cli.js --help` to see every flag.
 
 ## How the numbers are computed
 
-- **Rank:** `1 − Σwᵢ·cdf(xᵢ/medianᵢ) / Σwᵢ`, using exponential CDFs for commits (median 1000, w=2), PRs (50, w=3), issues (25, w=1) and reviews (2, w=1), and log-normal CDFs for stars (50, w=4) and followers (10, w=1). The result is mapped to S / A+ / A / A- / B+ / B / B- / C+ / C at the 1 / 12.5 / 25 / … / 100 percentile thresholds.
-- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with eight tiers (SSS → C), drawn like github-profile-trophy (cup, laurel for S/A ranks, extra cups for SS/SSS; `darkhub` palette in dark mode, `default` in light mode). Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, AncientUser, OGUser and AllSuperRank (see the [guide](GUIDE.md) for the exact rules).
+- **Rank:** `1 − Σwᵢ·cdf(xᵢ/medianᵢ) / Σwᵢ`, using exponential CDFs for commits (median 1000, w=2), PRs (50, w=3), issues (25, w=1) and reviews (2, w=1), and log-normal CDFs for stars (50, w=4) and followers (10, w=1). The percentile is mapped to S+ / S / A / B / C / D / E at 1 / 10 / 25 / 50 / 70 / 85 / 100.
+- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with seven levels (S+ → E), drawn like github-profile-trophy (cup, laurel for S and A; `darkhub` palette in dark mode, `default` in light mode). Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, AncientUser, OGUser and AllSuperRank (see the [guide](GUIDE.md) for the exact rules).
 - **Streak:** computed from your daily contribution calendar across every year since you joined, in the configured time zone.
 
 ## Development

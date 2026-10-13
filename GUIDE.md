@@ -175,7 +175,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 |---|---|---|
 | `avatar` | `circle` `rounded` `hide` | `circle` |
 | `facts` | up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers` | first three |
-| `rankIcon` | what the ring shows: `level` (A+), `percentile` (6.9%), `github` (mark) | `level` |
+| `rankIcon` | what the ring shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
 |---|---|---|
@@ -189,7 +189,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 |---|---|---|---|
 | <img src="docs/guide/rank-level.png"> | <img src="docs/guide/rank-percentile.png"> | <img src="docs/guide/rank-github.png"> | <img src="docs/guide/rank-hidden.png"> |
 
-The rank uses the same formula as github-readme-stats (S … C with a "top X%" percentile). `title` (root key) appears next to `@login`.
+One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the special level **S+**. The header ring and the trophies use it. The header level comes from your percentile (the github-readme-stats formula): S+ is the top 1%, S up to 10%, A 25%, B 50%, C 70%, D 85%, E below. Trophies place each of their eight old thresholds on the same scale (S+ is the highest threshold). Every level has a colour that you can change with the colour overrides `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS` and `levelTop`. `title` (root key) appears next to `@login`.
 
 ## Stats
 
@@ -332,7 +332,7 @@ A day with zero contributions *today* does not break the current streak.
   "trophies": {
     "titles": [],
     "hideTitles": [],
-    "ranks": ["-C"],
+    "ranks": ["-E"],
     "hideRanks": [],
     "columns": 0,
     "rows": 0,
@@ -350,7 +350,7 @@ A day with zero contributions *today* does not break the current streak.
 |---|---|---|---|
 | `titles` | trophy names | `[]` | Show only these. Aliases from the original project work: `Star`, `Commit`, `Follower`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`… |
 | `hideTitles` | trophy names | `[]` | Hide these |
-| `ranks` | `SSS SS S AAA AA A B C ? SECRET` | `[]` | Only these ranks. A `-` prefix drops one: `["-C"]`. `SECRET` selects the secret trophies |
+| `ranks` | `E D C B A S S+ SECRET` | `[]` | Only these ranks. A `-` prefix drops one: `["-E"]`. `SECRET` selects the secret trophies. The old names SSS, SS, AAA and AA are gone: use `S+`, `S` and `B` |
 | `hideRanks` | same | `[]` | Drop ranks |
 | `columns` | −1–12 | `0` | `0` / `-1`: everything on one row |
 | `rows` | 0–10 | `0` | `0`: no limit |
@@ -365,7 +365,7 @@ Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
 |---|---|
 | <img src="docs/guide/trophies-default.png"> | <img src="docs/guide/trophies-grid.png"> |
 
-| `extra` + `ranks: ["-C"]` + `columns: 4` | `titles: ["Star","Commit","PR","Followers"]` |
+| `extra` + `ranks: ["-E"]` + `columns: 4` | `titles: ["Star","Commit","PR","Followers"]` |
 |---|---|
 | <img src="docs/guide/trophies-extra.png"> | <img src="docs/guide/trophies-filter.png"> |
 
@@ -431,6 +431,7 @@ Hex values with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`). They apply
 | `bg_color`, `panel_color`, `border_color` | card background, panels, borders |
 | `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
 | `icon_color`, `ring_color` | accent (icons, links, heatmap ramp) and second accent (rank ring, gradients) |
+| `levelE` `levelD` `levelC` `levelB` `levelA` `levelS` `levelTop` | the colour of each level (`levelTop` is the top 1%) |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | each streak element |
 | `snakeColor` | the snake of the heatmap (`heatmap.mode: "snake"`) |

@@ -49,7 +49,7 @@ const EXAMPLE = `{
   "stats": { "numberFormat": "short" },
   "streak": { "dateFormat": "M j[, Y]" },
   "languages": { "layout": "bar", "count": 8 },
-  "trophies": { "ranks": ["-C"] }
+  "trophies": { "ranks": ["-E"] }
 }
 `;
 

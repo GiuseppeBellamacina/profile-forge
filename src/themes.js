@@ -82,6 +82,7 @@ export const COLOR_KEYS = {
   title_color: ["title"], stroke_color: ["streakStroke"],
   currStreakNum: ["streakCurrNum"], sideNums: ["streakSideNums"], currStreakLabel: ["streakCurrLabel"],
   sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"],
+  levelE: ["lvE"], levelD: ["lvD"], levelC: ["lvC"], levelB: ["lvB"], levelA: ["lvA"], levelS: ["lvS"], levelTop: ["lvTop"],
   bg_gradient: ["bgGradient"],
 };
 export const COLOR_NAMES = Object.keys(COLOR_KEYS);
@@ -143,6 +144,14 @@ export function resolveTheme(name, colors = {}) {
   c.streakStroke ??= c.border;
   c.streakExcl ??= c.muted;
   c.snake ??= c.accent2;
+  // one colour per level (E .. S, and the top 1%); the defaults grow from muted to gold
+  c.lvE ??= c.muted;
+  c.lvD ??= c.text;
+  c.lvC ??= c.accent2;
+  c.lvB ??= c.accent;
+  c.lvA ??= c.fire;
+  c.lvS ??= "#ffc857";
+  c.lvTop ??= "#ff6bd6";
   c.name = name;
   return c;
 }
