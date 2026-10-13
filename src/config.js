@@ -23,7 +23,7 @@ export const DEFAULTS = {
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
   trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 12, marginH: 12, noBg: false, noFrame: false, extra: [] },
-  heatmap: { weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
+  heatmap: { mode: "grid", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
 
@@ -33,7 +33,7 @@ const ENUMS = {
   "header.avatar": ["circle", "rounded", "hide"], "header.rankIcon": ["level", "percentile", "github"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
-  "heatmap.cell": ["square", "round"], "heatmap.weekStart": ["sun", "mon"],
+  "heatmap.mode": ["grid", "snake"], "heatmap.cell": ["square", "round"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
