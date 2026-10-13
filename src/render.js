@@ -1,4 +1,4 @@
-import { BRANDS, ICONS } from "./icons.js";
+import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
 import { drawFrame, frameFor } from "./frames.js";
@@ -421,71 +421,40 @@ function languagesSection(d, X, w) {
 
 
 /** One 110×110 trophy, drawn like github-profile-trophy (cup, laurel for S/A, extra cups for SS/SSS). */
-// Trophies: every card is 110 x 110. The level gives the colour (colors.levelE ... levelTop); `style` the picture.
-// Each picture is drawn on a 40 x 40 board, `f` = main fill, `s` = darker detail colour, `badge` = where the level letter goes.
-export const TROPHY_STYLES = ["cup", "medal", "shield", "gem", "letter"];
+// Trophies: the classic github-profile-trophy cup with its laurel, drawn in the colour of the level. The higher the level the
+// richer it gets: A has the laurel, S adds a second cup, the top 1% (S+) three cups.
 export const TROPHY_PARTS = ["title", "label", "score", "bar"];
-const TROPHY_ART = {
-  cup: {
-    badge: [20, 15],
-    draw: (f) => `<path d="M9 5H31V15C31 22 26 26 20 26S9 22 9 15Z" fill="${f}"/><path d="M9 8H5.5C5.5 13.5 7.5 16.5 11 17.5M31 8H34.5C34.5 13.5 32.5 16.5 29 17.5" fill="none" stroke="${f}" stroke-width="2.2" stroke-linecap="round"/><rect x="18" y="26" width="4" height="5.5" fill="${f}"/><rect x="12.5" y="31" width="15" height="4.5" rx="1.8" fill="${f}"/>`,
-  },
-  medal: {
-    badge: [20, 25],
-    draw: (f, s) => `<path d="M11 2H18L24 14H17Z" fill="${s}"/><path d="M29 2H22L16 14H23Z" fill="${s}" opacity=".75"/><circle cx="20" cy="25" r="11" fill="${f}"/><circle cx="20" cy="25" r="8.4" fill="none" stroke="${s}" stroke-width="1" opacity=".5"/>`,
-  },
-  shield: {
-    badge: [20, 19],
-    draw: (f, s) => `<path d="M20 3L34 8V19C34 28 28 33 20 37C12 33 6 28 6 19V8Z" fill="${f}"/><path d="M20 6.5L31 10.2V19C31 26 26.6 30 20 33.4C13.4 30 9 26 9 19V10.2Z" fill="none" stroke="${s}" stroke-width="1" opacity=".5"/>`,
-  },
-  gem: {
-    badge: [20, 17],
-    draw: (f, s) => `<path d="M11 6H29L36 14L20 36L4 14Z" fill="${f}"/><path d="M4 14H36M11 6L15 14L20 36L25 14L29 6" fill="none" stroke="${s}" stroke-width="1" opacity=".5"/>`,
-  },
-  letter: {
-    badge: [20, 20],
-    draw: (f) => `<rect x="4" y="4" width="32" height="32" rx="10" fill="${f}"/>`,
-  },
-};
-const lum = (hex) => {
-  const h = hex.replace("#", "");
-  const v = h.length === 3 ? [...h].map((x) => x + x) : h.match(/../g);
-  const [r, g, b] = v.slice(0, 3).map((x) => parseInt(x, 16) / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
 const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` : `${n}pt`);
 
-/** One card. Returns the svg body, the gradient it needs and where the progress bar sits (the section animates the fill). */
+/** One 110 x 110 card. Returns the svg body, the gradient it needs and where the progress bar sits (the section animates the fill). */
 function trophy(tr, X, o) {
   const { c, A } = X;
   const secret = tr.rank === "SECRET";
   const unknown = tr.rank === "?";
   const base = secret ? c.accent2 : unknown ? c.muted : levelColor(c, tr.rank);
-  const light = mix(base, "#ffffff", 0.32);
-  const dark = mix(base, "#000000", 0.38);
+  const light = mix(base, "#ffffff", 0.28);
+  const dark = mix(base, "#000000", 0.4);
   const id = `tg-${secret ? "SECRET" : unknown ? "UNKNOWN" : tr.rank.replace("+", "P")}`;
-  const ink = lum(base) > 0.5 ? "#15171f" : "#ffffff";
-  const art = TROPHY_ART[o.style] ?? TROPHY_ART.cup;
   const has = (p) => o.parts.has(p);
-
-  // stack the visible parts and centre the stack in the card (each part: height; gap 5)
-  const blocks = [["title", 12], ["art", 46], ["label", 10], ["score", 10], ["bar", 4]].filter(([k]) => k === "art" || has(k));
-  const gap = 5;
-  const total = blocks.reduce((n, [, h]) => n + h, 0) + gap * (blocks.length - 1);
-  let y = Math.max(6, (110 - total) / 2);
-  const at = {};
-  for (const [k, h] of blocks) { at[k] = y; y += h + gap; }
-
   const letter = secret ? "S" : unknown ? "?" : tr.rank;
-  const big = o.style === "letter";
-  const fs = (letter.length > 1 ? (big ? 15 : 10.5) : big ? 21 : 14);
+  const cup = (fill) =>
+    `${CUP}<circle cx="8" cy="6" r="4" fill="#fff"/><text x="8" y="8.4" text-anchor="middle" font-family="Courier, monospace" font-size="${letter.length > 1 ? 5.4 : 7}" font-weight="700" fill="${mix(base, "#000000", 0.55)}">${esc(letter)}</text>`;
+  // cups: the top 1% has three (a big one between two small ones), S two, the rest one
+  const extra = secret || unknown ? 0 : { "S+": 2, S: 1 }[tr.rank] ?? 0;
+  const small = (x) => `<svg x="${x}" y="35" width="65" height="65" viewBox="0 0 30 30" fill="${base}">${cup(base)}</svg>`;
+  const laurel = !secret && !unknown && ["S+", "S", "A"].includes(tr.rank)
+    ? `<svg width="120" height="120" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${LAUREL(c.base === "light" ? "#009366" : "#178600")}</svg>`
+    : "";
   const score = tr.title === "Experience" ? `${tr.score} yrs` : secret ? "SECRET" : abridge(tr.score);
   const parts = [
-    has("title") ? `<text x="55" y="${r3(at.title + 10)}" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(tr.title, 11, 98))}</text>` : "",
-    `<g transform="translate(${r3(55 - 23)} ${r3(at.art)}) scale(1.15)" fill="url(#${id})">${art.draw(`url(#${id})`, dark)}<text x="${art.badge[0]}" y="${r3(art.badge[1] + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="800" font-family="${FD}" fill="${ink}">${esc(letter)}</text></g>`,
-    has("label") ? `<text x="55" y="${r3(at.label + 8)}" text-anchor="middle" font-size="9" font-weight="600" font-family="${FD}" fill="${c.muted}">${esc(fit(tr.label, 9, 100))}</text>` : "",
-    has("score") ? `<text x="55" y="${r3(at.score + 8)}" text-anchor="middle" font-size="9.5" font-weight="700" font-family="${FD}" fill="${c.text}">${score}</text>` : "",
-    has("bar") ? `<rect x="15" y="${r3(at.bar)}" rx="1.5" width="80" height="3.4" opacity="0.25" fill="${base}"/>` : "",
+    laurel,
+    extra === 2 ? small(7) : "",
+    extra >= 1 ? small(68) : "",
+    `<svg x="28" y="20" width="100" height="100" viewBox="0 0 30 30" fill="url(#${id})">${cup(null)}</svg>`,
+    has("title") ? `<text x="55" y="18" text-anchor="middle" font-size="13" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(tr.title, 13, 100))}</text>` : "",
+    has("label") ? `<text x="55" y="85" text-anchor="middle" font-size="10.5" font-weight="700" font-family="${FD}" fill="${c.muted}">${esc(fit(tr.label, 10.5, 100))}</text>` : "",
+    has("score") ? `<text x="55" y="97" text-anchor="middle" font-size="10" font-weight="700" font-family="${FD}" fill="${c.muted}">${score}</text>` : "",
+    has("bar") ? `<rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${base}"/>` : "",
   ].join("\n      ");
 
   // the top 1%: the card border pulses and a light sweeps across it now and then
@@ -494,9 +463,9 @@ function trophy(tr, X, o) {
       <g opacity="0.5"${A.loop({ "0%": "transform:translateX(-40px)", "55%,100%": "transform:translateX(150px)" }, { dur: 3.6, delay: 2, still: ' transform="translate(30 0)"' })}><rect x="0" y="-10" width="22" height="140" fill="url(#${id}-shine)" transform="rotate(18 11 55)"/></g>`
     : "";
   return {
-    defs: `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${base}"/><stop offset="1" stop-color="${dark}"/></linearGradient>${tr.rank === "S+" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
+    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)"><stop offset="0%" stop-color="${light}"/><stop offset="70%" stop-color="${base}"/><stop offset="100%" stop-color="${dark}"/></linearGradient>${tr.rank === "S+" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
     body: parts + topfx,
-    bar: has("bar") ? { x: 15, y: r3(at.bar), w: 80, h: 3.4, color: base } : null,
+    bar: has("bar") ? { x: 15, y: 101, w: 80, h: 3.2, color: base } : null,
   };
 }
 

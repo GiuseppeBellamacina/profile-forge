@@ -343,19 +343,19 @@ test("top 1% (S+) has looping effects on the ring and the trophies; other levels
   assert.ok(!/@keyframes/.test(still) && still.includes('stroke-dashoffset="-12"'), "static frame: the same ring, held still");
 });
 
-test("trophies: styles, visible parts, padding and alignment", () => {
-  const svg = (trophies) => { const [d, k] = make({ layout: ["trophies"], trophies }); return render(d, { k, t: 1 }); };
+test("trophies: the classic cup, more cups for higher levels, visible parts, padding and alignment", () => {
+  const svg = (trophies, mutate) => { const [d, k] = make({ layout: ["trophies"], trophies }); mutate?.(d); return render(d, { k, t: 1 }); };
   const count = (s, re) => (s.match(re) ?? []).length;
-  const cup = svg({});
-  assert.ok(cup.includes("M9 5H31V15"), "cup by default");
-  for (const [style, mark] of [["medal", "M11 2H18L24 14H17Z"], ["shield", "M20 3L34 8V19"], ["gem", "M11 6H29L36 14L20 36L4 14Z"], ["letter", 'rx="10"']]) assert.ok(svg({ style }).includes(mark), style);
+  const cups = (rank) => count(svg({}, (d) => { d.trophies = [{ title: "Stars", rank, label: "x", score: 5, progress: 0.5 }]; }), /viewBox="0 0 30 30"/g);
+  assert.deepEqual(["E", "B", "A", "S", "S+"].map(cups), [1, 1, 1, 2, 3], "S has two cups, the top 1% three");
+  const laurel = (rank) => svg({}, (d) => { d.trophies = [{ title: "Stars", rank, label: "x", score: 5, progress: 0.5 }]; }).includes('viewBox="0 0 100 100"');
+  assert.deepEqual(["E", "C", "A", "S", "S+"].map(laurel), [false, false, true, true, true], "the laurel starts at A");
   const bare = svg({ parts: ["title"] });
-  assert.ok(bare.includes(">Stars<") && !bare.includes("Stargazer") && !bare.includes('height="3.4"'), "only the title is left");
-  assert.equal(count(svg({ parts: [] }), /Stargazer|>Stars<|pt</g), 0, "just the pictures");
+  assert.ok(bare.includes(">Stars<") && !bare.includes("Stargazer") && !bare.includes('height="3.2"'), "only the title is left");
+  assert.equal(count(svg({ parts: [] }), /Stargazer|>Stars<|pt</g), 0, "just the cups");
   const left = svg({ align: "left", columns: 3, padding: 40 });
   assert.ok(left.includes('x="70"'), "left aligned cards start after the panel padding");
   assert.throws(() => normalize({ trophies: { parts: ["title", "shine"] } }), /trophies\.parts/);
-  assert.throws(() => normalize({ trophies: { style: "trident" } }), /trophies\.style/);
 });
 
 test("avatar frames: every frame draws, auto follows the level, shapes and static frames work", async () => {
