@@ -81,7 +81,7 @@ export const COLOR_KEYS = {
   icon_color: ["accent"], ring_color: ["accent2"], fire_color: ["fire"], track_color: ["track"],
   title_color: ["title"], stroke_color: ["streakStroke"],
   currStreakNum: ["streakCurrNum"], sideNums: ["streakSideNums"], currStreakLabel: ["streakCurrLabel"],
-  sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"],
+  sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"],
   bg_gradient: ["bgGradient"],
 };
 export const COLOR_NAMES = Object.keys(COLOR_KEYS);
@@ -142,6 +142,7 @@ export function resolveTheme(name, colors = {}) {
   c.streakDates ??= c.muted;
   c.streakStroke ??= c.border;
   c.streakExcl ??= c.muted;
+  c.snake ??= c.accent2;
   c.name = name;
   return c;
 }

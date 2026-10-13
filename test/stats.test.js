@@ -267,3 +267,19 @@ test("heatmap: grid is plain, snake adds an animated snake that eats the contrib
   assert.ok(!still.includes("@keyframes") && still.includes('rx="3" fill'), "static frames keep the snake waiting at the start, no CSS");
   assert.throws(() => normalize({ heatmap: { mode: "worm" } }), /heatmap\.mode/);
 });
+
+test("heatmap shapes: each kind draws its own element, mixed is stable, the snake takes its colour from the theme", () => {
+  const svg = (heatmap, colors) => {
+    const [d, k] = make({ layout: ["heatmap"], heatmap, ...(colors && { colors }) });
+    return render(d, { k, t: 1 });
+  };
+  assert.ok(svg({ cell: "triangle" }).includes("<polygon"));
+  assert.ok(svg({ cell: "snowflake" }).includes('stroke-linecap="round"'));
+  assert.ok(svg({ cell: "moon" }).includes("<circle") && svg({ cell: "moon" }).includes("A"));
+  const mixed = svg({ cell: "mixed" });
+  assert.ok(mixed.includes("<polygon") && mixed.includes('rx="3"') && mixed.includes('rx="6.75"'), "square, round and triangle all appear");
+  assert.equal(mixed, svg({ cell: "mixed" }), "the same grid always gets the same mix");
+  assert.ok(svg({ mode: "snake" }, { snakeColor: "ff8a3d" }).includes('fill="#ff8a3d"'));
+  assert.throws(() => normalize({ heatmap: { cell: "star" } }), /heatmap\.cell/);
+  assert.throws(() => normalize({ heatmap: { snakePath: "zigzag" } }), /heatmap\.snakePath/);
+});

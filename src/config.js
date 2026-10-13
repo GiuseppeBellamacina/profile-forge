@@ -33,7 +33,7 @@ const ENUMS = {
   "header.avatar": ["circle", "rounded", "hide"], "header.rankIcon": ["level", "percentile", "github"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
-  "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "sweep"], "heatmap.cell": ["square", "round"], "heatmap.weekStart": ["sun", "mon"],
+  "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "busy", "nearest", "wander", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],

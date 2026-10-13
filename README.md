@@ -153,7 +153,7 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0, "title": null },
   "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-C"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
                  "noBg": false, "noFrame": false, "extra": ["Issues", "Reviews"], "title": null },
-  "heatmap":   { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },   // mode: "snake" = animated snake (snakePath: smart | sweep)
+  "heatmap":   { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },   // mode: "snake" = animated snake (snakePath: smart, busy, nearest, wander, sweep, rows, spiral); cell: square, round, triangle, snowflake, moon, mixed
   "export":    { "png": false, "gif": false },   // local CLI only, see "Local CLI, PNG and GIF"
   "includePrivate": false
 }
@@ -192,6 +192,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 | `icon_color`, `ring_color` | icons / accent, second accent (rank ring, gradients) |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | per-element streak colors |
+| `snakeColor` | the heatmap snake |
 | `bg_gradient` | `"angle,color1,color2,..."` for the card background |
 
 `customThemes` lets you save a palette: `{ "name": { "base": "<built-in or custom theme>", ...overrides } }` and use `"name"` in `themes`.
