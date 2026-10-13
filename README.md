@@ -190,6 +190,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 | `bg_color`, `panel_color`, `border_color` | card background, panels, borders |
 | `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
 | `icon_color`, `ring_color` | icons / accent, second accent (rank ring, gradients) |
+| `frameColor` | the avatar frame |
 | `levelE` … `levelS`, `levelTop` | the colour of each level (`levelTop` = top 1%) |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | per-element streak colors |

@@ -175,11 +175,15 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 |---|---|---|
 | `avatar` | `circle` `rounded` `hide` | `circle` |
 | `facts` | up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers` | first three |
+| `frame` | `none` `ring` `double` `dashed` `neon` `pixel` `glitch` `laurel` `flames` `sakura` `stars` `halo` `aurora` `auto` | `ring` |
+| `frameAnimation` | `default` `none` `spin` `pulse` `twinkle` | `default` |
 | `rankIcon` | what the ring shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
 |---|---|---|
 | <img src="docs/guide/header-circle.png"> | <img src="docs/guide/header-rounded.png"> | <img src="docs/guide/header-no-avatar.png"> |
+
+**Avatar frames.** `frame` puts a decoration around the avatar, like Discord avatar decorations: `ring` is the classic gradient ring, `double`, `dashed`, `neon`, `pixel`, `glitch`, `laurel`, `flames`, `sakura`, `stars`, `halo` and `aurora` are the decorations, `none` removes it, and `auto` follows your level (E none, D ring, C double, B dashed, A neon, S flames, and the top 1% gets the animated aurora). They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
 
 `facts: ["currentStreak", "longestStreak", "stars", "followers"]`:
 
@@ -439,6 +443,7 @@ Hex values with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`). They apply
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | each streak element |
 | `snakeColor` | the snake of the heatmap (`heatmap.mode: "snake"`) |
+| `frameColor` | the avatar frame (default: the colour of your level) |
 | `bg_gradient` | `"angle,color1,color2,..."` for the card background |
 
 ```json

@@ -18,7 +18,7 @@
         "icon_color": { "$ref": "#/definitions/hex" }, "ring_color": { "$ref": "#/definitions/hex" }, "fire_color": { "$ref": "#/definitions/hex" },
         "track_color": { "$ref": "#/definitions/hex" }, "stroke_color": { "$ref": "#/definitions/hex" },
         "currStreakNum": { "$ref": "#/definitions/hex" }, "sideNums": { "$ref": "#/definitions/hex" }, "currStreakLabel": { "$ref": "#/definitions/hex" },
-        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" },
+        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" }, "frameColor": { "$ref": "#/definitions/hex" },
         "levelE": { "$ref": "#/definitions/hex" }, "levelD": { "$ref": "#/definitions/hex" }, "levelC": { "$ref": "#/definitions/hex" }, "levelB": { "$ref": "#/definitions/hex" }, "levelA": { "$ref": "#/definitions/hex" }, "levelS": { "$ref": "#/definitions/hex" }, "levelTop": { "$ref": "#/definitions/hex" },
         "bg_gradient": { "type": "string" }
       }
@@ -103,6 +103,8 @@
       "type": "object", "additionalProperties": false,
       "properties": {
         "avatar": { "enum": ["circle", "rounded", "hide"], "default": "circle" },
+        "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S flames, S+ aurora). Colour: colors.frameColor, default the level colour." },
+        "frameAnimation": { "enum": ["default", "none", "spin", "pulse", "twinkle"], "default": "default", "description": "default: the frame's own motion. none: still. spin / pulse / twinkle: override it where it makes sense." },
         "facts": { "type": "array", "maxItems": 4, "items": { "enum": ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"] }, "default": ["contributionsThisYear", "bestDay", "busiestWeekday"] },
         "rankIcon": { "enum": ["level", "percentile", "github"], "default": "level" }
       }

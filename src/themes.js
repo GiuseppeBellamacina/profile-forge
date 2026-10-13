@@ -81,7 +81,7 @@ export const COLOR_KEYS = {
   icon_color: ["accent"], ring_color: ["accent2"], fire_color: ["fire"], track_color: ["track"],
   title_color: ["title"], stroke_color: ["streakStroke"],
   currStreakNum: ["streakCurrNum"], sideNums: ["streakSideNums"], currStreakLabel: ["streakCurrLabel"],
-  sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"],
+  sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"], frameColor: ["frame"],
   levelE: ["lvE"], levelD: ["lvD"], levelC: ["lvC"], levelB: ["lvB"], levelA: ["lvA"], levelS: ["lvS"], levelTop: ["lvTop"],
   bg_gradient: ["bgGradient"],
 };
