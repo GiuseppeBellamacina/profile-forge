@@ -82,6 +82,20 @@
       "items": { "oneOf": [{ "$ref": "#/definitions/section" }, { "type": "array", "maxItems": 2, "items": { "$ref": "#/definitions/section" } }] },
       "default": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"]
     },
+    "grid": {
+      "description": "Free layout on a 6-column grid instead of `layout`: each section has a width in columns and falls to the lowest free spot. The height follows the content. Minimum widths: header 6, stats/streak/languages/heatmap 3, the others 2.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["section"],
+            "properties": { "section": { "$ref": "#/definitions/section" }, "cols": { "type": "integer", "minimum": 1, "maximum": 6, "default": 3 } }
+          }
+        }
+      ],
+      "default": null
+    },
     "hideSections": { "type": "array", "items": { "enum": ["rank", "header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"] } },
     "header": {
       "type": "object", "additionalProperties": false,

@@ -95,7 +95,24 @@ The `portfolio` preset reads its tech stack icons from `assets/img/` (paths are 
 
 - A **nested pair** puts two sections side by side at half width: `["stats", "streak"]`, `["about", "workingOn"]`, `["trophies", "heatmap"]`. Any two sections can pair except `header`.
 - `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width; on their own they are centered.
-- In a pair, `workingOn` stacks its cards, `trophies` wraps to 4 per row, `heatmap` shows the last 23 weeks, `languages` as a bar uses 2 legend columns. If one of the two has no content, the other takes the full width.
+- In a pair, `workingOn` stacks its cards, `trophies` wraps to as many per row as fit, `heatmap` shows the last weeks that fit, `languages` as a bar uses 2 legend columns. If one of the two has no content, the other takes the full width.
+
+### Free grid (`grid`)
+
+For more control than rows, `grid` replaces `layout` with a 6-column grid. Every section gets a width in columns and falls to the lowest free spot, like widgets on a home screen, so a short card fills the gap next to a tall one. The height always follows the content.
+
+```json
+"grid": [
+  { "section": "header" },
+  { "section": "languages", "cols": 3 }, { "section": "workingOn", "cols": 3 },
+  { "section": "about", "cols": 3 }, { "section": "streak", "cols": 3 },
+  { "section": "heatmap", "cols": 3 }, { "section": "trophies", "cols": 3 }
+]
+```
+
+- `cols` is 1 to 6 (default 3; the header is always 6). Narrower than a section can be drawn is raised to its minimum: header 6, `stats` / `streak` / `languages` / `heatmap` 3, the rest 2.
+- Order matters: sections are placed one after the other, each in the lowest free spot (leftmost on a tie).
+- A section can appear once. `hideSections` still applies. When `grid` is set, `layout` is ignored; the web configurator writes `grid` for you.
 - `about`, `workingOn` and `techStack` are skipped when they have no content.
 - `hideSections` removes sections (and `"rank"` removes only the ring in the header).
 

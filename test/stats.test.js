@@ -214,3 +214,18 @@ test("layout: any two content sections can share a row at half width", () => {
   assert.ok(height([["heatmap", "languages"]]) < height(["heatmap", "languages"]));
   assert.equal(height([["about", "workingOn"]]), height(["about"]), "an empty partner leaves the other at full width");
 });
+
+test("grid: sections fall to the lowest free spot, widths are clamped, mistakes are named", () => {
+  const height = (grid) => {
+    const [d, k] = make({ grid });
+    return Number(/viewBox="0 0 1000 ([\d.]+)"/.exec(render(d, { k, t: 1 }))[1]);
+  };
+  const tall = [{ section: "header" }, { section: "stats", cols: 3 }, { section: "trophies", cols: 3 }, { section: "heatmap", cols: 3 }];
+  // heatmap fits under the short stats card instead of below the tall trophies card
+  assert.ok(height(tall) < height([{ section: "header" }, { section: "stats", cols: 6 }, { section: "trophies", cols: 6 }, { section: "heatmap", cols: 6 }]));
+  assert.equal(normalize({ grid: [{ section: "stats", cols: 1 }, { section: "header", cols: 2 }] }).grid.map((g) => g.span).join(), "3,6", "narrow widths are raised to the section minimum");
+  assert.throws(() => normalize({ grid: [{ section: "stats" }, { section: "stats" }] }), /appears twice/);
+  assert.throws(() => normalize({ grid: [{ section: "stats", cols: 9 }] }), /cols/);
+  assert.throws(() => normalize({ grid: [{ section: "nope" }] }), /unknown section/);
+  assert.equal(normalize({}).grid, null);
+});
