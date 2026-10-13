@@ -111,6 +111,7 @@ For more control than rows, `grid` replaces `layout` with a 6-column grid. Every
 ```
 
 - `cols` is 1 to 6 (default 3; the header is always 6). Narrower than a section can be drawn is raised to its minimum: header 6, `stats` / `streak` / `languages` / `heatmap` 3, the rest 2.
+- `height` (optional, pixels) makes a card taller than its content, for instance to line up with its neighbour. It never makes it shorter, so nothing is cut: a value below what the content needs is raised to it. Leave it out for automatic height.
 - Order matters: sections are placed one after the other, each in the lowest free spot (leftmost on a tie).
 - A section can appear once. `hideSections` still applies. When `grid` is set, `layout` is ignored; the web configurator writes `grid` for you.
 - `about`, `workingOn` and `techStack` are skipped when they have no content.

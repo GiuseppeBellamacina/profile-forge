@@ -17,7 +17,7 @@ export const DEFAULTS = {
   card: { radius: 20, hideBorder: false, animations: true, background: { gradient: null, pattern: "none", glow: true } },
   layout: ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
   hideSections: [],
-  grid: null, // [{ section, cols }]: free 6-column grid instead of `layout` (see GUIDE)
+  grid: null, // [{ section, cols, height? }]: free 6-column grid instead of `layout` (see GUIDE)
   header: { avatar: "circle", facts: ["contributionsThisYear", "bestDay", "busiestWeekday"], rankIcon: "level" },
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
@@ -137,7 +137,8 @@ export function normalize(raw = {}) {
         seen.add(id);
         const cols = it.cols ?? (id === "header" ? 6 : 3);
         if (!Number.isInteger(cols) || cols < 1 || cols > 6) throw new Error(`Config "grid[${i}].cols" must be a whole number from 1 to 6 (got ${cols})`);
-        return { id, span: Math.max(cols, MIN_SPAN[id]) };
+        if (it.height !== undefined && (!Number.isInteger(it.height) || it.height < 0 || it.height > 3000)) throw new Error(`Config "grid[${i}].height" must be a whole number of pixels from 0 to 3000 (got ${it.height})`);
+        return { id, span: Math.max(cols, MIN_SPAN[id]), height: it.height };
       })
       .filter((it) => !hideSections.has(normKey(it.id)));
   }
