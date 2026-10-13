@@ -509,6 +509,55 @@ function heatmapSection(d, X, W = 940) {
         })
         .join("")
     : "";
+  // Snake mode: a snake crawls through the grid column by column and eats the contributions, then the cycle restarts.
+  // Every moving part is plain CSS (opacity / transform keyframes), so it also runs inside a README <img>.
+  const SNAKE_LEN = 6;
+  const SNAKE_DT = 0.06; // seconds per cell
+  const SNAKE_PAUSE = 1.5;
+  const snakeSvg = () => {
+    const pts = [{ x: x0 - step, y: y0 }]; // starts just outside the grid, on the left
+    weeks.forEach((_, w) => {
+      const rows = [0, 1, 2, 3, 4, 5, 6];
+      if (w % 2) rows.reverse();
+      for (const i of rows) pts.push({ x: x0 + w * step, y: y0 + i * step });
+    });
+    pts.push({ x: pts.at(-1).x + step, y: pts.at(-1).y }); // and leaves on the right
+    const last = pts.length - 1;
+    const seg = (k) => `<rect width="13.5" height="13.5" rx="${rx}" fill="${c.accent2}" opacity="${r3(1 - k * 0.1)}"`;
+    if (A.t !== undefined) {
+      // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
+      return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return `${seg(k)} x="${r3(p.x)}" y="${r3(p.y)}"/>`; }).join("");
+    }
+    const T = r3((last + SNAKE_LEN) * SNAKE_DT + SNAKE_PAUSE);
+    const pct = (t) => r3((t / T) * 100);
+    const delay = r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5); // after the grid has faded in
+    const corners = pts.map((p, j) => j).filter((j) => {
+      if (j === 0 || j === last) return true;
+      const d1 = [pts[j].x - pts[j - 1].x, pts[j].y - pts[j - 1].y].map(Math.round).join();
+      const d2 = [pts[j + 1].x - pts[j].x, pts[j + 1].y - pts[j].y].map(Math.round).join();
+      return d1 !== d2;
+    });
+    const run = (name) => `animation:${name} ${T}s linear ${delay}s infinite`;
+    let body = "";
+    for (let k = 0; k < SNAKE_LEN; k++) {
+      const stops = [`0%{transform:translate(${r3(pts[0].x)}px,${r3(pts[0].y)}px)}`];
+      for (const j of corners) if (j > 0 && j < last) stops.push(`${pct((j + k) * SNAKE_DT)}%{transform:translate(${r3(pts[j].x)}px,${r3(pts[j].y)}px)}`);
+      stops.push(`${pct((last + k) * SNAKE_DT)}%{transform:translate(${r3(pts[last].x)}px,${r3(pts[last].y)}px)}`, `100%{transform:translate(${r3(pts[last].x)}px,${r3(pts[last].y)}px)}`);
+      A.css.push(`@keyframes sn${k}{${stops.join("")}}`);
+      body += `${seg(k)} style="${run(`sn${k}`)}"/>`;
+    }
+    let covers = "";
+    weeks.forEach((wk, w) => {
+      for (const [, n, i] of wk) {
+        if (!n) continue;
+        const j = 1 + w * 7 + (w % 2 ? 6 - i : i);
+        A.css.push(`@keyframes ce${w}_${i}{0%,${pct(j * SNAKE_DT)}%{opacity:0}${pct(j * SNAKE_DT + 0.1)}%,99.5%{opacity:1}100%{opacity:0}}`);
+        covers += `<rect x="${r3(x0 + w * step - 0.6)}" y="${r3(y0 + i * step - 0.6)}" width="14.7" height="14.7" rx="${rx + 0.6}" fill="${c.heat[0]}" opacity="0" style="${run(`ce${w}_${i}`)}"/>`;
+      }
+    });
+    return `<clipPath id="snkclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath>
+  <g clip-path="url(#snkclip)">${covers}${body}</g>`;
+  };
   return {
     w: W, top: 674, nx: 30, h: 180,
     draw: (H) => `
@@ -524,6 +573,7 @@ function heatmapSection(d, X, W = 940) {
           .join("")}</g>`,
     )
     .join("")}
+  ${o.mode === "snake" ? snakeSvg() : ""}
   ${
     o.legend
       ? `<g${A.a(2.4, 0.5, { o: 0 })}>

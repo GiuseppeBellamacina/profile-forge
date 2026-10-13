@@ -168,6 +168,7 @@
     "heatmap": {
       "type": "object", "additionalProperties": false,
       "properties": {
+        "mode": { "enum": ["grid", "snake"], "default": "grid", "description": "grid: the plain contribution grid. snake: an animated snake eats the contributions (loops forever, plain CSS)." },
         "weeks": { "type": "integer", "minimum": 4, "maximum": 53, "default": 53 },
         "cell": { "enum": ["square", "round"], "default": "square" },
         "weekStart": { "enum": ["sun", "mon"], "default": "sun" },
