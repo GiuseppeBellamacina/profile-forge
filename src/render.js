@@ -229,16 +229,18 @@ function streakSection(d, X, W = 460) {
   const range = (s) => (s.length ? `${f(s.start, false)} – ${f(s.end)}` : tr("noStreak"));
   const since = !first ? "" : o.dateFormat ? `${f(first)} – ${tr("present")}` : `${fmtDate(first, false)} ${first.slice(0, 4)} – ${tr("present")}`;
   const nfmt = (n) => (o.shortNumbers ? shortBig(n) : num(n));
-  const unit = o.mode === "weekly" ? `<tspan font-size="13" font-weight="600" dx="3">${esc(tr("weeks"))}</tspan>` : "";
+  const weekly = o.mode === "weekly";
+  const unit = weekly ? `<tspan font-size="13" font-weight="600" dx="3">${esc(tr("weeks"))}</tspan>` : "";
   const cols = [
     ["total", 0.8, { text: nfmt(total) }, tr("totalContrib"), since, c.streakSideNums, c.streakSideLabels],
-    ["current", 1.0, { text: nfmt(current.length) + unit, big: true }, tr("current"), range(current), c.streakCurrNum, c.streakCurrLabel],
+    ["current", 1.0, { text: nfmt(current.length), big: true, unit: weekly ? tr("weeks") : "" }, tr("current"), range(current), c.streakCurrNum, c.streakCurrLabel],
     ["longest", 1.1, { text: nfmt(longest.length) + unit }, tr("longest"), range(longest), c.streakSideNums, c.streakSideLabels],
   ].filter((x) => !o.hide.has(x[0]));
   const n = cols.length;
   if (!n) return null;
   const col = (x, delay, value, label, text, numColor, labelColor) => `<g${A.a(delay, 0.5, { o: 0, ty: 10 })}>
-    <text x="${x}" y="${value.big ? 278 : 276}" text-anchor="middle" font-size="${value.big ? 30 : 26}" font-weight="700" font-family="${FD}" fill="${numColor}">${value.text}</text>
+    <text x="${x}" y="${value.big ? (value.unit ? 272 : 278) : 276}" text-anchor="middle" font-size="${value.big ? 30 : 26}" font-weight="700" font-family="${FD}" fill="${numColor}">${value.text}</text>
+    ${value.unit ? `<text x="${x}" y="291" text-anchor="middle" font-size="11" font-weight="600" fill="${numColor}">${esc(value.unit)}</text>` : ""}
     <text x="${x}" y="326" text-anchor="middle" font-size="13" font-weight="600" fill="${labelColor}">${esc(label)}</text>
     <text x="${x}" y="343" text-anchor="middle" font-size="11" fill="${c.streakDates}">${esc(text)}</text>
   </g>`;
