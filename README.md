@@ -86,7 +86,7 @@ All-time commits are added up from `contributionsCollection` year by year throug
      card:
        runs-on: ubuntu-latest
        steps:
-         - uses: actions/checkout@v4
+         - uses: actions/checkout@v7
          - uses: GiuseppeBellamacina/profile-forge@v1
            with:
              token: ${{ secrets.PROFILE_FORGE_TOKEN || github.token }}
