@@ -396,3 +396,9 @@ test("rank indicator: ring, hexagon or shield, with an adjustable thickness", ()
   assert.throws(() => normalize({ header: { rankStyle: "star" } }), /header\.rankStyle/);
   assert.throws(() => normalize({ header: { rankThickness: 30 } }), /rankThickness/);
 });
+
+test("options that were removed are ignored, unknown ones are still rejected", () => {
+  assert.doesNotThrow(() => normalize({ trophies: { style: "gem", padding: 24 } }));
+  assert.equal(normalize({ trophies: { style: "gem", padding: 24 } }).trophies.padding, 24);
+  assert.throws(() => normalize({ trophies: { stile: "gem" } }), /Unknown config key "trophies\.stile"/);
+});

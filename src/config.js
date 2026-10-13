@@ -71,11 +71,15 @@ function check(p, d, v) {
   return v;
 }
 
+// Options that no longer exist. Configs written for an older version keep working: these are ignored instead of rejected.
+export const REMOVED_KEYS = new Set(["trophies.style"]);
+
 function merge(def, user, path = "") {
   const out = { ...def };
   for (const [k, v] of Object.entries(user ?? {})) {
     if (k === "$schema") continue;
     const p = path ? `${path}.${k}` : k;
+    if (REMOVED_KEYS.has(p)) continue;
     if (!(k in def)) throw new Error(`Unknown config key "${p}". Valid keys${path ? ` under "${path}"` : ""}: ${Object.keys(def).join(", ")}`);
     if (isPlain(def[k]) && !FREE.has(p)) {
       if (!isPlain(v)) throw new Error(`Config "${p}" must be an object`);
