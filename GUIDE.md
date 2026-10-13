@@ -177,6 +177,8 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 | `facts` | up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers` | first three |
 | `frame` | `none` `ring` `double` `dashed` `neon` `pixel` `glitch` `laurel` `flames` `sakura` `stars` `halo` `aurora` `auto` | `ring` |
 | `frameAnimation` | `default` `none` `spin` `pulse` `twinkle` | `default` |
+| `rankStyle` | `ring` `hexagon` `shield` | `ring` |
+| `rankThickness` | 4–16 | `8` |
 | `rankIcon` | what the ring shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
