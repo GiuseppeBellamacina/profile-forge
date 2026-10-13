@@ -144,14 +144,16 @@ export function resolveTheme(name, colors = {}) {
   c.streakStroke ??= c.border;
   c.streakExcl ??= c.muted;
   c.snake ??= c.accent2;
-  // one colour per level (E .. S, and the top 1%); the defaults grow from muted to gold
-  c.lvE ??= c.muted;
-  c.lvD ??= c.text;
-  c.lvC ??= c.accent2;
-  c.lvB ??= c.accent;
-  c.lvA ??= c.fire;
-  c.lvS ??= "#ffc857";
-  c.lvTop ??= "#ff6bd6";
+  // one colour per level (E .. S, and the top 1%). The defaults are the same in every theme, so the levels always look different
+  // from each other (a green theme would otherwise make them all green); light themes get them a little darker.
+  const lv = (hex) => (c.base === "light" ? mix(hex, "#000000", 0.16) : hex);
+  c.lvE ??= lv("#8b93a1"); // grey
+  c.lvD ??= lv("#4aa8ff"); // blue
+  c.lvC ??= lv("#36c98b"); // green
+  c.lvB ??= lv("#b98cff"); // purple
+  c.lvA ??= lv("#ff9f43"); // orange
+  c.lvS ??= lv("#ffd23f"); // gold
+  c.lvTop ??= lv("#ff5fd2"); // pink
   c.name = name;
   return c;
 }

@@ -440,7 +440,7 @@ Hex values with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`). They apply
 | `bg_color`, `panel_color`, `border_color` | card background, panels, borders |
 | `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
 | `icon_color`, `ring_color` | accent (icons, links, heatmap ramp) and second accent (rank ring, gradients) |
-| `levelE` `levelD` `levelC` `levelB` `levelA` `levelS` `levelTop` | the colour of each level (`levelTop` is the top 1%) |
+| `levelE` `levelD` `levelC` `levelB` `levelA` `levelS` `levelTop` | the colour of each level (`levelTop` is the top 1%); by default grey, blue, green, purple, orange, gold and pink in every theme, so the levels are always easy to tell apart |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | each streak element |
 | `snakeColor` | the snake of the heatmap (`heatmap.mode: "snake"`) |
