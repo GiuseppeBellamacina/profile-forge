@@ -699,17 +699,18 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
     // like widgets on a home screen). The height follows the content.
     const heights = Array(COLS).fill(0);
     const placed = [];
-    for (const { id, span } of k.grid) {
+    for (const { id, span, height } of k.grid) {
       const s = BUILD[id](d, X, spanWidth(span));
       if (!s) continue;
+      const h = Math.max(s.h, height ?? 0); // a taller card than its content needs (never shorter: nothing is cut)
       let best = 0;
       let bestY = Infinity;
       for (let c0 = 0; c0 + span <= COLS; c0++) {
         const top = Math.max(...heights.slice(c0, c0 + span));
         if (top < bestY) (bestY = top, best = c0);
       }
-      for (let i = best; i < best + span; i++) heights[i] = bestY + s.h + GUTTER;
-      placed.push({ id, s, x: 30 + best * (COL_W + GUTTER), y: bestY, h: s.h });
+      for (let i = best; i < best + span; i++) heights[i] = bestY + h + GUTTER;
+      placed.push({ id, s, x: 30 + best * (COL_W + GUTTER), y: bestY, h });
     }
     // sections that start at the same height appear together, then the next band
     const ys = [...new Set(placed.map((it) => it.y))].sort((p, q) => p - q);
@@ -740,7 +741,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   }
   const SH = y + 8;
   // Editors ask where things landed (to draw handles over the card) instead of the svg.
-  if (boxesOnly) return { height: SH, boxes: items.map(({ id, s, x, y, h }) => ({ id, x, y, w: s.w, h })) };
+  if (boxesOnly) return { height: SH, boxes: items.map(({ id, s, x, y, h }) => ({ id, x, y, w: s.w, h, minH: s.h })) };
   const parts = items.map(({ id, s, x, y, h, delay }) => {
     A.dt = delay - BASE[id];
     return `<g transform="translate(${r3(x - s.nx)} ${r3(y - s.top)})">${s.draw(h)}</g>`;
@@ -806,5 +807,5 @@ export function renderButton(link, { theme = "dark", fontCss = "", colors } = {}
 </svg>`;
 }
 
-/** Where each section lands on the card: { height, boxes: [{ id, x, y, w, h }] } in card pixels (same options as render). */
+/** Where each section lands on the card: { height, boxes: [{ id, x, y, w, h, minH }] } in card pixels; minH is the height its content needs. Same options as render. */
 export const sectionBoxes = (d, opts) => render(d, { ...opts, boxesOnly: true });

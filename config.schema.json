@@ -83,14 +83,15 @@
       "default": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"]
     },
     "grid": {
-      "description": "Free layout on a 6-column grid instead of `layout`: each section has a width in columns and falls to the lowest free spot. The height follows the content. Minimum widths: header 6, stats/streak/languages/heatmap 3, the others 2.",
+      "description": "Free layout on a 6-column grid instead of `layout`: each section has a width in columns and falls to the lowest free spot. The height follows the content. Minimum widths: header 6, stats/streak/languages/heatmap 3, the others 2. The optional height can only make a card taller than its content.",
       "oneOf": [
         { "type": "null" },
         {
           "type": "array",
           "items": {
             "type": "object", "additionalProperties": false, "required": ["section"],
-            "properties": { "section": { "$ref": "#/definitions/section" }, "cols": { "type": "integer", "minimum": 1, "maximum": 6, "default": 3 } }
+            "properties": { "section": { "$ref": "#/definitions/section" }, "cols": { "type": "integer", "minimum": 1, "maximum": 6, "default": 3 },
+              "height": { "type": "integer", "minimum": 0, "maximum": 3000, "description": "Card height in pixels. Never shorter than the content needs; omit for automatic." } }
           }
         }
       ],

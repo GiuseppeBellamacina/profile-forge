@@ -240,3 +240,17 @@ test("sectionBoxes: reports where sections land, matching the grid packing", asy
   assert.ok(by.heatmap.y < by.trophies.y + by.trophies.h);
   assert.equal(height, Math.max(...boxes.map((b) => b.y + b.h)) + 28, "card height = lowest edge + gutter + bottom margin");
 });
+
+test("grid: height makes a card taller, never shorter than its content", async () => {
+  const { sectionBoxes } = await import("../src/render.js");
+  const boxes = (grid) => {
+    const [d, k] = make({ grid });
+    return Object.fromEntries(sectionBoxes(d, { k }).boxes.map((b) => [b.id, b]));
+  };
+  const auto = boxes([{ section: "stats", cols: 3 }, { section: "streak", cols: 3 }]);
+  const tall = boxes([{ section: "stats", cols: 3, height: auto.stats.minH + 100 }, { section: "streak", cols: 3 }]);
+  assert.equal(tall.stats.h, auto.stats.h + 100);
+  assert.equal(tall.stats.minH, auto.stats.minH);
+  assert.equal(boxes([{ section: "stats", cols: 3, height: 10 }]).stats.h, auto.stats.minH, "too short is raised to the content height");
+  assert.throws(() => normalize({ grid: [{ section: "stats", height: -5 }] }), /height/);
+});
