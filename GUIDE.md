@@ -189,7 +189,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 |---|---|---|---|
 | <img src="docs/guide/rank-level.png"> | <img src="docs/guide/rank-percentile.png"> | <img src="docs/guide/rank-github.png"> | <img src="docs/guide/rank-hidden.png"> |
 
-One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the special level **S+**. The header ring and the trophies use it. The header level comes from your percentile (the github-readme-stats formula): S+ is the top 1%, S up to 10%, A 25%, B 50%, C 70%, D 85%, E below. Trophies place each of their eight old thresholds on the same scale (S+ is the highest threshold). Every level has a colour that you can change with the colour overrides `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS` and `levelTop`. `title` (root key) appears next to `@login`.
+One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the special level **S+**. The header ring and the trophies use it. The header level comes from your percentile (the github-readme-stats formula): S+ is the top 1%, S up to 10%, A 25%, B 50%, C 70%, D 85%, E below. Trophies place each of their eight old thresholds on the same scale (S+ is the highest threshold). The top 1% level is animated: the ring gets a pulsing halo, a light running around it and twinkling sparkles, and its trophies shimmer (plain CSS, so it plays inside a README; PNG and GIF show it held still). Every level has a colour that you can change with the colour overrides `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS` and `levelTop`. `title` (root key) appears next to `@login`.
 
 ## Stats
 

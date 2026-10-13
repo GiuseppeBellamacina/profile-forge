@@ -327,3 +327,18 @@ test("levels: E D C B A S and the top 1% level, one scale for the header and the
   const level = (stars) => trophies({ stars, commits: 0, followers: 0, issues: 0, prs: 0, repos: 0, reviews: 0, experience: 0, years: 0, organizations: 0, languageCount: 0, firstYear: 2023 }).find((t) => t.title === "Stars").rank;
   assert.deepEqual([2000, 700, 200, 100, 50, 30, 10, 1, 0].map(level), ["S+", "S", "A", "B", "C", "C", "D", "E", "?"]);
 });
+
+test("top 1% (S+) has looping effects on the ring and the trophies; other levels do not; static frames stay still", () => {
+  const view = (level, t) => {
+    const [d, k] = make({ layout: ["header", "trophies"] });
+    d.rank = { level, percentile: level === "S+" ? 0.4 : 30 };
+    if (level === "S+") for (const tr of d.trophies) if (tr.rank === "S") tr.rank = "S+";
+    return render(d, { k, t });
+  };
+  const top = view("S+");
+  assert.ok(/@keyframes lp\d+/.test(top) && top.includes('stroke-dasharray="26 '), "halo, running light and sparkles");
+  assert.ok(top.includes("-shine"), "the trophies shimmer");
+  assert.ok(!/@keyframes lp\d+/.test(view("A")), "a normal level has no loops");
+  const still = view("S+", 1);
+  assert.ok(!/@keyframes/.test(still) && still.includes("rotate(-40 900 90)"), "static frame: the same ring, held still");
+});

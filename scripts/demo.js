@@ -12,7 +12,7 @@ import { summarize } from "../src/stats.js";
 
 const { values: o, positionals: [configPath, prefix] } = parseArgs({
   allowPositionals: true,
-  options: { slot: { type: "string" }, scale: { type: "string", default: "1" }, svg: { type: "boolean" } },
+  options: { slot: { type: "string" }, scale: { type: "string", default: "1" }, svg: { type: "boolean" }, top: { type: "boolean" } },
 });
 if (!configPath || !prefix) throw new Error("usage: node scripts/demo.js <config.json> <out-prefix> [--slot dark] [--scale 1] [--svg]");
 
@@ -52,6 +52,7 @@ const profile = {
   days,
 };
 
+if (o.top) Object.assign(profile, { followers: 4200, prs: 1800, issues: 900, stars: 52000, commits: 30000, reviews: 400, repoCount: 60 }); // a top 1% profile, to see the special level
 const raw = JSON.parse(await readFile(configPath, "utf8"));
 const k = normalize(raw);
 const data = summarize(profile, k);

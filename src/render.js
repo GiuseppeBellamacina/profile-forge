@@ -1,7 +1,7 @@
 import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
-import { levelColor } from "./levels.js";
+import { isTop, levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
 import { trophyMatches } from "./stats.js";
 import { parseColors, resolveTheme } from "./themes.js";
@@ -90,6 +90,17 @@ function animator(t) {
     css,
     t,
     dt: 0,
+    /**
+     * An endless loop (glow, sparkle, spin) as attributes to put on an element. frames: { "0%,100%": "opacity:.2", "50%": "opacity:1" }.
+     * Static frames (PNG / GIF) get `still` instead: the element held at one pose, no CSS.
+     */
+    loop(frames, { dur = 2, ease = "ease-in-out", delay = 0, origin, still = "" } = {}) {
+      if (t !== undefined) return still;
+      const name = `lp${css.length}`;
+      css.push(`@keyframes ${name}{${Object.entries(frames).map(([k, v]) => `${k}{${v}}`).join("")}}`);
+      const o = origin ? `transform-origin:${origin[0]}px ${origin[1]}px;` : "";
+      return ` style="${o}animation:${name} ${dur}s ${ease} ${r3(delay + this.dt)}s infinite"`;
+    },
     a(delay, dur, from, to = {}, origin) {
       delay = r3(delay + this.dt);
       const fin = Object.fromEntries(Object.keys(from).map((k) => [k, to[k] ?? DEFAULTS[k]]));
@@ -145,10 +156,26 @@ function headerSection(d, X) {
     <clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>`
       : `<circle cx="92" cy="90" r="58" fill="none" stroke="url(#grad)" stroke-width="3"/>
     <clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`;
+  const top = isTop(d.rank.level);
+  // the top 1%: a pulsing halo, a light that runs around the ring and sparkles that twinkle (plain CSS loops)
+  const topRing = () => {
+    const col = levelColor(c, d.rank.level);
+    const spark = (k) => {
+      const a = ((60 * k + 15) * Math.PI) / 180;
+      const x = r3(900 + 66 * Math.cos(a));
+      const y = r3(90 + 66 * Math.sin(a));
+      const s = 4.2;
+      return `<path d="M${x} ${r3(y - s)}L${r3(x + s * 0.3)} ${r3(y - s * 0.3)}L${r3(x + s)} ${y}L${r3(x + s * 0.3)} ${r3(y + s * 0.3)}L${x} ${r3(y + s)}L${r3(x - s * 0.3)} ${r3(y + s * 0.3)}L${r3(x - s)} ${y}L${r3(x - s * 0.3)} ${r3(y - s * 0.3)}Z" fill="${col}" opacity="0.9"${A.loop({ "0%,100%": "opacity:0;transform:scale(.3)", "50%": "opacity:1;transform:scale(1)" }, { dur: 2, delay: 1.2 + k * 0.33, origin: [x, y] })}/>`;
+    };
+    return `<circle cx="900" cy="90" r="59" fill="none" stroke="${col}" stroke-width="2.5" opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}/>
+    <circle cx="900" cy="90" r="50" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="26 ${r3(C - 26)}" opacity="0.55"${A.loop({ "0%": "transform:rotate(0deg)", "100%": "transform:rotate(360deg)" }, { dur: 3.2, ease: "linear", delay: 1.2, origin: [900, 90], still: ' transform="rotate(-40 900 90)"' })}/>
+    ${Array.from({ length: 6 }, (_, k) => spark(k)).join("")}`;
+  };
   const rank = () => `<g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
     <circle cx="900" cy="90" r="50" fill="none" stroke="${c.track}" stroke-width="8"/>
     <circle cx="900" cy="90" r="50" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round"
       stroke-dasharray="${r3(C)}" transform="rotate(-90 900 90)"${A.a(0.5, 1.4, { dash: C }, { dash: (C * (100 - progress)) / 100 })}/>
+    ${top ? topRing() : ""}
     ${
       pct
         ? `<text x="900" y="97" text-anchor="middle" font-size="22" font-weight="700" font-family="${FD}" fill="${c.text}">${r3(d.rank.percentile).toFixed(1)}%</text>
@@ -396,7 +423,7 @@ const TROPHY_THEMES = {
 const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` : `${n}pt`);
 
 /** One 110×110 trophy, drawn like github-profile-trophy (cup, laurel for S/A, extra cups for SS/SSS). */
-function trophy(tr, tt, theme) {
+function trophy(tr, tt, theme, { c, A }) {
   const id = `tg-${theme}-${tr.rank === "?" ? "UNKNOWN" : tr.rank.replace("+", "P")}`;
   const secret = tr.rank === "SECRET";
   const [base, shadow, rankText] = secret ? tt.secret.slice(1) : tt[tr.rank[0]] ?? tt.other;
@@ -410,14 +437,19 @@ function trophy(tr, tt, theme) {
   const laurel = !secret && "SA".includes(tr.rank[0])
     ? `<svg width="120" height="120" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${LAUREL(tt.laurel)}</svg>`
     : "";
+  // the top 1%: the card border pulses and a light sweeps across it now and then
+  const topfx = tr.rank === "S+"
+    ? `<rect x="0.5" y="0.5" width="109" height="109" rx="4.5" fill="none" stroke="${levelColor(c, "S+")}" stroke-width="1.6" opacity="0.6"${A.loop({ "0%,100%": "opacity:.25", "50%": "opacity:1" }, { dur: 2.4, delay: 1.8 })}/>
+      <g opacity="0.5"${A.loop({ "0%": "transform:translateX(-40px)", "55%,100%": "transform:translateX(150px)" }, { dur: 3.6, delay: 2, still: ' transform="translate(30 0)"' })}><rect x="0" y="-10" width="22" height="140" fill="url(#${id}-shine)" transform="rotate(18 11 55)"/></g>`
+    : "";
   return {
-    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)">${stops}</linearGradient>`,
+    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)">${stops}</linearGradient>${tr.rank === "S+" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
     body: `${laurel}${extra === 2 ? small(7) : ""}${extra >= 1 ? small(68) : ""}
       <svg x="28" y="20" width="100" height="100" viewBox="0 0 30 30" fill="url(#${id})">${cup(null, secret ? tt.secret[3] : rankText)}</svg>
       <text x="55" y="18" text-anchor="middle" font-size="13" font-weight="700" font-family="${FD}" fill="${tt.title}">${esc(tr.title)}</text>
       <text x="55" y="85" text-anchor="middle" font-size="10.5" font-weight="700" font-family="${FD}" fill="${tt.text}">${esc(tr.label)}</text>
       <text x="55" y="97" text-anchor="middle" font-size="10" font-weight="700" font-family="${FD}" fill="${tt.text}">${tr.title === "Experience" ? `${tr.score} yrs` : secret ? "SECRET" : abridge(tr.score)}</text>
-      <rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${tt.bar}"/>`,
+      <rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${tt.bar}"/>${topfx}`,
   };
 }
 
@@ -451,7 +483,7 @@ function trophiesSection(d, X, W = 940) {
           const inRow = Math.min(cols, list.length - row * cols);
           const x = 30 + (W - (inRow * s + gx * (inRow - 1))) / 2 + (i % cols) * (s + gx);
           const y = 542 + row * (s + gy);
-          const { defs: g, body } = trophy(tr_, tt, theme);
+          const { defs: g, body } = trophy(tr_, tt, theme, X);
           defs.push(g);
           return `<g${A.a(1.45 + i * 0.08, 0.5, { o: 0, s: 0.6 }, {}, [r3(x + s / 2), r3(y + s / 2)])}>
     <svg x="${r3(x)}" y="${r3(y)}" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">
