@@ -2,6 +2,8 @@
 // Renders a card from a config.json using deterministic demo data (no GitHub token, no network).
 // Used to generate the images in docs/ and presets/. Needs `npm install` for PNG output.
 //   node scripts/demo.js <config.json> <out-prefix> [--slot dark] [--scale 1] [--svg]
+//   showcase options: --top (a top 1% profile), --rank <E|D|C|B|A|S|S+> (force the header level),
+//                     --levels (one trophy per level), --crop x,y,w,h (only that part of the card)
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,7 +14,7 @@ import { summarize } from "../src/stats.js";
 
 const { values: o, positionals: [configPath, prefix] } = parseArgs({
   allowPositionals: true,
-  options: { slot: { type: "string" }, scale: { type: "string", default: "1" }, svg: { type: "boolean" }, top: { type: "boolean" } },
+  options: { slot: { type: "string" }, scale: { type: "string", default: "1" }, svg: { type: "boolean" }, top: { type: "boolean" }, rank: { type: "string" }, levels: { type: "boolean" }, crop: { type: "string" } },
 });
 if (!configPath || !prefix) throw new Error("usage: node scripts/demo.js <config.json> <out-prefix> [--slot dark] [--scale 1] [--svg]");
 
@@ -56,6 +58,15 @@ if (o.top) Object.assign(profile, { followers: 4200, prs: 1800, issues: 900, sta
 const raw = JSON.parse(await readFile(configPath, "utf8"));
 const k = normalize(raw);
 const data = summarize(profile, k);
+const PERCENT = { E: 92, D: 78, C: 60, B: 38, A: 18, S: 6.9, "S+": 0.4 };
+if (o.rank) data.rank = { level: o.rank, percentile: PERCENT[o.rank] ?? 50 };
+if (o.levels) {
+  // one trophy per level, from the lowest to the top 1%, then a secret one
+  const names = ["Stars", "Commits", "Followers", "PullRequest", "Repositories", "Experience", "Stars"];
+  const labels = ["First Star", "First Friend", "Middle Pull", "High Puller", "Hyper Repo Creator", "Master Dev", "Super Stargazer"];
+  data.trophies = ["E", "D", "C", "B", "A", "S", "S+"].map((rank, i) => ({ title: names[i], rank, label: labels[i], score: [3, 25, 60, 140, 340, 720, 2400][i], progress: [0.3, 0.45, 0.6, 0.5, 0.7, 0.8, 1][i] }));
+  data.trophies.push({ title: "OGUser", rank: "SECRET", label: "OG User", score: null, progress: 1 });
+}
 
 // Tech stack images are paths relative to the config, embedded as data URIs (same as the CLI).
 const MIME = { ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
@@ -79,7 +90,13 @@ for (const [slot, theme] of k.slots) {
   const colors = { ...k.colors, ...k.colorsByTheme[slot] };
   const opts = (extra) => ({ theme, k, colors, ...extra });
   const out = o.slot ? prefix : `${prefix}-${slot}`;
-  if (o.svg) await writeFile(`${out}.svg`, render(data, opts({ fontCss })));
-  else await writeFile(`${out}.png`, toPng(render(data, opts({ t: 1 })), Number(o.scale)));
+  // --crop x,y,w,h keeps only that part of the card (the svg is re-framed, nothing is resampled)
+  const crop = (svg) => {
+    if (!o.crop) return svg;
+    const [x, y, w, h] = o.crop.split(",").map(Number);
+    return svg.replace(/<svg ([^>]*?)width="[\d.]+" height="[\d.]+" viewBox="[^"]*"/, `<svg $1width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}"`);
+  };
+  if (o.svg) await writeFile(`${out}.svg`, crop(render(data, opts({ fontCss }))));
+  else await writeFile(`${out}.png`, toPng(crop(render(data, opts({ t: 1 }))), Number(o.scale)));
   console.log("wrote", out + (o.svg ? ".svg" : ".png"));
 }

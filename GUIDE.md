@@ -8,7 +8,7 @@ All the pictures here are rendered with demo data (`node scripts/gen-docs.js`), 
 - [Presets](#presets)
 - [Layout and sections](#layout-and-sections)
 - [Card: radius, border, background](#card-radius-border-background)
-- [Header](#header)
+- [Header](#header) (rank levels, frames)
 - [Stats](#stats)
 - [Streak](#streak)
 - [Languages](#languages)
@@ -168,7 +168,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 ## Header
 
 ```json
-{ "header": { "avatar": "circle", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" } }
+{ "header": { "avatar": "circle", "frame": "ring", "frameAnimation": "default", "rankStyle": "ring", "rankThickness": 8, "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" } }
 ```
 
 | Key | Values | Default |
@@ -179,23 +179,77 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 | `frameAnimation` | `default` `none` `spin` `pulse` `twinkle` | `default` |
 | `rankStyle` | `ring` `hexagon` `shield` | `ring` |
 | `rankThickness` | 4–16 | `8` |
-| `rankIcon` | what the ring shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
+| `rankIcon` | what the rank shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
 |---|---|---|
 | <img src="docs/guide/header-circle.png"> | <img src="docs/guide/header-rounded.png"> | <img src="docs/guide/header-no-avatar.png"> |
 
-**Avatar frames.** `frame` puts a decoration around the avatar, like Discord avatar decorations: `ring` is the classic gradient ring, `double`, `dashed`, `neon`, `pixel`, `glitch`, `laurel`, `flames`, `sakura`, `stars`, `halo` and `aurora` are the decorations, `none` removes it, and `auto` follows your level (E none, D ring, C double, B dashed, A neon, S flames, and the top 1% gets the animated aurora). They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
-
 `facts: ["currentStreak", "longestStreak", "stars", "followers"]`:
 
 <img src="docs/guide/header-facts.png" width="60%">
+
+### Rank levels
+
+One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the special level **S+**. The header rank and the trophies use it. The header level comes from your percentile (the github-readme-stats formula): S+ is the top 1%, S up to 10%, A up to 25%, B up to 50%, C up to 70%, D up to 85%, E below. Trophies place each of their eight old thresholds on the same scale, and S+ is their highest threshold. Every level has its own colour, the same in every theme so the levels are always easy to tell apart (grey, blue, green, purple, orange, gold, pink); change them with the colour overrides `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS` and `levelTop`.
+
+| `E` | `D` | `C` | `B` |
+|---|---|---|---|
+| <img src="docs/guide/rank-E.png" width="200"> | <img src="docs/guide/rank-D.png" width="200"> | <img src="docs/guide/rank-C.png" width="200"> | <img src="docs/guide/rank-B.png" width="200"> |
+
+| `A` | `S` | `S+` |  |
+|---|---|---|---|
+| <img src="docs/guide/rank-A.png" width="200"> | <img src="docs/guide/rank-S.png" width="200"> | <img src="docs/guide/rank-top.png" width="200"> |  |
+
+**The top 1% is animated.** The ring of an S+ profile gets a pulsing halo, a light that runs around it and twinkling sparkles, and its trophies shimmer. It is plain CSS, so it plays inside a README image; PNG and GIF exports show the same drawing held still.
+
+| Header of a top 1% profile |
+|---|
+| <img src="docs/guide/header-top-animated.svg"> |
+
+`levelB: "ff4d6d"`, a custom colour for one level:
+
+<img src="docs/guide/rank-colors.png" width="200">
+
+### Rank shape and what it shows
+
+| `rankStyle: "ring"` | `"hexagon"` | `"shield"` | `rankThickness: 14` |
+|---|---|---|---|
+| <img src="docs/guide/rank-A.png" width="200"> | <img src="docs/guide/rank-hexagon.png" width="200"> | <img src="docs/guide/rank-shield.png" width="200"> | <img src="docs/guide/rank-thick.png" width="200"> |
 
 | `rankIcon: "level"` | `"percentile"` | `"github"` | `hideSections: ["rank"]` |
 |---|---|---|---|
 | <img src="docs/guide/rank-level.png"> | <img src="docs/guide/rank-percentile.png"> | <img src="docs/guide/rank-github.png"> | <img src="docs/guide/rank-hidden.png"> |
 
-One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the special level **S+**. The header ring and the trophies use it. The header level comes from your percentile (the github-readme-stats formula): S+ is the top 1%, S up to 10%, A 25%, B 50%, C 70%, D 85%, E below. Trophies place each of their eight old thresholds on the same scale (S+ is the highest threshold). The top 1% level is animated: the ring gets a pulsing halo, a light running around it and twinkling sparkles, and its trophies shimmer (plain CSS, so it plays inside a README; PNG and GIF show it held still). Every level has a colour that you can change with the colour overrides `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS` and `levelTop`. `title` (root key) appears next to `@login`.
+### Avatar frames
+
+`frame` puts a decoration around the avatar, like Discord avatar decorations. `ring` is the classic gradient ring (the default), `none` removes it, the rest are decorations, and `auto` follows your level: E none, D ring, C double, B dashed, A neon, S flames, and the top 1% gets the animated aurora. They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
+
+| `ring` | `double` | `dashed` |
+|---|---|---|
+| <img src="docs/guide/frame-ring.png" width="260"> | <img src="docs/guide/frame-double.png" width="260"> | <img src="docs/guide/frame-dashed.png" width="260"> |
+
+| `neon` | `pixel` | `glitch` |
+|---|---|---|
+| <img src="docs/guide/frame-neon.png" width="260"> | <img src="docs/guide/frame-pixel.png" width="260"> | <img src="docs/guide/frame-glitch.png" width="260"> |
+
+| `laurel` | `flames` | `sakura` |
+|---|---|---|
+| <img src="docs/guide/frame-laurel.png" width="260"> | <img src="docs/guide/frame-flames.png" width="260"> | <img src="docs/guide/frame-sakura.png" width="260"> |
+
+| `stars` | `halo` | `aurora` |
+|---|---|---|
+| <img src="docs/guide/frame-stars.png" width="260"> | <img src="docs/guide/frame-halo.png" width="260"> | <img src="docs/guide/frame-aurora.png" width="260"> |
+
+| `frame: "auto"` at level S+ | `frame: "neon"`, rounded avatar | `frameColor: "00e5a0"` |
+|---|---|---|
+| <img src="docs/guide/frame-auto-top.png" width="300"> | <img src="docs/guide/frame-rounded.png" width="260"> | <img src="docs/guide/frame-color.png" width="260"> |
+
+Animated (these play in the browser):
+
+| `neon` | `flames` | `stars` | `aurora` | `glitch` |
+|---|---|---|---|---|
+| <img src="docs/guide/frame-neon-animated.svg" width="150"> | <img src="docs/guide/frame-flames-animated.svg" width="150"> | <img src="docs/guide/frame-stars-animated.svg" width="150"> | <img src="docs/guide/frame-aurora-animated.svg" width="150"> | <img src="docs/guide/frame-glitch-animated.svg" width="150"> |
 
 ## Stats
 
@@ -343,7 +397,10 @@ A day with zero contributions *today* does not break the current streak.
     "columns": 0,
     "rows": 0,
     "marginW": 14,
-    "marginH": 12,
+    "marginH": 14,
+    "padding": 20,
+    "align": "center",
+    "parts": ["title", "label", "score", "bar"],
     "noBg": false,
     "noFrame": false,
     "extra": ["Issues", "Reviews"],
@@ -369,6 +426,22 @@ A day with zero contributions *today* does not break the current streak.
 | `title` | string | translated | Custom panel title |
 
 Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience. Secret trophies show up only once earned: MultiLanguage, LongTimeUser, Organizations, Joined2020, AncientUser, OGUser, AllSuperRank.
+
+### Levels
+
+Each trophy is the classic cup in the colour of its level, and the higher the level the richer it gets: **A** adds the laurel, **S** a second cup, and the top 1% (**S+**) three cups with a pulsing border and a light that sweeps across the card (animated, like the rank). The level letter is on the cup. The levels are the same as the header rank (see [Rank levels](#rank-levels)), and `levelE` … `levelTop` change their colours.
+
+<img src="docs/guide/trophies-levels.png">
+
+The top 1%:
+
+<img src="docs/guide/trophies-top-animated.svg">
+
+`parts: ["title", "bar"]` shows only the title and the progress bar, and `align: "left"` with `padding: 36` starts an incomplete row at the left edge:
+
+| `parts: ["title", "bar"]`, `columns: 4` | `align: "left"`, `columns: 5`, `padding: 36` |
+|---|---|
+| <img src="docs/guide/trophies-parts.png" width="400"> | <img src="docs/guide/trophies-left.png" width="400"> |
 
 | default | `columns: 4`, `rows: 2`, margins 16 |
 |---|---|
@@ -404,7 +477,23 @@ Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
 
 **Shapes.** `cell` picks what a day looks like: `square`, `round`, `triangle` (up and down alternating, so they tile), `snowflake` (a brighter flake for more contributions), `moon` (the moon phase grows with the contributions, from an empty disc to a full moon) and `mixed` (a random but stable mix of square, round and triangle).
 
+| `triangle` | `snowflake` |
+|---|---|
+| <img src="docs/guide/heatmap-triangle.png" width="460"> | <img src="docs/guide/heatmap-snowflake.png" width="460"> |
+
+| `moon` | `mixed` |
+|---|---|
+| <img src="docs/guide/heatmap-moon.png" width="460"> | <img src="docs/guide/heatmap-mixed.png" width="460"> |
+
 **Snake.** `"mode": "snake"` turns the heatmap into the animated snake from [Platane/snk](https://github.com/Platane/snk): a snake crawls through the grid column by column and eats the contributions, then starts over. It is the heatmap itself, so you do not need a separate snake image next to the card (use either the plain grid or the snake, not both). With `"snakePath": "smart"` (default) the route is planned when the card is generated: the snake eats the quietest days first and works up to the busiest ones, finding the cheapest way to the next day of the current tier (Dijkstra on the grid), steering around its own body and out of dead ends, and avoiding busier days that are not due yet. The finished route is written into the SVG, so nothing is computed when the image is viewed. The other routes: `busy` eats the busiest days first, `nearest` always goes to the closest day, `sweep` goes column by column, `rows` row by row and `spiral` from the outside in. The snake colour is the colour override `snakeColor` (default: the theme's `ring_color`). A long route is played faster, so one loop lasts about 30 seconds at most. It is plain CSS, so it animates inside a README `<img>`; it adds about 80 KB to the SVG, and in PNG / GIF exports the snake waits at the start of the grid.
+
+| `mode: "snake"` (route `smart`) | `snakePath: "spiral"` |
+|---|---|
+| <img src="docs/guide/heatmap-snake-animated.svg" width="450"> | <img src="docs/guide/heatmap-snake-spiral-animated.svg" width="450"> |
+
+`cell: "moon"`, `snakePath: "busy"` and `snakeColor: "ffd23f"`; the snake takes the shape of the cells:
+
+<img src="docs/guide/heatmap-snake-moon-animated.svg" width="500">
 
 ## Themes, custom themes and colors
 
@@ -578,7 +667,8 @@ Not ported from the original projects: `card_width` / `card_height` (the card is
   "layout": ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
   "grid": null,
   "hideSections": [],
-  "header": { "avatar": "circle", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" },
+  "header": { "avatar": "circle", "frame": "ring", "frameAnimation": "default", "rankStyle": "ring", "rankThickness": 8,
+              "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"], "rankIcon": "level" },
   "stats": { "title": null, "hide": [], "show": [], "icons": true, "numberFormat": "long", "numberPrecision": null,
              "textBold": true, "lineHeight": 30, "commitsYear": null, "excludeRepos": [] },
   "streak": { "title": null, "hide": [], "mode": "daily", "excludeDays": [], "startingYear": null,

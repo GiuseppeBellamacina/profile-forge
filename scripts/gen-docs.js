@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-// Regenerates every image used by GUIDE.md (docs/guide/*.png) and the preset previews (docs/presets/*.png).
+// Regenerates every image used by GUIDE.md (docs/guide/*.png and a few animated *.svg), the preset previews (docs/presets/*.png)
+// and the theme previews (docs/themes/*.png).
 // Uses deterministic demo data (scripts/demo.js): no token, no network. Needs `npm install`.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { FRAMES } from "../src/frames.js";
+import { THEME_NAMES } from "../src/themes.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const demo = join(root, "scripts", "demo.js");
@@ -14,7 +17,36 @@ const THEMES = { dark: "catppuccin-mocha", light: "catppuccin-latte" };
 
 // name -> config (merged over { themes, layout: <the section shown> }). `light: true` also renders the light slot.
 const only = (...layout) => ({ layout });
+const RING = ["--crop", "600,0,400,185"]; // the rank indicator only
+const AVATAR = ["--crop", "0,0,400,185"]; // the avatar and its frame only
 const CASES = {
+  // levels, rank shapes and the top 1% (rank-top and the *-top cases are also written as animated svg)
+  ...Object.fromEntries(["E", "D", "C", "B", "A", "S"].map((l) => [`rank-${l}`, { ...only("header"), args: ["--rank", l, ...RING] }])),
+  "rank-top": { ...only("header"), args: ["--rank", "S+", ...RING] },
+  "rank-top-animated": { ...only("header"), args: ["--rank", "S+", ...RING], svg: true },
+  "rank-hexagon": { ...only("header"), header: { rankStyle: "hexagon" }, args: ["--rank", "A", ...RING] },
+  "rank-shield": { ...only("header"), header: { rankStyle: "shield" }, args: ["--rank", "A", ...RING] },
+  "rank-thick": { ...only("header"), header: { rankThickness: 14 }, args: ["--rank", "B", ...RING] },
+  "rank-colors": { ...only("header"), colors: { levelB: "ff4d6d" }, args: ["--rank", "B", ...RING] },
+  "header-top": { ...only("header"), args: ["--top"] },
+  "header-top-animated": { ...only("header"), args: ["--top"], svg: true },
+  // trophies
+  "trophies-levels": { ...only("trophies"), args: ["--levels"] },
+  "trophies-parts": { ...only("trophies"), trophies: { parts: ["title", "bar"], columns: 4 }, args: ["--levels"] },
+  "trophies-left": { ...only("trophies"), trophies: { align: "left", columns: 5, padding: 36 }, args: ["--levels"] },
+  "trophies-top": { ...only("trophies"), args: ["--top"] },
+  "trophies-top-animated": { ...only("trophies"), args: ["--top"], svg: true },
+  // avatar frames (all of them as images, a few also as animated svg)
+  ...Object.fromEntries(FRAMES.filter((f) => f !== "none").map((f) => [`frame-${f}`, { ...only("header"), header: { frame: f }, args: ["--rank", f === "auto" ? "S" : "A", ...AVATAR] }])),
+  "frame-rounded": { ...only("header"), header: { frame: "neon", avatar: "rounded" }, args: ["--rank", "A", ...AVATAR] },
+  "frame-auto-top": { ...only("header"), header: { frame: "auto" }, args: ["--rank", "S+"] },
+  ...Object.fromEntries(["neon", "flames", "stars", "aurora", "glitch"].map((f) => [`frame-${f}-animated`, { ...only("header"), header: { frame: f }, args: ["--rank", f === "aurora" ? "S+" : "A", ...AVATAR], svg: true }])),
+  "frame-color": { ...only("header"), header: { frame: "double" }, colors: { frameColor: "00e5a0" }, args: ["--rank", "A", ...AVATAR] },
+  // heatmap shapes and the snake
+  ...Object.fromEntries(["triangle", "snowflake", "moon", "mixed"].map((s) => [`heatmap-${s}`, { ...only("heatmap"), heatmap: { cell: s } }])),
+  "heatmap-snake-animated": { ...only("heatmap"), heatmap: { mode: "snake" }, svg: true },
+  "heatmap-snake-spiral-animated": { ...only("heatmap"), heatmap: { mode: "snake", snakePath: "spiral" }, svg: true },
+  "heatmap-snake-moon-animated": { ...only("heatmap"), heatmap: { mode: "snake", cell: "moon", snakePath: "busy" }, colors: { snakeColor: "ffd23f" }, svg: true },
   // layout / card
   "layout-default": { layout: ["header", ["stats", "streak"], "languages", "heatmap"] },
   "layout-pairs": only("header", ["languages", "streak"], "stats", "heatmap"),
@@ -59,7 +91,7 @@ const CASES = {
   // trophies
   "trophies-default": only("trophies"),
   "trophies-grid": { ...only("trophies"), trophies: { columns: 4, rows: 2, marginW: 16, marginH: 16 } },
-  "trophies-extra": { ...only("trophies"), trophies: { extra: ["Issues", "Reviews"], ranks: ["-C"], columns: 4 } },
+  "trophies-extra": { ...only("trophies"), trophies: { extra: ["Issues", "Reviews"], ranks: ["-E"], columns: 4 } },
   "trophies-filter": { ...only("trophies"), trophies: { titles: ["Star", "Commit", "PR", "Followers"], title: "Highlights" } },
   "trophies-secret": { ...only("trophies"), trophies: { ranks: ["SECRET"] } },
   "trophies-clean": { ...only("trophies"), trophies: { noBg: true, noFrame: true, columns: 6 } },
@@ -115,20 +147,28 @@ mkdirSync(join(root, "docs", "presets"), { recursive: true });
 const wanted = process.argv.slice(2);
 for (const [name, c] of Object.entries(CASES)) {
   if (wanted.length && !wanted.includes(name)) continue;
-  const { light, ...cfg } = c;
+  const { light, args = [], svg, ...cfg } = c;
+  const extra = [...args, ...(svg ? ["--svg"] : [])];
   // techStack images live next to the presets: render from there so relative paths resolve.
   const cwdConfig = { themes: THEMES, ...cfg };
   if (cfg.techStack) {
     const f = join(root, "presets", ".guide-tmp.json");
     writeFileSync(f, JSON.stringify(cwdConfig));
-    execFileSync("node", [demo, f, join(root, "docs", "guide", name), ...(light ? [] : ["--slot", "dark"])], { stdio: "inherit" });
+    execFileSync("node", [demo, f, join(root, "docs", "guide", name), ...(light ? [] : ["--slot", "dark"]), ...extra], { stdio: "inherit" });
     rmSync(f, { force: true });
-  } else if (light) render(cwdConfig, join(root, "docs", "guide", name));
-  else render(cwdConfig, join(root, "docs", "guide", name), ["--slot", "dark"]);
+  } else if (light) render(cwdConfig, join(root, "docs", "guide", name), extra);
+  else render(cwdConfig, join(root, "docs", "guide", name), ["--slot", "dark", ...extra]);
 }
 
 for (const file of readdirSync(join(root, "presets")).filter((f) => f.endsWith(".json"))) {
   const name = file.replace(/\.json$/, "");
   if (wanted.length && !wanted.includes(name)) continue;
   execFileSync("node", [demo, join(root, "presets", file), join(root, "docs", "presets", name)], { stdio: "inherit" });
+}
+
+// one small preview of the default card per built-in theme (docs/themes, shown by the README and the configurator's fallback)
+mkdirSync(join(root, "docs", "themes"), { recursive: true });
+for (const theme of THEME_NAMES()) {
+  if (wanted.length && !wanted.includes("themes") && !wanted.includes(theme)) continue;
+  render({ themes: { dark: theme } }, join(root, "docs", "themes", theme), ["--slot", "dark", "--scale", "0.5"]);
 }
