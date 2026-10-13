@@ -665,7 +665,7 @@ function stackSection(d, X, W = 940) {
  * Render the full card. d: summarize() output; k: normalized config (src/config.js).
  * opts.t undefined = animated SVG, number = static frame at that progress.
  */
-export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), colors } = {}) {
+export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), colors, boxesOnly = false } = {}) {
   const c = resolveTheme(theme, colors ?? k.colors);
   if (t === undefined && !k.card.animations) t = 1;
   const A = animator(t);
@@ -691,17 +691,14 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
     heatmap: heatmapSection,
     techStack: stackSection,
   };
-  const parts = [];
+  // Both layout engines produce the same thing: where every section goes (x, y, w, h) and when it appears.
+  const items = [];
   let y = 0;
-  const place = (id, s, x, top, delay) => {
-    A.dt = delay - BASE[id];
-    return `<g transform="translate(${r3(x - s.nx)} ${r3(top - s.top)})">${s.draw(s.h)}</g>`;
-  };
   if (k.grid) {
     // Free grid: 6 columns, each section has a width in columns and falls to the lowest free spot (skyline packing,
     // like widgets on a home screen). The height follows the content.
     const heights = Array(COLS).fill(0);
-    const items = [];
+    const placed = [];
     for (const { id, span } of k.grid) {
       const s = BUILD[id](d, X, spanWidth(span));
       if (!s) continue;
@@ -712,12 +709,12 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
         if (top < bestY) (bestY = top, best = c0);
       }
       for (let i = best; i < best + span; i++) heights[i] = bestY + s.h + GUTTER;
-      items.push({ id, s, x: 30 + best * (COL_W + GUTTER), y: bestY });
+      placed.push({ id, s, x: 30 + best * (COL_W + GUTTER), y: bestY, h: s.h });
     }
     // sections that start at the same height appear together, then the next band
-    const ys = [...new Set(items.map((it) => it.y))].sort((p, q) => p - q);
+    const ys = [...new Set(placed.map((it) => it.y))].sort((p, q) => p - q);
     const step = ys.length > 1 ? Math.min(0.4, 2.2 / (ys.length - 1)) : 0;
-    for (const it of items) parts.push(place(it.id, it.s, it.x, it.y, ys.indexOf(it.y) * step));
+    for (const it of placed) items.push({ ...it, delay: ys.indexOf(it.y) * step });
     y = Math.max(0, ...heights);
   } else {
     // A row of two is built at half width; if one of them turns out empty, the other is rebuilt at full width.
@@ -735,14 +732,19 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
         const H = Math.max(...g.map((x) => x.s.h));
         g.forEach(({ id, s }, i) => {
           const slot = g.length === 2 ? (i ? 510 : 30) : s.w === 460 ? 270 : 30;
-          A.dt = ri * step - BASE[id];
-          parts.push(`<g transform="translate(${r3(slot - s.nx)} ${r3(y - s.top)})">${s.draw(H)}</g>`);
+          items.push({ id, s, x: slot, y, h: H, delay: ri * step });
         });
         y += H + 20;
       }
     }
   }
   const SH = y + 8;
+  // Editors ask where things landed (to draw handles over the card) instead of the svg.
+  if (boxesOnly) return { height: SH, boxes: items.map(({ id, s, x, y, h }) => ({ id, x, y, w: s.w, h })) };
+  const parts = items.map(({ id, s, x, y, h, delay }) => {
+    A.dt = delay - BASE[id];
+    return `<g transform="translate(${r3(x - s.nx)} ${r3(y - s.top)})">${s.draw(h)}</g>`;
+  });
   const bg = k.card.background;
   const grad = (bg.gradient ? parseColors({ bg_gradient: bg.gradient }).bg_gradient : c.bgGradient)?.split(",");
   const bgFill = grad
@@ -803,3 +805,6 @@ export function renderButton(link, { theme = "dark", fontCss = "", colors } = {}
   <g clip-path="url(#r)"><rect class="sh" width="60" height="${h}" fill="url(#s)"/></g>
 </svg>`;
 }
+
+/** Where each section lands on the card: { height, boxes: [{ id, x, y, w, h }] } in card pixels (same options as render). */
+export const sectionBoxes = (d, opts) => render(d, { ...opts, boxesOnly: true });

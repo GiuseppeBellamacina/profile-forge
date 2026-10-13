@@ -229,3 +229,14 @@ test("grid: sections fall to the lowest free spot, widths are clamped, mistakes 
   assert.throws(() => normalize({ grid: [{ section: "nope" }] }), /unknown section/);
   assert.equal(normalize({}).grid, null);
 });
+
+test("sectionBoxes: reports where sections land, matching the grid packing", async () => {
+  const { sectionBoxes } = await import("../src/render.js");
+  const [d, k] = make({ grid: [{ section: "header" }, { section: "stats", cols: 3 }, { section: "trophies", cols: 3 }, { section: "heatmap", cols: 3 }] });
+  const { height, boxes } = sectionBoxes(d, { k });
+  const by = Object.fromEntries(boxes.map((b) => [b.id, b]));
+  assert.deepEqual([by.stats.x, by.stats.w, by.trophies.x, by.trophies.w], [30, 460, 510, 460]);
+  assert.equal(by.heatmap.x, 30, "heatmap falls under the short stats card");
+  assert.ok(by.heatmap.y < by.trophies.y + by.trophies.h);
+  assert.equal(height, Math.max(...boxes.map((b) => b.y + b.h)) + 28, "card height = lowest edge + gutter + bottom margin");
+});
