@@ -1,4 +1,5 @@
 import { normalize } from "./config.js";
+import { ALL_LEVELS, TOP, levelOfPercentile } from "./levels.js";
 
 // Pure scoring functions. Algorithms ported from MIT-licensed projects:
 //   rank      -> anuraghazra/github-readme-stats (src/calculateRank.js)
@@ -7,9 +8,6 @@ import { normalize } from "./config.js";
 
 const expCdf = (x) => 1 - 2 ** -x;
 const logNormCdf = (x) => x / (1 + x);
-
-const RANK_THRESHOLDS = [1, 12.5, 25, 37.5, 50, 62.5, 75, 87.5, 100];
-const RANK_LEVELS = ["S", "A+", "A", "A-", "B+", "B", "B-", "C+", "C"];
 
 /** github-readme-stats rank, "include_all_commits" variant (commit median 1000). */
 export function calculateRank({ commits, prs, issues, reviews, stars, followers }) {
@@ -21,8 +19,7 @@ export function calculateRank({ commits, prs, issues, reviews, stars, followers 
     4 * logNormCdf(stars / 50) +
     1 * logNormCdf(followers / 10);
   const percentile = (1 - score / 12) * 100;
-  const level = RANK_LEVELS[RANK_THRESHOLDS.findIndex((t) => percentile <= t)];
-  return { level, percentile };
+  return { level: levelOfPercentile(percentile), percentile };
 }
 
 /**
@@ -125,7 +122,9 @@ export function calendarFacts(days) {
   return { bestDay: best, busiestWeekday: names[busiestWeekdayIndex], busiestWeekdayIndex, thisYear };
 }
 
-const TROPHY_RANKS = ["SSS", "SS", "S", "AAA", "AA", "A", "B", "C"];
+// Every title has 8 thresholds (highest first); they become the 7 levels S+, S, A, B, C, D, E (the second old "A" folds into B).
+const LEVEL_TIER = [0, 1, 2, 3, 5, 6, 7];
+const TROPHY_LEVELS = [...ALL_LEVELS].reverse();
 const TROPHIES = [
   ["Stars", "stars", [2000, 700, 200, 100, 50, 30, 10, 1],
     ["Super Stargazer", "High Stargazer", "Stargazer", "Super Star", "High Star", "You are a Star", "Middle Star", "First Star"]],
@@ -161,10 +160,11 @@ export const trophyMatches = (title, tokens) => {
 export function trophies(s, extra = new Set()) {
   const list = TROPHIES.filter((t) => !t[4] || extra.has(t[0].toLowerCase())).map(([title, key, reqs, labels]) => {
     const score = s[key];
-    const i = reqs.findIndex((r) => score >= r);
-    const rank = i === -1 ? "?" : TROPHY_RANKS[i];
-    const progress = i === -1 ? Math.min(score / reqs.at(-1), 1) : i === 0 ? 1 : (score - reqs[i]) / (reqs[i - 1] - reqs[i]);
-    return { title, rank, label: i === -1 ? "Unknown" : labels[i], score: key === "experience" ? s.years : score, progress };
+    const lreqs = LEVEL_TIER.map((t) => reqs[t]);
+    const i = lreqs.findIndex((r) => score >= r);
+    const rank = i === -1 ? "?" : TROPHY_LEVELS[i];
+    const progress = i === -1 ? Math.min(score / lreqs.at(-1), 1) : i === 0 ? 1 : (score - lreqs[i]) / (lreqs[i - 1] - lreqs[i]);
+    return { title, rank, label: i === -1 ? "Unknown" : labels[LEVEL_TIER[i]], score: key === "experience" ? s.years : score, progress };
   });
   const secret = [
     [s.languageCount >= 10, "MultiLanguage", "Rainbow Lang User"],
@@ -173,7 +173,7 @@ export function trophies(s, extra = new Set()) {
     [s.firstYear === 2020, "Joined2020", "Everything started..."],
     [s.firstYear <= 2010, "AncientUser", "Ancient User"],
     [s.firstYear <= 2008, "OGUser", "OG User"],
-    [list.filter((t) => BASE.includes(t.title)).every((t) => t.rank.startsWith("S")), "AllSuperRank", "S Rank Hacker"],
+    [list.filter((t) => BASE.includes(t.title)).every((t) => t.rank === "S" || t.rank === TOP), "AllSuperRank", "S Rank Hacker"],
   ];
   for (const [ok, title, label] of secret) if (ok) list.push({ title, rank: "SECRET", label, score: null, progress: 1 });
   return list;

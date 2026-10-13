@@ -5,10 +5,10 @@ import { normalize, setPath } from "../src/config.js";
 import { parseColors, THEME_NAMES } from "../src/themes.js";
 import { calculateRank, computeStreak, summarize, topLanguages, trophies } from "../src/stats.js";
 
-test("rank: zero activity is C, heavy activity is S", () => {
-  assert.equal(calculateRank({ commits: 0, prs: 0, issues: 0, reviews: 0, stars: 0, followers: 0 }).level, "C");
+test("rank: zero activity is E, heavy activity is the top 1% level", () => {
+  assert.equal(calculateRank({ commits: 0, prs: 0, issues: 0, reviews: 0, stars: 0, followers: 0 }).level, "E");
   const top = calculateRank({ commits: 20000, prs: 2000, issues: 1000, reviews: 500, stars: 100000, followers: 10000 });
-  assert.equal(top.level, "S");
+  assert.equal(top.level, "S+");
   assert.ok(top.percentile < 1);
 });
 
@@ -39,12 +39,12 @@ test("languages: forks and hidden ignored, count weight ranks by repo count", ()
 test("trophies: tiers and secret trophies", () => {
   const t = trophies({ stars: 227, commits: 5000, followers: 0, issues: 1, prs: 27, repos: 59, reviews: 0, experience: 16, years: 4, organizations: 3, languageCount: 12, firstYear: 2022 });
   const rank = Object.fromEntries(t.map((x) => [x.title, x.rank]));
-  assert.equal(rank.Stars, "S");
-  assert.equal(rank.Commits, "SSS");
+  assert.equal(rank.Stars, "A");
+  assert.equal(rank.Commits, "S+");
   assert.equal(rank.Followers, "?");
   assert.equal(rank.Issues, undefined);
-  assert.equal(rank.PullRequest, "A");
-  assert.equal(rank.Experience, "A");
+  assert.equal(rank.PullRequest, "C");
+  assert.equal(rank.Experience, "C");
   assert.ok(rank.MultiLanguage && rank.Organizations);
   assert.ok(!rank.LongTimeUser);
 });
@@ -176,7 +176,10 @@ test("trophies: filters, grid, extras, secrets", () => {
   assert.equal((only.match(/rx="4.5"/g) ?? []).length, 2);
   assert.ok(only.includes('fill="none" stroke="none"'));
   assert.ok(!render(d, { k: normalize({ trophies: { hideTitles: ["PR"], ranks: ["-C"] } }) }).includes(">PullRequest<"));
-  assert.ok(!render(d, { k: normalize({ trophies: { ranks: ["nope"] } }) }).includes("TROPHIES"));
+  assert.throws(() => normalize({ trophies: { ranks: ["nope"] } }), /unknown rank "nope"/);
+  assert.throws(() => normalize({ trophies: { ranks: ["SSS"] } }), /no longer exists.*use "S\+"/);
+  assert.throws(() => normalize({ trophies: { hideRanks: ["AAA"] } }), /no longer exists/);
+  assert.ok(!render(d, { k: normalize({ trophies: { ranks: ["Z"].filter(() => false) } }) }).includes("undefined"));
   assert.ok(render(d, { k: normalize({ trophies: { columns: 2, rows: 2 } }) }).includes("TROPHIES"));
 });
 
@@ -312,4 +315,15 @@ test("margins: room under the last card, and the first card never sits on the bo
   const grid = (g) => { const [d, k] = make({ grid: g }); return sectionBoxes(d, { k }).boxes; };
   assert.equal(grid([{ section: "stats", cols: 3 }])[0].y, 30);
   assert.equal(grid([{ section: "header" }, { section: "stats", cols: 3 }])[0].y, 0);
+});
+
+test("levels: E D C B A S and the top 1% level, one scale for the header and the trophies", async () => {
+  const { levelOfPercentile, ALL_LEVELS } = await import("../src/levels.js");
+  assert.deepEqual(ALL_LEVELS, ["E", "D", "C", "B", "A", "S", "S+"]);
+  const at = [0.5, 1, 1.01, 10, 10.01, 25, 25.5, 50, 60, 70, 80, 85, 99.9].map(levelOfPercentile);
+  assert.deepEqual(at, ["S+", "S+", "S", "S", "A", "A", "B", "B", "C", "C", "D", "D", "E"]);
+  // trophies: the 8 old thresholds fold into the 7 levels (the old second "A" threshold is dropped)
+  const { trophies } = await import("../src/stats.js");
+  const level = (stars) => trophies({ stars, commits: 0, followers: 0, issues: 0, prs: 0, repos: 0, reviews: 0, experience: 0, years: 0, organizations: 0, languageCount: 0, firstYear: 2023 }).find((t) => t.title === "Stars").rank;
+  assert.deepEqual([2000, 700, 200, 100, 50, 30, 10, 1, 0].map(level), ["S+", "S", "A", "B", "C", "C", "D", "E", "?"]);
 });

@@ -1,6 +1,7 @@
 import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
+import { levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
 import { trophyMatches } from "./stats.js";
 import { parseColors, resolveTheme } from "./themes.js";
@@ -152,7 +153,7 @@ function headerSection(d, X) {
       pct
         ? `<text x="900" y="97" text-anchor="middle" font-size="22" font-weight="700" font-family="${FD}" fill="${c.text}">${r3(d.rank.percentile).toFixed(1)}%</text>
     <text x="900" y="115" text-anchor="middle" font-size="10" fill="${c.muted}">${esc(tr("rankLabel", { l: d.rank.level }))}</text>`
-        : `${gh ? icon("github", 882, 70, 36, c.text) : `<text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="${FD}" fill="${c.text}">${d.rank.level}</text>`}
+        : `${gh ? icon("github", 882, 70, 36, c.text) : `<text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="${FD}" fill="${levelColor(c, d.rank.level)}">${d.rank.level}</text>`}
     <text x="900" y="${gh ? 122 : 117}" text-anchor="middle" font-size="10" fill="${c.muted}">${esc(tr("top", { p: r3(d.rank.percentile).toFixed(1) }))}</text>`
     }
   </g>
@@ -396,15 +397,15 @@ const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` 
 
 /** One 110×110 trophy, drawn like github-profile-trophy (cup, laurel for S/A, extra cups for SS/SSS). */
 function trophy(tr, tt, theme) {
-  const id = `tg-${theme}-${tr.rank === "?" ? "UNKNOWN" : tr.rank}`;
+  const id = `tg-${theme}-${tr.rank === "?" ? "UNKNOWN" : tr.rank.replace("+", "P")}`;
   const secret = tr.rank === "SECRET";
   const [base, shadow, rankText] = secret ? tt.secret.slice(1) : tt[tr.rank[0]] ?? tt.other;
   const stops = secret
     ? tt.secret.slice(0, 3).map((col, i) => `<stop offset="${i * 50}%" stop-color="${col}"/>`).join("")
     : `<stop offset="0%" stop-color="${base}"/><stop offset="${tt[tr.rank[0]] ? 70 : 50}%" stop-color="${base}"/><stop offset="100%" stop-color="${shadow}"/>`;
   const cup = (fill, letterColor) =>
-    `${CUP}<circle cx="8" cy="6" r="4" fill="${tt.circle}"/><text x="6" y="8" font-family="Courier, monospace" font-size="7" fill="${letterColor}">${secret ? "S" : tr.rank[0]}</text>`;
-  const extra = secret ? 0 : tr.rank.length - 1;
+    `${CUP}<circle cx="8" cy="6" r="4" fill="${tt.circle}"/><text x="8" y="8.4" text-anchor="middle" font-family="Courier, monospace" font-size="${!secret && tr.rank.length > 1 ? 5.5 : 7}" fill="${letterColor}">${secret ? "S" : tr.rank}</text>`;
+  const extra = 0; // the level is the letter, its colour and (for the top 1%) an animation, no longer extra cups
   const small = (x) => `<svg x="${x}" y="35" width="65" height="65" viewBox="0 0 30 30" fill="${base}">${cup(base, rankText)}</svg>`;
   const laurel = !secret && "SA".includes(tr.rank[0])
     ? `<svg width="120" height="120" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${LAUREL(tt.laurel)}</svg>`

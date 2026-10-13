@@ -35,5 +35,5 @@
   "header": { "avatar": "rounded" },
   "stats": { "numberFormat": "short" },
   "languages": { "layout": "bar", "count": 8, "hide": ["Jupyter Notebook"] },
-  "trophies": { "ranks": ["-C"] }
+  "trophies": { "ranks": ["-E"] }
 }

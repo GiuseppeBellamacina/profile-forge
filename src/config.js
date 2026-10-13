@@ -1,5 +1,6 @@
 // config.json: schema defaults, validation, and normalization into the runtime config used by stats/render.
 import { LOCALES, normLocale } from "./i18n.js";
+import { ALL_LEVELS, OLD_RANKS } from "./levels.js";
 import { hasTheme, parseColors, registerThemes, THEME_NAMES } from "./themes.js";
 
 export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"];
@@ -143,7 +144,14 @@ export function normalize(raw = {}) {
       .filter((it) => !hideSections.has(normKey(it.id)));
   }
 
-  const ranks = c.trophies.ranks.map((r) => r.toUpperCase());
+  const rankName = (r, key) => {
+    const name = r.replace(/^-/, "").toUpperCase();
+    if (OLD_RANKS[name]) throw new Error(`Config "trophies.${key}": "${name}" no longer exists. Ranks are now ${ALL_LEVELS.join(", ")} (use "${OLD_RANKS[name]}" instead of "${name}").`);
+    if (![...ALL_LEVELS, "SECRET", "?"].includes(name)) throw new Error(`Config "trophies.${key}": unknown rank "${r}". Valid: ${ALL_LEVELS.join(", ")}, SECRET (a leading "-" drops one, e.g. "-E").`);
+    return (r.startsWith("-") ? "-" : "") + name;
+  };
+  const ranks = c.trophies.ranks.map((r) => rankName(r, "ranks"));
+  for (const r of c.trophies.hideRanks) rankName(r, "hideRanks");
   const colors = parseColors(c.colors);
   const colorsByTheme = Object.fromEntries(Object.entries(c.colorsByTheme).map(([s, v]) => [s, parseColors(v)]));
   const facts = c.header.facts;
