@@ -1,7 +1,7 @@
 import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
-import { planSnake, sweepSnake } from "./snake.js";
+import { snakeRoute } from "./snake.js";
 import { trophyMatches } from "./stats.js";
 import { parseColors, resolveTheme } from "./themes.js";
 
@@ -466,6 +466,59 @@ function trophiesSection(d, X, W = 940) {
   };
 }
 
+// Heatmap cells: every shape fits the same 13.5px box. `fill` is the colour of the day's level; `dim` the colour of an empty
+// day (moons are drawn as an empty disc with the lit part on top). `grow` makes the shape a little larger, used to hide
+// what lies underneath. `inner` is a <title> for tooltips.
+const CELL = 13.5;
+export const CELL_SHAPES = ["square", "round", "triangle", "snowflake", "moon", "mixed"];
+const MIXED = ["square", "round", "triangle"];
+/** The shape of cell (w, i): fixed for a given grid, random among the geometric ones for "mixed". */
+export const shapeAt = (kind, w, i) => (kind === "mixed" ? MIXED[(((w * 73856093) ^ (i * 19349663)) >>> 0) % MIXED.length] : kind);
+const MOON_LIT = [0, 0.18, 0.45, 0.75, 1];
+function cellShape(kind, x, y, fill, { lvl = 0, up = true, grow = 0, inner = "", dim = fill, rx = 3 } = {}) {
+  const h = CELL / 2;
+  const cx = x + h;
+  const cy = y + h;
+  const g = grow;
+  switch (kind) {
+    case "round":
+      return `<rect x="${r3(x - g)}" y="${r3(y - g)}" width="${r3(CELL + 2 * g)}" height="${r3(CELL + 2 * g)}" rx="${r3(h + g)}" fill="${fill}">${inner}</rect>`;
+    case "triangle": {
+      const r = h + g + 0.4;
+      const t = up ? [[cx, cy - r * 0.92], [cx + r, cy + r * 0.78], [cx - r, cy + r * 0.78]] : [[cx - r, cy - r * 0.78], [cx + r, cy - r * 0.78], [cx, cy + r * 0.92]];
+      return `<polygon points="${t.map(([a, b]) => `${r3(a)},${r3(b)}`).join(" ")}" fill="${fill}" stroke="${fill}" stroke-width="${r3(1 + g)}" stroke-linejoin="round">${inner}</polygon>`;
+    }
+    case "snowflake": {
+      const R = h - 0.4 + g;
+      let d = "";
+      for (let k = 0; k < 6; k++) {
+        const a = (Math.PI / 3) * k + Math.PI / 2;
+        const ux = Math.cos(a);
+        const uy = Math.sin(a);
+        d += `M${r3(cx)} ${r3(cy)}L${r3(cx + ux * R)} ${r3(cy + uy * R)}`;
+        // a small branch on each arm
+        const bx = cx + ux * R * 0.62;
+        const by = cy + uy * R * 0.62;
+        for (const da of [0.9, -0.9]) d += `M${r3(bx)} ${r3(by)}l${r3(Math.cos(a + da) * R * 0.34)} ${r3(Math.sin(a + da) * R * 0.34)}`;
+      }
+      return `<path d="${d}" fill="none" stroke="${fill}" stroke-width="${r3(1.3 + 2 * g)}" stroke-linecap="round">${inner}</path>`;
+    }
+    case "moon": {
+      const R = h + g;
+      const base = `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="${r3(R)}" fill="${dim}"/>`;
+      const f = MOON_LIT[lvl] ?? 0;
+      if (f <= 0) return `<g>${inner}${base}</g>`;
+      // lit side on the right: a half circle plus the terminator, an ellipse arc that bows right for a crescent, left when gibbous
+      const lit = f >= 1
+        ? `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="${r3(R)}" fill="${fill}"/>`
+        : `<path d="M${r3(cx)} ${r3(cy - R)}A${r3(R)} ${r3(R)} 0 0 1 ${r3(cx)} ${r3(cy + R)}A${r3(Math.max(0.01, R * Math.abs(1 - 2 * f)))} ${r3(R)} 0 0 ${f < 0.5 ? 0 : 1} ${r3(cx)} ${r3(cy - R)}Z" fill="${fill}"/>`;
+      return `<g>${inner}${base}${lit}</g>`;
+    }
+    default:
+      return `<rect x="${r3(x - g)}" y="${r3(y - g)}" width="${r3(CELL + 2 * g)}" height="${r3(CELL + 2 * g)}" rx="${r3(rx + g)}" fill="${fill}">${inner}</rect>`;
+  }
+}
+
 function heatmapSection(d, X, W = 940) {
   const { c, A, k, tr, tag, num } = X;
   const o0 = k.heatmap;
@@ -498,7 +551,12 @@ function heatmapSection(d, X, W = 940) {
   const step = 16.8;
   const x0 = 78;
   const y0 = 722;
-  const rx = o.cell === "round" ? 6.75 : 3;
+  const rx = 3;
+  // one cell of the grid; `grow` / `lvl` let the snake cover it with the empty-day look
+  const cell = (w, i, lvl, inner = "", grow = 0) => {
+    const kind = shapeAt(o.cell, w, i);
+    return cellShape(kind, r3(x0 + w * step), r3(y0 + i * step), c.heat[lvl], { lvl, up: (w + i) % 2 === 0, grow, inner, dim: c.heat[0], rx });
+  };
   let month = "";
   const months = o.monthLabels
     ? weeks
@@ -515,12 +573,12 @@ function heatmapSection(d, X, W = 940) {
   const SNAKE_LEN = 6;
   const SNAKE_PAUSE = 1.5;
   const snakeSvg = () => {
-    const { pts: route, eaten } = o.snakePath === "sweep" ? sweepSnake(weeks) : planSnake(weeks, level, SNAKE_LEN);
+    const { pts: route, eaten } = snakeRoute(o.snakePath, weeks, level, SNAKE_LEN);
     const pts = route.map(({ w, i }) => ({ x: x0 + w * step, y: y0 + i * step }));
     const last = pts.length - 1;
     // a long route is played faster so one loop never takes much longer than half a minute
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));
-    const seg = (k) => `<rect width="13.5" height="13.5" rx="${rx}" fill="${c.accent2}" opacity="${r3(1 - k * 0.1)}"`;
+    const seg = (k) => `<rect width="13.5" height="13.5" rx="${rx}" fill="${c.snake}" opacity="${r3(1 - k * 0.1)}"`;
     if (A.t !== undefined) {
       // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
       return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return `${seg(k)} x="${r3(p.x)}" y="${r3(p.y)}"/>`; }).join("");
@@ -546,7 +604,7 @@ function heatmapSection(d, X, W = 940) {
         if (!n) continue;
         const j = eaten.get(`${w},${i}`) ?? last;
         A.css.push(`@keyframes ce${w}_${i}{0%,${pct(j * DT)}%{opacity:0}${pct(j * DT + 0.1)}%,99.5%{opacity:1}100%{opacity:0}}`);
-        covers += `<rect x="${r3(x0 + w * step - 0.6)}" y="${r3(y0 + i * step - 0.6)}" width="14.7" height="14.7" rx="${rx + 0.6}" fill="${c.heat[0]}" opacity="0" style="${run(`ce${w}_${i}`)}"/>`;
+        covers += cell(w, i, 0, "", o.cell === "snowflake" ? 0.3 : 0.6).replace(/^<(\w+)/, `<$1 opacity="0" style="${run(`ce${w}_${i}`)}"`);
       }
     });
     return `<clipPath id="snkclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath>
@@ -563,7 +621,7 @@ function heatmapSection(d, X, W = 940) {
     .map(
       (wk, w) =>
         `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
-          .map(([key, n, i]) => `<rect x="${r3(x0 + w * step)}" y="${r3(y0 + i * step)}" width="13.5" height="13.5" rx="${rx}" fill="${c.heat[level(n)]}"><title>${n} · ${key}</title></rect>`)
+          .map(([key, n, i]) => cell(w, i, level(n), `<title>${n} · ${key}</title>`))
           .join("")}</g>`,
     )
     .join("")}
@@ -572,7 +630,7 @@ function heatmapSection(d, X, W = 940) {
     o.legend
       ? `<g${A.a(2.4, 0.5, { o: 0 })}>
     <text x="${840 + W - 940}" y="698" text-anchor="end" font-size="10" fill="${c.muted}">${esc(tr("less"))}</text>
-    ${c.heat.map((h, i) => `<rect x="${846 + W - 940 + i * 16}" y="688" width="12" height="12" rx="${rx > 3 ? 6 : 3}" fill="${h}"/>`).join("")}
+    ${c.heat.map((h, i) => cellShape(o.cell === "mixed" ? "square" : o.cell, 846 + W - 940 + i * 16 - 0.75, 687.25, h, { lvl: i, dim: c.heat[0] })).join("")}
     <text x="${930 + W - 940}" y="698" font-size="10" fill="${c.muted}">${esc(tr("more"))}</text>
   </g>`
       : ""

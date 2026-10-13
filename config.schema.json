@@ -18,7 +18,7 @@
         "icon_color": { "$ref": "#/definitions/hex" }, "ring_color": { "$ref": "#/definitions/hex" }, "fire_color": { "$ref": "#/definitions/hex" },
         "track_color": { "$ref": "#/definitions/hex" }, "stroke_color": { "$ref": "#/definitions/hex" },
         "currStreakNum": { "$ref": "#/definitions/hex" }, "sideNums": { "$ref": "#/definitions/hex" }, "currStreakLabel": { "$ref": "#/definitions/hex" },
-        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" },
+        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" },
         "bg_gradient": { "type": "string" }
       }
     },
@@ -169,9 +169,9 @@
       "type": "object", "additionalProperties": false,
       "properties": {
         "mode": { "enum": ["grid", "snake"], "default": "grid", "description": "grid: the plain contribution grid. snake: an animated snake eats the contributions (loops forever, plain CSS)." },
-        "snakePath": { "enum": ["smart", "sweep"], "default": "smart", "description": "Route of the snake. smart: eats the quietest days first and works up to the busiest, steering around its own body and around busy days not yet due. sweep: column by column." },
+        "snakePath": { "enum": ["smart", "busy", "nearest", "wander", "sweep", "rows", "spiral"], "default": "smart", "description": "Route of the snake. smart: quietest days first, then busier ones. busy: busiest first. nearest: always the closest day. wander: one of the closest days, pseudo-randomly. sweep: column by column. rows: row by row. spiral: outside in." },
         "weeks": { "type": "integer", "minimum": 4, "maximum": 53, "default": 53 },
-        "cell": { "enum": ["square", "round"], "default": "square" },
+        "cell": { "enum": ["square", "round", "triangle", "snowflake", "moon", "mixed"], "default": "square", "description": "Shape of a day. triangle: alternating up / down. snowflake: more contributions, brighter flake. moon: phases from empty to full by contributions. mixed: a random mix of square, round and triangle." },
         "weekStart": { "enum": ["sun", "mon"], "default": "sun" },
         "legend": { "type": "boolean", "default": true },
         "monthLabels": { "type": "boolean", "default": true }
