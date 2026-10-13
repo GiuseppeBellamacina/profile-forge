@@ -10,7 +10,7 @@ const rgb = (h) => {
   if (h.length === 3) h = [...h].map((x) => x + x).join("");
   return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
 };
-const mix = (a, b, p) => "#" + rgb(a).map((x, i) => Math.round(x + (rgb(b)[i] - x) * p).toString(16).padStart(2, "0")).join("");
+export const mix = (a, b, p) => "#" + rgb(a).map((x, i) => Math.round(x + (rgb(b)[i] - x) * p).toString(16).padStart(2, "0")).join("");
 
 /** Derive a full theme from the 5 colors that matter: bg, text, accent, accent2, fire. */
 const dv = (base, bg, text, accent, accent2, fire, extra = {}) => ({

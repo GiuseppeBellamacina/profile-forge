@@ -336,7 +336,7 @@ A day with zero contributions *today* does not break the current streak.
     "hideRanks": [],
     "columns": 0,
     "rows": 0,
-    "marginW": 12,
+    "marginW": 14,
     "marginH": 12,
     "noBg": false,
     "noFrame": false,
@@ -354,7 +354,11 @@ A day with zero contributions *today* does not break the current streak.
 | `hideRanks` | same | `[]` | Drop ranks |
 | `columns` | −1–12 | `0` | `0` / `-1`: everything on one row |
 | `rows` | 0–10 | `0` | `0`: no limit |
-| `marginW`, `marginH` | 0–60 | `12` | Spacing |
+| `marginW`, `marginH` | 0–60 | `14` | Space between trophies |
+| `padding` | 0–60 | `20` | Space between the panel edge and the trophies |
+| `align` | `center` `left` | `center` | Where an incomplete last row sits |
+| `style` | `cup` `medal` `shield` `gem` `letter` | `cup` | The picture on each trophy; the level gives it its colour |
+| `parts` | `title` `label` `score` `bar` | all | What each trophy shows besides the picture; the rest re-centres itself |
 | `noBg`, `noFrame` | boolean | `false` | Remove the trophy background / frame |
 | `extra` | `Issues` `Reviews` | `[]` | Opt-in trophies |
 | `title` | string | translated | Custom panel title |
@@ -576,7 +580,7 @@ Not ported from the original projects: `card_width` / `card_height` (the card is
   "languages": { "title": null, "layout": "bar", "count": 8, "hide": [], "excludeRepos": [], "hideProgress": false,
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0 },
   "trophies": { "title": null, "titles": [], "hideTitles": [], "ranks": [], "hideRanks": [], "columns": 0, "rows": 0,
-                "marginW": 12, "marginH": 12, "noBg": false, "noFrame": false, "extra": [] },
+                "marginW": 14, "marginH": 14, "padding": 20, "align": "center", "style": "cup", "parts": ["title", "label", "score", "bar"], "noBg": false, "noFrame": false, "extra": [] },
   "heatmap": { "mode": "grid", "snakePath": "smart", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
   "export": { "png": false, "gif": false }
 }
