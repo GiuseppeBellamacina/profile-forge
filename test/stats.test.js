@@ -261,7 +261,7 @@ test("heatmap: grid is plain, snake adds an animated snake that eats the contrib
   assert.ok(!plain.includes("snkclip") && !plain.includes("@keyframes sn0"));
   const [d2, k2] = make({ layout: ["heatmap"], heatmap: { mode: "snake" } });
   const snake = render(d2, { k: k2 });
-  assert.ok(snake.includes("@keyframes sn0") && snake.includes("@keyframes sn5") && snake.includes('id="snkclip"'));
+  assert.ok(snake.includes("@keyframes sn{") && snake.includes('id="snkclip"'));
   assert.ok(/@keyframes ce\d+_\d+/.test(snake), "every eaten cell has a cover that appears when the head passes");
   const still = render(d2, { k: k2, t: 1 });
   assert.ok(!still.includes("@keyframes") && still.includes('rx="3" fill'), "static frames keep the snake waiting at the start, no CSS");

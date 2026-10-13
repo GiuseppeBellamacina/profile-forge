@@ -376,12 +376,13 @@ Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
 ## Heatmap
 
 ```json
-{ "heatmap": { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true } }
+{ "heatmap": { "mode": "grid", "snakePath": "smart", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true } }
 ```
 
 | Key | Values | Default |
 |---|---|---|
 | `mode` | `grid` `snake` | `grid` |
+| `snakePath` | `smart` `sweep` | `smart` |
 | `weeks` | 4–53 | `53` |
 | `cell` | `square` `round` | `square` |
 | `weekStart` | `sun` `mon` | `sun` |
@@ -392,7 +393,7 @@ Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
 |---|---|---|
 | <img src="docs/guide/heatmap-square.png"> | <img src="docs/guide/heatmap-round.png"> | <img src="docs/guide/heatmap-compact.png"> |
 
-**Snake.** `"mode": "snake"` turns the heatmap into the animated snake from [Platane/snk](https://github.com/Platane/snk): a snake crawls through the grid column by column and eats the contributions, then starts over. It is the heatmap itself, so you do not need a separate snake image next to the card (use either the plain grid or the snake, not both). It is plain CSS, so it animates inside a README `<img>`; it adds about 80 KB to the SVG, and in PNG / GIF exports the snake waits at the start of the grid.
+**Snake.** `"mode": "snake"` turns the heatmap into the animated snake from [Platane/snk](https://github.com/Platane/snk): a snake crawls through the grid column by column and eats the contributions, then starts over. It is the heatmap itself, so you do not need a separate snake image next to the card (use either the plain grid or the snake, not both). With `"snakePath": "smart"` (default) the route is planned when the card is generated: the snake eats the quietest days first and works up to the busiest ones, finding the cheapest way to the next day of the current tier (Dijkstra on the grid), steering around its own body and out of dead ends, and avoiding busier days that are not due yet. The finished route is written into the SVG, so nothing is computed when the image is viewed. `"sweep"` is the classic route, column by column. A long route is played faster, so one loop lasts about 30 seconds at most. It is plain CSS, so it animates inside a README `<img>`; it adds about 80 KB to the SVG, and in PNG / GIF exports the snake waits at the start of the grid.
 
 ## Themes, custom themes and colors
 
@@ -572,7 +573,7 @@ Not ported from the original projects: `card_width` / `card_height` (the card is
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0 },
   "trophies": { "title": null, "titles": [], "hideTitles": [], "ranks": [], "hideRanks": [], "columns": 0, "rows": 0,
                 "marginW": 12, "marginH": 12, "noBg": false, "noFrame": false, "extra": [] },
-  "heatmap": { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
+  "heatmap": { "mode": "grid", "snakePath": "smart", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
   "export": { "png": false, "gif": false }
 }
 ```

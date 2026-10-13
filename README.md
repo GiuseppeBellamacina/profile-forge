@@ -153,7 +153,7 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0, "title": null },
   "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-C"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
                  "noBg": false, "noFrame": false, "extra": ["Issues", "Reviews"], "title": null },
-  "heatmap":   { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },   // mode: "snake" = animated snake
+  "heatmap":   { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },   // mode: "snake" = animated snake (snakePath: smart | sweep)
   "export":    { "png": false, "gif": false },   // local CLI only, see "Local CLI, PNG and GIF"
   "includePrivate": false
 }
