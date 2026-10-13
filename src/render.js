@@ -300,7 +300,7 @@ function languagesSection(d, X) {
         return `
   <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, 940, H, c)}${title}</g>
   ${bar ? `<clipPath id="bar"><rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}"/></clipPath>
-  <rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}" fill="${c.track}"/>
+  <rect x="50" y="414" width="900" height="${bh}" rx="${bh / 2}" fill="${c.track}"${A.a(1.0, 0.5, { o: 0 })}/>
   <g clip-path="url(#bar)"><g${A.a(1.1, 1.0, { sx: 0 }, {}, [50, 420])}>${segs}</g></g>` : ""}
   ${top.map((l, i) => {
     const lx = 50 + (i % cols) * (900 / cols);
