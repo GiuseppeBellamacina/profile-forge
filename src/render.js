@@ -147,7 +147,25 @@ function headerSection(d, X) {
     followers: ["people", tr("followersFact", { n: num(d.stats.followers) })],
   };
   const facts = hs.facts.map((f) => FACTS[f]);
-  const C = 2 * Math.PI * 50;
+  const ringStyle = hs.rankStyle;
+  const thick = hs.rankThickness;
+  // the rank indicator at `grow` pixels outside its base size, as a ring, a hexagon or a shield; pathLength is 100 so that dashes are percents
+  const ringEl = (grow, attrs) => {
+    const R = 50 + grow;
+    if (ringStyle === "hexagon") {
+      const pts = Array.from({ length: 6 }, (_, k) => { const a = ((-90 + 60 * k) * Math.PI) / 180; return `${r3(900 + R * 1.06 * Math.cos(a))} ${r3(90 + R * 1.06 * Math.sin(a))}`; });
+      return `<path d="M${pts.join("L")}Z" fill="none" pathLength="100" stroke-linejoin="round" ${attrs}/>`;
+    }
+    if (ringStyle === "shield") {
+      const k = R / 50;
+      const P = (x, y) => `${r3(900 + (x - 900) * k)} ${r3(92 + (y - 92) * k)}`;
+      return `<path d="M${P(900, 40)}L${P(947, 54)}V${r3(92 + (92 - 92) * k)}C${P(947, 120)} ${P(924, 137)} ${P(900, 146)}C${P(876, 137)} ${P(853, 120)} ${P(853, 92)}V${r3(92 + (54 - 92) * k)}Z" fill="none" pathLength="100" stroke-linejoin="round" ${attrs}/>`;
+    }
+    return `<circle cx="900" cy="90" r="${R}" fill="none" pathLength="100" ${attrs}/>`;
+  };
+  // the progress colour: the colour of the level, lighter at the start (the top 1% runs from pink to gold)
+  const lvCol = levelColor(c, d.rank.level);
+  X.defs.push(`<linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${mix(lvCol, "#ffffff", 0.35)}"/><stop offset="1" stop-color="${isTop(d.rank.level) ? levelColor(c, "S") : lvCol}"/></linearGradient>`);
   const progress = 100 - d.rank.percentile;
   const pct = hs.rankIcon === "percentile";
   const gh = hs.rankIcon === "github";
@@ -174,14 +192,13 @@ function headerSection(d, X) {
       const s = 4.2;
       return `<path d="M${x} ${r3(y - s)}L${r3(x + s * 0.3)} ${r3(y - s * 0.3)}L${r3(x + s)} ${y}L${r3(x + s * 0.3)} ${r3(y + s * 0.3)}L${x} ${r3(y + s)}L${r3(x - s * 0.3)} ${r3(y + s * 0.3)}L${r3(x - s)} ${y}L${r3(x - s * 0.3)} ${r3(y - s * 0.3)}Z" fill="${col}" opacity="0.9"${A.loop({ "0%,100%": "opacity:0;transform:scale(.3)", "50%": "opacity:1;transform:scale(1)" }, { dur: 2, delay: 1.2 + k * 0.33, origin: [x, y] })}/>`;
     };
-    return `<circle cx="900" cy="90" r="59" fill="none" stroke="${col}" stroke-width="2.5" opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}/>
-    <circle cx="900" cy="90" r="50" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="26 ${r3(C - 26)}" opacity="0.55"${A.loop({ "0%": "transform:rotate(0deg)", "100%": "transform:rotate(360deg)" }, { dur: 3.2, ease: "linear", delay: 1.2, origin: [900, 90], still: ' transform="rotate(-40 900 90)"' })}/>
+    return `${ringEl(9, `stroke="${col}" stroke-width="2.5" opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`)}
+    ${ringEl(0, `stroke="#fff" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="7 93" opacity="0.55"${A.loop({ "0%": "stroke-dashoffset:0", "100%": "stroke-dashoffset:-100" }, { dur: 3.2, ease: "linear", delay: 1.2, still: ' stroke-dashoffset="-12"' })}`)}
     ${Array.from({ length: 6 }, (_, k) => spark(k)).join("")}`;
   };
   const rank = () => `<g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
-    <circle cx="900" cy="90" r="50" fill="none" stroke="${c.track}" stroke-width="8"/>
-    <circle cx="900" cy="90" r="50" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round"
-      stroke-dasharray="${r3(C)}" transform="rotate(-90 900 90)"${A.a(0.5, 1.4, { dash: C }, { dash: (C * (100 - progress)) / 100 })}/>
+    ${ringEl(0, `stroke="${c.track}" stroke-width="${thick}"`)}
+    ${ringEl(0, `stroke="url(#rg)" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="100"${ringStyle === "ring" ? ' transform="rotate(-90 900 90)"' : ""}${A.a(0.5, 1.4, { dash: 100 }, { dash: 100 - progress })}`)}
     ${top ? topRing() : ""}
     ${
       pct

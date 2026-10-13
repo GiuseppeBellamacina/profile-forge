@@ -336,11 +336,11 @@ test("top 1% (S+) has looping effects on the ring and the trophies; other levels
     return render(d, { k, t });
   };
   const top = view("S+");
-  assert.ok(/@keyframes lp\d+/.test(top) && top.includes('stroke-dasharray="26 '), "halo, running light and sparkles");
+  assert.ok(/@keyframes lp\d+/.test(top) && top.includes('stroke-dasharray="7 93"'), "halo, running light and sparkles");
   assert.ok(top.includes("-shine"), "the trophies shimmer");
   assert.ok(!/@keyframes lp\d+/.test(view("A")), "a normal level has no loops");
   const still = view("S+", 1);
-  assert.ok(!/@keyframes/.test(still) && still.includes("rotate(-40 900 90)"), "static frame: the same ring, held still");
+  assert.ok(!/@keyframes/.test(still) && still.includes('stroke-dashoffset="-12"'), "static frame: the same ring, held still");
 });
 
 test("trophies: styles, visible parts, padding and alignment", () => {
@@ -385,4 +385,14 @@ test("avatar frames: every frame draws, auto follows the level, shapes and stati
   assert.ok(!/@keyframes lp/.test(view({ frame: "aurora" }, "S", 1)) && !/@keyframes lp/.test(view({ frame: "neon", frameAnimation: "none" }, "S")), "static frames and 'none' do not move");
   assert.throws(() => normalize({ header: { frame: "gold" } }), /header\.frame/);
   assert.throws(() => normalize({ header: { frameAnimation: "wobble" } }), /header\.frameAnimation/);
+});
+
+test("rank indicator: ring, hexagon or shield, with an adjustable thickness", () => {
+  const svg = (header) => { const [d, k] = make({ layout: ["header"], header }); return render(d, { k, t: 1 }); };
+  assert.ok(svg({}).includes('<circle cx="900" cy="90" r="50"') && svg({}).includes('stroke-width="8"'), "the ring is the default");
+  const hex = svg({ rankStyle: "hexagon", rankThickness: 12 });
+  assert.ok(/<path d="M[^"]*Z" fill="none" pathLength="100"/.test(hex) && hex.includes('stroke-width="12"') && !hex.includes('<circle cx="900" cy="90" r="50"'));
+  assert.ok(svg({ rankStyle: "shield" }).includes("C"), "the shield is a path with curves");
+  assert.throws(() => normalize({ header: { rankStyle: "star" } }), /header\.rankStyle/);
+  assert.throws(() => normalize({ header: { rankThickness: 30 } }), /rankThickness/);
 });
