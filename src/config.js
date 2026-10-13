@@ -5,6 +5,8 @@ import { hasTheme, parseColors, registerThemes, THEME_NAMES } from "./themes.js"
 export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"];
 export const STATS_ITEMS = ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"];
 export const STATS_EXTRA = ["prsmerged", "prsmergedpercentage", "discussionsstarted", "discussionsanswered"];
+// Narrowest width (in grid columns, out of 6) each section can be drawn at; the header always spans the card.
+export const MIN_SPAN = { header: 6, about: 2, workingOn: 2, stats: 3, streak: 3, languages: 3, trophies: 2, heatmap: 3, techStack: 2 };
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 export const DEFAULTS = {
@@ -15,6 +17,7 @@ export const DEFAULTS = {
   card: { radius: 20, hideBorder: false, animations: true, background: { gradient: null, pattern: "none", glow: true } },
   layout: ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
   hideSections: [],
+  grid: null, // [{ section, cols }]: free 6-column grid instead of `layout` (see GUIDE)
   header: { avatar: "circle", facts: ["contributionsThisYear", "bestDay", "busiestWeekday"], rankIcon: "level" },
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
@@ -38,7 +41,7 @@ const RANGES = {
   "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "heatmap.weeks": [4, 53],
 };
 // Keys whose value shape isn't described by the default's type.
-const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "about", "workingOn", "links", "techStack"]);
+const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
 const NUMERIC_NULL = new Set(["stats.numberPrecision", "stats.commitsYear", "streak.startingYear"]);
 const isPlain = (v) => v && typeof v === "object" && !Array.isArray(v);
 
@@ -122,6 +125,23 @@ export function normalize(raw = {}) {
     })
     .filter((r) => r.length);
 
+  let grid = null;
+  if (c.grid !== null) {
+    if (!Array.isArray(c.grid)) throw new Error(`Config "grid" must be a list of { section, cols }`);
+    const seen = new Set();
+    grid = c.grid
+      .map((it, i) => {
+        if (!isPlain(it)) throw new Error(`Config "grid[${i}]" must be { "section": ..., "cols": ... }`);
+        const id = sectionId(it.section);
+        if (seen.has(id)) throw new Error(`Config "grid": section "${id}" appears twice`);
+        seen.add(id);
+        const cols = it.cols ?? (id === "header" ? 6 : 3);
+        if (!Number.isInteger(cols) || cols < 1 || cols > 6) throw new Error(`Config "grid[${i}].cols" must be a whole number from 1 to 6 (got ${cols})`);
+        return { id, span: Math.max(cols, MIN_SPAN[id]) };
+      })
+      .filter((it) => !hideSections.has(normKey(it.id)));
+  }
+
   const ranks = c.trophies.ranks.map((r) => r.toUpperCase());
   const colors = parseColors(c.colors);
   const colorsByTheme = Object.fromEntries(Object.entries(c.colorsByTheme).map(([s, v]) => [s, parseColors(v)]));
@@ -138,7 +158,7 @@ export function normalize(raw = {}) {
   return {
     ...c,
     locale: normLocale(c.locale),
-    slots, colors, colorsByTheme, layout, hideSections,
+    slots, colors, colorsByTheme, layout, grid, hideSections,
     header: { ...c.header, facts },
     stats: {
       ...c.stats,

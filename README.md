@@ -198,7 +198,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 
 ### Layout
 
-`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`. A nested pair puts two sections side by side at half width: any two of them except `header` (`[["about", "workingOn"], ["trophies", "heatmap"]]`). `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width, so on their own they are centered. In a pair, `workingOn` stacks its cards, `trophies` wraps to 4 per row, `heatmap` shows the last 23 weeks and `techStack` keeps scrolling. `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`) are skipped.
+`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`. A nested pair puts two sections side by side at half width: any two of them except `header` (`[["about", "workingOn"], ["trophies", "heatmap"]]`). `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width, so on their own they are centered. In a pair, `workingOn` stacks its cards, `trophies` wraps to as many per row as fit, `heatmap` shows the last weeks that fit and `techStack` keeps scrolling. For free sizes and positions use the 6-column `grid` instead (see the [guide](GUIDE.md#free-grid-grid)). `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`) are skipped.
 
 ### Options, by section
 

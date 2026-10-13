@@ -9,6 +9,11 @@ import { parseColors, resolveTheme } from "./themes.js";
 const FB = "Inter, 'Segoe UI', Ubuntu, 'Helvetica Neue', Arial, sans-serif";
 const FD = "'Space Grotesk', Inter, 'Segoe UI', Ubuntu, sans-serif";
 export const DURATION = 4.4;
+// The free grid: 6 columns of 140px with a 20px gutter inside the 940px content area.
+export const COLS = 6;
+const GUTTER = 20;
+const COL_W = 140;
+export const spanWidth = (n) => n * COL_W + (n - 1) * GUTTER;
 const W = 1000;
 
 const clamp = (x) => Math.min(1, Math.max(0, x));
@@ -106,7 +111,7 @@ const heading = (x, y, text, c, extra = "") =>
 const sub = (c, text) => `<tspan dx="6" font-weight="400" letter-spacing="0" fill="${c.muted}">· ${esc(text)}</tspan>`;
 
 /**
- * Every section is { w, h, top, nx, draw(H) }: w = 940 (full) or 460 (half, can share a row), h = natural height,
+ * Every section is { w, h, top, nx, draw(H) }: w = its width (a section can be built at any width the grid gives it; 940 / 460 are the natural ones), h = natural height,
  * top/nx = the absolute y/x origin it draws at (the layout engine translates it), draw(H) = svg for a panel of height H.
  */
 function headerSection(d, X) {
@@ -178,7 +183,7 @@ function headerSection(d, X) {
   };
 }
 
-function statsSection(d, X) {
+function statsSection(d, X, W = 460) {
   const { c, A, k, tr, num } = X;
   const o = k.stats;
   const s = d.stats;
@@ -192,28 +197,30 @@ function statsSection(d, X) {
   ].filter(([, id]) => o.show.has(id.toLowerCase()));
   const items = [...base, ...extra];
   const fmt = (id, v) => (id === "prsMergedPercentage" ? `${v.toFixed(1)}%` : o.numberFormat === "short" ? short(v, o.numberPrecision) : num(v));
-  const rows = Math.max(1, Math.ceil(items.length / 2));
+  const two = W >= 400; // narrow cards list the stats in one column
+  const colW = two ? (W - 40) / 2 : W - 40;
+  const rows = Math.max(1, Math.ceil(items.length / (two ? 2 : 1)));
   const lh = o.lineHeight;
   const gap = o.icons ? 24 : 0;
   return {
-    w: 460, top: 184, nx: 30, h: Math.max(120, 78 + (rows - 1) * lh),
+    w: W, top: 184, nx: 30, h: Math.max(120, 78 + (rows - 1) * lh),
     draw: (H) => `
-  <g${A.a(0.4, 0.5, { o: 0 })}>${panel(30, 184, 460, H, c)}${heading(50, 210, o.title ?? tr("stats"), c)}</g>
+  <g${A.a(0.4, 0.5, { o: 0 })}>${panel(30, 184, W, H, c)}${heading(50, 210, o.title ?? tr("stats"), c)}</g>
   ${items
     .map(([ic, id, value], i) => {
-      const x = 50 + (i % 2) * 225;
-      const y = 240 + Math.floor(i / 2) * lh;
+      const x = 50 + (two ? i % 2 : 0) * colW;
+      const y = 240 + Math.floor(i / (two ? 2 : 1)) * lh;
       return `<g${A.a(0.55 + i * 0.07, 0.45, { o: 0, ty: 8 })}>
     ${o.icons ? icon(ic, x, y - 12, 15, c.accent) : ""}
     <text x="${x + gap}" y="${y}" font-size="13.5" font-weight="${o.textBold ? 600 : 400}" fill="${c.muted}">${esc(tr(id))}</text>
-    <text x="${x + 200}" y="${y}" text-anchor="end" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${fmt(id, value)}</text>
+    <text x="${x + colW - 25}" y="${y}" text-anchor="end" font-size="15" font-weight="700" font-family="${FD}" fill="${c.text}">${fmt(id, value)}</text>
   </g>`;
     })
     .join("")}`,
   };
 }
 
-function streakSection(d, X) {
+function streakSection(d, X, W = 460) {
   const { c, A, k, tr, tag, num, fmtDate } = X;
   const o = k.streak;
   const { total, current, longest, first } = d.streak;
@@ -236,19 +243,19 @@ function streakSection(d, X) {
     <text x="${x}" y="343" text-anchor="middle" font-size="11" fill="${c.streakDates}">${esc(text)}</text>
   </g>`;
   const dividers = Array.from({ length: n - 1 }, (_, i) => {
-    const x = r3(510 + (460 * (i + 1)) / n);
+    const x = r3(510 + (W * (i + 1)) / n);
     return `<line x1="${x}" y1="222" x2="${x}" y2="340" stroke="${c.streakStroke}"/>`;
   }).join("");
   const days = [...o.excludeDays].sort().map((i) => weekday(tag, i, "short")).join(", ");
   return {
-    w: 460, top: 184, nx: 510, h: 168,
+    w: W, top: 184, nx: 510, h: 168,
     draw: (H) => `
-  <g${A.a(0.6, 0.5, { o: 0 })}>${panel(510, 184, 460, H, c)}${heading(530, 210, o.title ?? tr("streak"), c)}${dividers}
-    ${o.excludeDays.size && o.excludeDaysLabel ? `<text x="950" y="210" text-anchor="end" font-size="10" fill="${c.streakExcl}">${esc(tr("excluding", { days }))}</text>` : ""}
+  <g${A.a(0.6, 0.5, { o: 0 })}>${panel(510, 184, W, H, c)}${heading(530, 210, o.title ?? tr("streak"), c)}${dividers}
+    ${o.excludeDays.size && o.excludeDaysLabel ? `<text x="${510 + W - 20}" y="210" text-anchor="end" font-size="10" fill="${c.streakExcl}">${esc(tr("excluding", { days }))}</text>` : ""}
   </g>
   <g transform="translate(0 ${r3((H - 168) / 2)})">${cols
     .map(([key, delay, value, label, text, nc, lc], i) => {
-      const x = r3(510 + (460 * (i + 0.5)) / n);
+      const x = r3(510 + (W * (i + 0.5)) / n);
       const ring =
         key === "current"
           ? `<g${A.a(0.9, 0.6, { o: 0, s: 0.6 }, {}, [x, 266])}>
@@ -268,9 +275,11 @@ const arc = (cx, cy, r, a0, a1) => {
   return `${p(a0)} A ${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p(a1)}`;
 };
 
-function languagesSection(d, X, half = false) {
+function languagesSection(d, X, w) {
   const { c, A, k, tr } = X;
   const o = k.languages;
+  const chartLayout = o.layout !== "bar" && o.layout !== "compact";
+  const W = w ?? (chartLayout ? 460 : 940);
   const { top, total } = d.languages;
   if (!top.length) return null;
   const value = (l) => (o.hideProgress ? "" : o.statsFormat === "bytes" ? bytes(l.size) : `${l.percent.toFixed(1)}%`);
@@ -281,9 +290,8 @@ function languagesSection(d, X, half = false) {
 
   if (o.layout === "bar" || o.layout === "compact") {
     const compact = o.layout === "compact";
-    const W = half ? 460 : 940; // bar layouts are full width unless paired with another section
     const IW = W - 40;
-    const cols = half ? 2 : compact ? 5 : 4;
+    const cols = W < 500 ? 2 : W < 700 ? 3 : compact ? 5 : 4;
     const rows = Math.ceil(top.length / cols);
     const bar = !o.hideProgress;
     const y0 = bar ? 452 : 424;
@@ -313,14 +321,14 @@ function languagesSection(d, X, half = false) {
     };
   }
 
-  // Half-width charts: donut / pie (legend on the right) and donut-vertical (legend below).
-  const vertical = o.layout === "donut-vertical";
+  // Charts: donut / pie (legend on the right) and donut-vertical (legend below; also used when the card is narrow).
+  const vertical = o.layout === "donut-vertical" || W < 400;
   const shown = top.slice(0, 10);
   const pie = o.layout === "pie";
   const R = 56;
   const rows = Math.ceil(shown.length / 2);
   const h = vertical ? 208 + (rows - 1) * 22 : 168;
-  const cx = vertical ? 260 : 120;
+  const cx = vertical ? 30 + W / 2 : 120;
   const cy = vertical ? 372 + 54 + R : 372 + 100;
   const chart = () => {
     let a = -Math.PI / 2;
@@ -335,18 +343,19 @@ function languagesSection(d, X, half = false) {
     }).join("");
   };
   return {
-    w: 460, top: 372, nx: 30, h,
+    w: W, top: 372, nx: 30, h,
     draw: (H) => {
       const two = shown.length > 5 || vertical;
+      const colStep = vertical ? (W - 60) / 2 : Math.min(200, Math.max(140, (W - 235) / 2));
       const legend = shown.map((l, i) => {
         const col = two ? i % 2 : 0;
         const row = two ? Math.floor(i / 2) : i;
-        const lx = vertical ? 60 + col * 200 : 215 + col * 140;
+        const lx = vertical ? 60 + col * colStep : 215 + col * colStep;
         const ly = (vertical ? cy + R + 28 : 372 + 56) + row * 22;
-        return `<g${A.a(1.3 + i * 0.06, 0.4, { o: 0 })}>${dot(l, lx, ly)}${label(l, lx + 16, ly, 12, vertical ? 18 : 9)}</g>`;
+        return `<g${A.a(1.3 + i * 0.06, 0.4, { o: 0 })}>${dot(l, lx, ly)}${label(l, lx + 16, ly, 12, vertical || W >= 700 ? 18 : 9)}</g>`;
       }).join("");
       return `
-  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, 460, H, c)}${title}</g>
+  <g${A.a(1.0, 0.5, { o: 0 })}>${panel(30, 372, W, H, c)}${title}</g>
   <g${A.a(1.1, 0.9, { o: 0, s: 0.6 }, {}, [cx, cy])}>${chart()}${pie ? "" : `<text x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="18" font-weight="700" font-family="${FD}" fill="${c.text}">${total}</text>`}</g>
   ${legend}`;
     },
@@ -406,9 +415,8 @@ function trophy(tr, tt, theme) {
   };
 }
 
-function trophiesSection(d, X, half = false) {
+function trophiesSection(d, X, W = 940) {
   const { c, A, k, tr, theme } = X;
-  const W = half ? 460 : 940;
   const o = k.trophies;
   const tt = TROPHY_THEMES[theme] ?? TROPHY_THEMES[c.base];
   let list = d.trophies.filter(
@@ -419,11 +427,13 @@ function trophiesSection(d, X, half = false) {
       !o.hideRanks.has(t.rank),
   );
   if (!list.length) return null;
-  const cols = o.columns > 0 ? Math.min(list.length, o.columns) : half ? Math.min(list.length, 4) : list.length;
-  if (o.rows) list = list.slice(0, cols * o.rows);
-  const rows = Math.ceil(list.length / cols);
   const gx = o.marginW;
   const gy = o.marginH;
+  // by default as many per row as fit (all of them in one row on a full-width card)
+  const fit = Math.max(1, Math.floor((W - 20 + gx) / (70 + gx)));
+  const cols = o.columns > 0 ? Math.min(list.length, o.columns) : Math.min(list.length, fit);
+  if (o.rows) list = list.slice(0, cols * o.rows);
+  const rows = Math.ceil(list.length / cols);
   const s = Math.min(110, (W - 20 - gx * (cols - 1)) / cols);
   return {
     w: W, top: 504, nx: 30, h: Math.round(58 + rows * s + (rows - 1) * gy),
@@ -453,12 +463,13 @@ function trophiesSection(d, X, half = false) {
   };
 }
 
-function heatmapSection(d, X, half = false) {
+function heatmapSection(d, X, W = 940) {
   const { c, A, k, tr, tag, num } = X;
   const o0 = k.heatmap;
-  const W = half ? 460 : 940;
-  // half width: only the most recent weeks that fit, and no month-count subtitle
-  const o = half ? { ...o0, weeks: Math.min(o0.weeks, 23) } : o0;
+  // narrower cards show only the most recent weeks that fit (and drop the subtitle)
+  const fitWeeks = Math.floor((30 + W - 2 - 13.5 - 78) / 16.8) + 1;
+  const narrow = fitWeeks < o0.weeks;
+  const o = narrow ? { ...o0, weeks: fitWeeks } : o0;
   const counts = new Map(d.days);
   const today = new Date(d.days.at(-1)[0] + "T00:00:00Z");
   const startDow = o.weekStart === "mon" ? 1 : 0;
@@ -499,7 +510,7 @@ function heatmapSection(d, X, half = false) {
   return {
     w: W, top: 674, nx: 30, h: 180,
     draw: (H) => `
-  <g${A.a(1.7, 0.5, { o: 0 })}>${panel(30, 674, W, H, c)}${heading(50, 698, tr("contributions"), c, half ? "" : sub(c, tr("lastYear", { n: num(lastYear) })))}
+  <g${A.a(1.7, 0.5, { o: 0 })}>${panel(30, 674, W, H, c)}${heading(50, 698, tr("contributions"), c, narrow ? "" : sub(c, tr("lastYear", { n: num(lastYear) })))}
     ${months}
     ${[1, 3, 5].map((wd) => `<text x="50" y="${r3(y0 + ((wd - startDow + 7) % 7) * step + 10)}" font-size="10" fill="${c.muted}">${esc(weekday(tag, wd, "short"))}</text>`).join("")}
   </g>
@@ -547,9 +558,8 @@ function wrap(text, size, maxW) {
 }
 const plain = (s) => s.replace(/\*\*|__/g, "");
 
-function aboutSection(d, X, half = false) {
+function aboutSection(d, X, W = 940) {
   const { c, A, k, tr } = X;
-  const W = half ? 460 : 940;
   const size = 14.5;
   const lh = 22;
   const gap = 10;
@@ -573,22 +583,22 @@ function aboutSection(d, X, half = false) {
   };
 }
 
-function workingSection(d, X, half = false) {
+function workingSection(d, X, W = 940) {
   const { c, A, k, tr } = X;
   const items = k.workingOn;
   const gap = 14;
-  const W = half ? 460 : 940;
-  // half width: the cards stack vertically instead of sitting side by side
-  const cw = half ? W - 40 : (W - 40 - gap * (items.length - 1)) / items.length;
+  // narrow cards stack vertically instead of sitting side by side
+  const stack = W < 620 && items.length > 1;
+  const cw = stack ? W - 40 : (W - 40 - gap * (items.length - 1)) / items.length;
   const stepY = 96 + 12;
   const icons = ["rocket", "zap", "flame", "code"];
   return {
-    w: W, top: 0, nx: 30, h: half ? 46 + items.length * stepY - 12 + 18 : 160,
+    w: W, top: 0, nx: 30, h: stack ? 46 + items.length * stepY - 12 + 18 : 160,
     draw: (H) => {
       const cards = items
         .map((it, i) => {
-          const x = half ? 50 : 50 + i * (cw + gap);
-          const dy = half ? i * stepY : 0;
+          const x = stack ? 50 : 50 + i * (cw + gap);
+          const dy = stack ? i * stepY : 0;
           const desc = it.description ? wrap(plain(it.description), 12.5, cw - 62).slice(0, 2) : [];
           const url = it.url ? it.url.replace(/^https?:\/\/(www\.)?/, "") : "";
           return `<g${A.a(0.15 + i * 0.1, 0.5, { o: 0, ty: 10 })}><g transform="translate(0 ${dy})">
@@ -607,9 +617,8 @@ function workingSection(d, X, half = false) {
 }
 
 /** Two endless marquee rows of tech logos (order shuffled at generation time), moving in opposite directions. */
-function stackSection(d, X, narrow = false) {
+function stackSection(d, X, W = 940) {
   const { c, A, k, tr, defs } = X;
-  const W = narrow ? 460 : 940;
   const items = k.stack ?? [];
   if (!items.length) return null;
   const half = Math.ceil(items.length / 2);
@@ -684,25 +693,53 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   };
   const parts = [];
   let y = 0;
-  // A row of two is built at half width; if one of them turns out empty, the other is rebuilt at full width.
-  const built = k.layout
-    .map((row) => {
-      const secs = row.map((id) => ({ id, s: BUILD[id](d, X, row.length === 2) })).filter((x) => x.s);
-      return secs.length === 1 && row.length === 2 ? [{ id: secs[0].id, s: BUILD[secs[0].id](d, X, false) }] : secs;
-    })
-    .filter((r) => r.length);
-  const step = built.length > 1 ? Math.min(0.4, 2.2 / (built.length - 1)) : 0;
-  for (const [ri, secs] of built.entries()) {
-    // Two half-width sections share a row; anything else stacks.
-    const groups = secs.length === 2 && secs.every((x) => x.s.w === 460) ? [secs] : secs.map((x) => [x]);
-    for (const g of groups) {
-      const H = Math.max(...g.map((x) => x.s.h));
-      g.forEach(({ id, s }, i) => {
-        const slot = g.length === 2 ? (i ? 510 : 30) : s.w === 460 ? 270 : 30;
-        A.dt = ri * step - BASE[id];
-        parts.push(`<g transform="translate(${r3(slot - s.nx)} ${r3(y - s.top)})">${s.draw(H)}</g>`);
-      });
-      y += H + 20;
+  const place = (id, s, x, top, delay) => {
+    A.dt = delay - BASE[id];
+    return `<g transform="translate(${r3(x - s.nx)} ${r3(top - s.top)})">${s.draw(s.h)}</g>`;
+  };
+  if (k.grid) {
+    // Free grid: 6 columns, each section has a width in columns and falls to the lowest free spot (skyline packing,
+    // like widgets on a home screen). The height follows the content.
+    const heights = Array(COLS).fill(0);
+    const items = [];
+    for (const { id, span } of k.grid) {
+      const s = BUILD[id](d, X, spanWidth(span));
+      if (!s) continue;
+      let best = 0;
+      let bestY = Infinity;
+      for (let c0 = 0; c0 + span <= COLS; c0++) {
+        const top = Math.max(...heights.slice(c0, c0 + span));
+        if (top < bestY) (bestY = top, best = c0);
+      }
+      for (let i = best; i < best + span; i++) heights[i] = bestY + s.h + GUTTER;
+      items.push({ id, s, x: 30 + best * (COL_W + GUTTER), y: bestY });
+    }
+    // sections that start at the same height appear together, then the next band
+    const ys = [...new Set(items.map((it) => it.y))].sort((p, q) => p - q);
+    const step = ys.length > 1 ? Math.min(0.4, 2.2 / (ys.length - 1)) : 0;
+    for (const it of items) parts.push(place(it.id, it.s, it.x, it.y, ys.indexOf(it.y) * step));
+    y = Math.max(0, ...heights);
+  } else {
+    // A row of two is built at half width; if one of them turns out empty, the other is rebuilt at full width.
+    const built = k.layout
+      .map((row) => {
+        const secs = row.map((id) => ({ id, s: BUILD[id](d, X, row.length === 2 ? 460 : undefined) })).filter((x) => x.s);
+        return secs.length === 1 && row.length === 2 ? [{ id: secs[0].id, s: BUILD[secs[0].id](d, X) }] : secs;
+      })
+      .filter((r) => r.length);
+    const step = built.length > 1 ? Math.min(0.4, 2.2 / (built.length - 1)) : 0;
+    for (const [ri, secs] of built.entries()) {
+      // Two half-width sections share a row; anything else stacks.
+      const groups = secs.length === 2 && secs.every((x) => x.s.w === 460) ? [secs] : secs.map((x) => [x]);
+      for (const g of groups) {
+        const H = Math.max(...g.map((x) => x.s.h));
+        g.forEach(({ id, s }, i) => {
+          const slot = g.length === 2 ? (i ? 510 : 30) : s.w === 460 ? 270 : 30;
+          A.dt = ri * step - BASE[id];
+          parts.push(`<g transform="translate(${r3(slot - s.nx)} ${r3(y - s.top)})">${s.draw(H)}</g>`);
+        });
+        y += H + 20;
+      }
     }
   }
   const SH = y + 8;
