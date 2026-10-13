@@ -342,3 +342,18 @@ test("top 1% (S+) has looping effects on the ring and the trophies; other levels
   const still = view("S+", 1);
   assert.ok(!/@keyframes/.test(still) && still.includes("rotate(-40 900 90)"), "static frame: the same ring, held still");
 });
+
+test("trophies: styles, visible parts, padding and alignment", () => {
+  const svg = (trophies) => { const [d, k] = make({ layout: ["trophies"], trophies }); return render(d, { k, t: 1 }); };
+  const count = (s, re) => (s.match(re) ?? []).length;
+  const cup = svg({});
+  assert.ok(cup.includes("M9 5H31V15"), "cup by default");
+  for (const [style, mark] of [["medal", "M11 2H18L24 14H17Z"], ["shield", "M20 3L34 8V19"], ["gem", "M11 6H29L36 14L20 36L4 14Z"], ["letter", 'rx="10"']]) assert.ok(svg({ style }).includes(mark), style);
+  const bare = svg({ parts: ["title"] });
+  assert.ok(bare.includes(">Stars<") && !bare.includes("Stargazer") && !bare.includes('height="3.4"'), "only the title is left");
+  assert.equal(count(svg({ parts: [] }), /Stargazer|>Stars<|pt</g), 0, "just the pictures");
+  const left = svg({ align: "left", columns: 3, padding: 40 });
+  assert.ok(left.includes('x="70"'), "left aligned cards start after the panel padding");
+  assert.throws(() => normalize({ trophies: { parts: ["title", "shine"] } }), /trophies\.parts/);
+  assert.throws(() => normalize({ trophies: { style: "trident" } }), /trophies\.style/);
+});

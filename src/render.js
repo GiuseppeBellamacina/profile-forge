@@ -1,10 +1,10 @@
-import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
+import { BRANDS, ICONS } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
 import { isTop, levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
 import { trophyMatches } from "./stats.js";
-import { parseColors, resolveTheme } from "./themes.js";
+import { mix, parseColors, resolveTheme } from "./themes.js";
 
 /** Total timeline length in seconds; GIF frames sample t∈[0,1] over it. */
 /** Body and display font stacks; Inter / Space Grotesk are embedded via @font-face when available. */
@@ -395,68 +395,90 @@ function languagesSection(d, X, w) {
   };
 }
 
-// Trophy palettes from github-profile-trophy: "darkhub" for dark themes, "default" for light ones, and the matching named palettes.
-const TP = (title, text, laurel, bar, [s, a, b, def], sec, circle = "#f0f6fb", rt = "#0d1117") => ({
-  title, text, circle, laurel, bar, secret: [...sec, sec[1]], S: [s, s, rt], A: [a, a, rt], B: [b, b, rt], other: [def, def, rt],
-});
-const TROPHY_THEMES = {
-  dark: {
-    title: "#c9d1d9", text: "#8b949e", circle: "#f0f6fb", laurel: "#178600", bar: "#ff79c6",
-    secret: ["#ff5555", "#ff79c6", "#388bfd", "#ff79c6"], S: ["#ffb86c", "#ffb86c", "#0d1117"], A: ["#8be9fd", "#8be9fd", "#0d1117"],
-    B: ["#ff5555", "#ff5555", "#0d1117"], other: ["#6272a4", "#6272a4", "#0d1117"],
+
+/** One 110×110 trophy, drawn like github-profile-trophy (cup, laurel for S/A, extra cups for SS/SSS). */
+// Trophies: every card is 110 x 110. The level gives the colour (colors.levelE ... levelTop); `style` the picture.
+// Each picture is drawn on a 40 x 40 board, `f` = main fill, `s` = darker detail colour, `badge` = where the level letter goes.
+export const TROPHY_STYLES = ["cup", "medal", "shield", "gem", "letter"];
+export const TROPHY_PARTS = ["title", "label", "score", "bar"];
+const TROPHY_ART = {
+  cup: {
+    badge: [20, 15],
+    draw: (f) => `<path d="M9 5H31V15C31 22 26 26 20 26S9 22 9 15Z" fill="${f}"/><path d="M9 8H5.5C5.5 13.5 7.5 16.5 11 17.5M31 8H34.5C34.5 13.5 32.5 16.5 29 17.5" fill="none" stroke="${f}" stroke-width="2.2" stroke-linecap="round"/><rect x="18" y="26" width="4" height="5.5" fill="${f}"/><rect x="12.5" y="31" width="15" height="4.5" rx="1.8" fill="${f}"/>`,
   },
-  light: {
-    title: "#000", text: "#666", circle: "#fff", laurel: "#009366", bar: "#0366d6",
-    secret: ["red", "fuchsia", "blue", "fuchsia"], S: ["#FAD200", "#C8A090", "#886000"], A: ["#B0B0B0", "#9090C0", "#505050"],
-    B: ["#A18D66", "#816D96", "#412D06"], other: ["#777", "#333", "#333"],
+  medal: {
+    badge: [20, 25],
+    draw: (f, s) => `<path d="M11 2H18L24 14H17Z" fill="${s}"/><path d="M29 2H22L16 14H23Z" fill="${s}" opacity=".75"/><circle cx="20" cy="25" r="11" fill="${f}"/><circle cx="20" cy="25" r="8.4" fill="none" stroke="${s}" stroke-width="1" opacity=".5"/>`,
   },
-  nord: TP("#81a1c1", "#eceff4", "#a3be8c", "#81a1c1", ["#ebcb8b", "#8fbcbb", "#d08770", "#5e81ac"], ["#bf616a", "#b48ead", "#81a1c1"], "#d8dee9"),
-  monokai: TP("#f92672", "#ffffff", "#a6e22e", "#f92672", ["#e6db74", "#66d9ef", "#fd971f", "#75715e"], ["#f92672", "#ae81ff", "#66d9ef"], "#fff"),
-  gruvbox: TP("#ebdbb2", "#98971a", "#689d6a", "#fabd26", ["#fabd2f", "#83a598", "#d65d0e", "#928374"], ["#fb4934", "#d3869b", "#458588"], "#ebdbb2"),
-  dracula: TP("#ff79c6", "#f8f8f2", "#50fa7b", "#ff79c6", ["#ffb86c", "#8be9fd", "#ff5555", "#6272a4"], ["#ff5555", "#ff79c6", "#bd93f9"], "#f8f8f2"),
-  radical: TP("#fe428e", "#a9fef7", "#50fa7b", "#fe428e", ["#ffce32", "#8df7b5", "#ea3f25", "#1e65f5"], ["#ff5555", "#ff15d9", "#1e65f5"], "#eeeeee"),
-  discord: TP("#7289da", "#ffffff", "#57f287", "#5865f2", ["#fee75c", "#eb459e", "#ed4245", "#5865f2"], ["#ed4245", "#57f287", "#5865f2"], "#ffffff"),
-  aura: TP("#ffffff", "#dbffe6", "#a9fcca", "#715df5", ["#8e57ff", "#7c71f5", "#226a80", "#5e8c2a"], ["#c273ff", "#c273ff", "#c273ff"], "#ffffff"),
-  "one-dark": TP("#e5c07b", "#e06c75", "#98c379", "#e5c07b", ["#e5c07b", "#56b6c2", "#c678dd", "#abb2bf"], ["#e06c75", "#c678dd", "#61afef"], "#ffffff"),
-  matrix: TP("#00cc00", "#00cc00", "#178600", "#00ff00", ["#ffd700", "#c0c0c0", "#b08d57", "#b08d57"], ["#ffd700", "#ffffff", "#ffd700"], "#002200", "#000000"),
+  shield: {
+    badge: [20, 19],
+    draw: (f, s) => `<path d="M20 3L34 8V19C34 28 28 33 20 37C12 33 6 28 6 19V8Z" fill="${f}"/><path d="M20 6.5L31 10.2V19C31 26 26.6 30 20 33.4C13.4 30 9 26 9 19V10.2Z" fill="none" stroke="${s}" stroke-width="1" opacity=".5"/>`,
+  },
+  gem: {
+    badge: [20, 17],
+    draw: (f, s) => `<path d="M11 6H29L36 14L20 36L4 14Z" fill="${f}"/><path d="M4 14H36M11 6L15 14L20 36L25 14L29 6" fill="none" stroke="${s}" stroke-width="1" opacity=".5"/>`,
+  },
+  letter: {
+    badge: [20, 20],
+    draw: (f) => `<rect x="4" y="4" width="32" height="32" rx="10" fill="${f}"/>`,
+  },
+};
+const lum = (hex) => {
+  const h = hex.replace("#", "");
+  const v = h.length === 3 ? [...h].map((x) => x + x) : h.match(/../g);
+  const [r, g, b] = v.slice(0, 3).map((x) => parseInt(x, 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` : `${n}pt`);
 
-/** One 110×110 trophy, drawn like github-profile-trophy (cup, laurel for S/A, extra cups for SS/SSS). */
-function trophy(tr, tt, theme, { c, A }) {
-  const id = `tg-${theme}-${tr.rank === "?" ? "UNKNOWN" : tr.rank.replace("+", "P")}`;
+/** One card. Returns the svg body, the gradient it needs and where the progress bar sits (the section animates the fill). */
+function trophy(tr, X, o) {
+  const { c, A } = X;
   const secret = tr.rank === "SECRET";
-  const [base, shadow, rankText] = secret ? tt.secret.slice(1) : tt[tr.rank[0]] ?? tt.other;
-  const stops = secret
-    ? tt.secret.slice(0, 3).map((col, i) => `<stop offset="${i * 50}%" stop-color="${col}"/>`).join("")
-    : `<stop offset="0%" stop-color="${base}"/><stop offset="${tt[tr.rank[0]] ? 70 : 50}%" stop-color="${base}"/><stop offset="100%" stop-color="${shadow}"/>`;
-  const cup = (fill, letterColor) =>
-    `${CUP}<circle cx="8" cy="6" r="4" fill="${tt.circle}"/><text x="8" y="8.4" text-anchor="middle" font-family="Courier, monospace" font-size="${!secret && tr.rank.length > 1 ? 5.5 : 7}" fill="${letterColor}">${secret ? "S" : tr.rank}</text>`;
-  const extra = 0; // the level is the letter, its colour and (for the top 1%) an animation, no longer extra cups
-  const small = (x) => `<svg x="${x}" y="35" width="65" height="65" viewBox="0 0 30 30" fill="${base}">${cup(base, rankText)}</svg>`;
-  const laurel = !secret && "SA".includes(tr.rank[0])
-    ? `<svg width="120" height="120" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${LAUREL(tt.laurel)}</svg>`
-    : "";
+  const unknown = tr.rank === "?";
+  const base = secret ? c.accent2 : unknown ? c.muted : levelColor(c, tr.rank);
+  const light = mix(base, "#ffffff", 0.32);
+  const dark = mix(base, "#000000", 0.38);
+  const id = `tg-${secret ? "SECRET" : unknown ? "UNKNOWN" : tr.rank.replace("+", "P")}`;
+  const ink = lum(base) > 0.5 ? "#15171f" : "#ffffff";
+  const art = TROPHY_ART[o.style] ?? TROPHY_ART.cup;
+  const has = (p) => o.parts.has(p);
+
+  // stack the visible parts and centre the stack in the card (each part: height; gap 5)
+  const blocks = [["title", 12], ["art", 46], ["label", 10], ["score", 10], ["bar", 4]].filter(([k]) => k === "art" || has(k));
+  const gap = 5;
+  const total = blocks.reduce((n, [, h]) => n + h, 0) + gap * (blocks.length - 1);
+  let y = Math.max(6, (110 - total) / 2);
+  const at = {};
+  for (const [k, h] of blocks) { at[k] = y; y += h + gap; }
+
+  const letter = secret ? "S" : unknown ? "?" : tr.rank;
+  const big = o.style === "letter";
+  const fs = (letter.length > 1 ? (big ? 15 : 10.5) : big ? 21 : 14);
+  const score = tr.title === "Experience" ? `${tr.score} yrs` : secret ? "SECRET" : abridge(tr.score);
+  const parts = [
+    has("title") ? `<text x="55" y="${r3(at.title + 10)}" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(tr.title, 11, 98))}</text>` : "",
+    `<g transform="translate(${r3(55 - 23)} ${r3(at.art)}) scale(1.15)" fill="url(#${id})">${art.draw(`url(#${id})`, dark)}<text x="${art.badge[0]}" y="${r3(art.badge[1] + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="800" font-family="${FD}" fill="${ink}">${esc(letter)}</text></g>`,
+    has("label") ? `<text x="55" y="${r3(at.label + 8)}" text-anchor="middle" font-size="9" font-weight="600" font-family="${FD}" fill="${c.muted}">${esc(fit(tr.label, 9, 100))}</text>` : "",
+    has("score") ? `<text x="55" y="${r3(at.score + 8)}" text-anchor="middle" font-size="9.5" font-weight="700" font-family="${FD}" fill="${c.text}">${score}</text>` : "",
+    has("bar") ? `<rect x="15" y="${r3(at.bar)}" rx="1.5" width="80" height="3.4" opacity="0.25" fill="${base}"/>` : "",
+  ].join("\n      ");
+
   // the top 1%: the card border pulses and a light sweeps across it now and then
   const topfx = tr.rank === "S+"
-    ? `<rect x="0.5" y="0.5" width="109" height="109" rx="4.5" fill="none" stroke="${levelColor(c, "S+")}" stroke-width="1.6" opacity="0.6"${A.loop({ "0%,100%": "opacity:.25", "50%": "opacity:1" }, { dur: 2.4, delay: 1.8 })}/>
+    ? `<rect x="0.5" y="0.5" width="109" height="109" rx="4.5" fill="none" stroke="${base}" stroke-width="1.6" opacity="0.6"${A.loop({ "0%,100%": "opacity:.25", "50%": "opacity:1" }, { dur: 2.4, delay: 1.8 })}/>
       <g opacity="0.5"${A.loop({ "0%": "transform:translateX(-40px)", "55%,100%": "transform:translateX(150px)" }, { dur: 3.6, delay: 2, still: ' transform="translate(30 0)"' })}><rect x="0" y="-10" width="22" height="140" fill="url(#${id}-shine)" transform="rotate(18 11 55)"/></g>`
     : "";
   return {
-    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)">${stops}</linearGradient>${tr.rank === "S+" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
-    body: `${laurel}${extra === 2 ? small(7) : ""}${extra >= 1 ? small(68) : ""}
-      <svg x="28" y="20" width="100" height="100" viewBox="0 0 30 30" fill="url(#${id})">${cup(null, secret ? tt.secret[3] : rankText)}</svg>
-      <text x="55" y="18" text-anchor="middle" font-size="13" font-weight="700" font-family="${FD}" fill="${tt.title}">${esc(tr.title)}</text>
-      <text x="55" y="85" text-anchor="middle" font-size="10.5" font-weight="700" font-family="${FD}" fill="${tt.text}">${esc(tr.label)}</text>
-      <text x="55" y="97" text-anchor="middle" font-size="10" font-weight="700" font-family="${FD}" fill="${tt.text}">${tr.title === "Experience" ? `${tr.score} yrs` : secret ? "SECRET" : abridge(tr.score)}</text>
-      <rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${tt.bar}"/>${topfx}`,
+    defs: `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${base}"/><stop offset="1" stop-color="${dark}"/></linearGradient>${tr.rank === "S+" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
+    body: parts + topfx,
+    bar: has("bar") ? { x: 15, y: r3(at.bar), w: 80, h: 3.4, color: base } : null,
   };
 }
 
 function trophiesSection(d, X, W = 940) {
-  const { c, A, k, tr, theme } = X;
+  const { c, A, k, tr } = X;
   const o = k.trophies;
-  const tt = TROPHY_THEMES[theme] ?? TROPHY_THEMES[c.base];
   let list = d.trophies.filter(
     (t) =>
       (!o.titles.size || trophyMatches(t.title, o.titles)) &&
@@ -467,35 +489,38 @@ function trophiesSection(d, X, W = 940) {
   if (!list.length) return null;
   const gx = o.marginW;
   const gy = o.marginH;
+  const pad = o.padding;
+  const inner = W - 2 * pad;
   // by default as many per row as fit (all of them in one row on a full-width card)
-  const fit = Math.max(1, Math.floor((W - 20 + gx) / (70 + gx)));
+  const fit = Math.max(1, Math.floor((inner + gx) / (70 + gx)));
   const cols = o.columns > 0 ? Math.min(list.length, o.columns) : Math.min(list.length, fit);
   if (o.rows) list = list.slice(0, cols * o.rows);
   const rows = Math.ceil(list.length / cols);
-  const s = Math.min(110, (W - 20 - gx * (cols - 1)) / cols);
+  const s = Math.min(110, (inner - gx * (cols - 1)) / cols);
   return {
-    w: W, top: 504, nx: 30, h: Math.round(58 + rows * s + (rows - 1) * gy),
+    w: W, top: 504, nx: 30, h: Math.round(42 + rows * s + (rows - 1) * gy + 18),
     draw: (H) => {
       const defs = [];
       const cards = list
         .map((tr_, i) => {
           const row = Math.floor(i / cols);
           const inRow = Math.min(cols, list.length - row * cols);
-          const x = 30 + (W - (inRow * s + gx * (inRow - 1))) / 2 + (i % cols) * (s + gx);
-          const y = 542 + row * (s + gy);
-          const { defs: g, body } = trophy(tr_, tt, theme, X);
+          const rowW = inRow * s + gx * (inRow - 1);
+          const x = 30 + (o.align === "left" ? pad : (W - rowW) / 2) + (i % cols) * (s + gx);
+          const y = 546 + row * (s + gy);
+          const { defs: g, body, bar } = trophy(tr_, X, o);
           defs.push(g);
           return `<g${A.a(1.45 + i * 0.08, 0.5, { o: 0, s: 0.6 }, {}, [r3(x + s / 2), r3(y + s / 2)])}>
     <svg x="${r3(x)}" y="${r3(y)}" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">
       <rect x="0.5" y="0.5" rx="4.5" width="109" height="109" fill="${o.noBg ? "none" : c.bg1}" stroke="${o.noFrame ? "none" : c.border}"/>
       ${body}
-      <g${A.a(1.8 + i * 0.08, 0.9, { sx: 0 }, {}, [15, 102])}><rect x="15" y="101" rx="1" width="${r3(80 * tr_.progress)}" height="3.2" fill="${tt.bar}"/></g>
+      ${bar ? `<g${A.a(1.8 + i * 0.08, 0.9, { sx: 0 }, {}, [bar.x, r3(bar.y + 2)])}><rect x="${bar.x}" y="${bar.y}" rx="1.5" width="${r3(bar.w * tr_.progress)}" height="${bar.h}" fill="${bar.color}"/></g>` : ""}
     </svg>
   </g>`;
         })
         .join("");
       return `<defs>${defs.join("")}</defs>
-  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, W, H, c)}${heading(50, 530, o.title ?? tr("trophies"), c)}</g>
+  <g${A.a(1.3, 0.5, { o: 0 })}>${panel(30, 504, W, H, c)}${heading(30 + pad, 530, o.title ?? tr("trophies"), c)}</g>
   ${cards}`;
     },
   };

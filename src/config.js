@@ -23,7 +23,7 @@ export const DEFAULTS = {
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
-  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 12, marginH: 12, noBg: false, noFrame: false, extra: [] },
+  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", style: "cup", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [] },
   heatmap: { mode: "grid", snakePath: "smart", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
@@ -34,12 +34,13 @@ const ENUMS = {
   "header.avatar": ["circle", "rounded", "hide"], "header.rankIcon": ["level", "percentile", "github"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
+  "trophies.style": ["cup", "medal", "shield", "gem", "letter"], "trophies.align": ["center", "left"],
   "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
-  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "heatmap.weeks": [4, 53],
+  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53],
 };
 // Keys whose value shape isn't described by the default's type.
 const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
@@ -184,6 +185,7 @@ export function normalize(raw = {}) {
       ranks: new Set(ranks.filter((r) => !r.startsWith("-"))),
       hideRanks: new Set([...c.trophies.hideRanks.map((r) => r.toUpperCase()), ...ranks.filter((r) => r.startsWith("-")).map((r) => r.slice(1))]),
       extra: new Set(c.trophies.extra.map((x) => x.toLowerCase())),
+      parts: must("trophies.parts", c.trophies.parts.map(nk), ["title", "label", "score", "bar"]),
     },
   };
 }

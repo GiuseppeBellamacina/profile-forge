@@ -151,7 +151,7 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
                  "shortNumbers": false, "excludeDaysLabel": true, "title": null },
   "languages": { "layout": "donut", "count": 8, "hide": ["html"], "excludeRepos": [], "hideProgress": false,
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0, "title": null },
-  "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-E"], "columns": 0, "rows": 0, "marginW": 12, "marginH": 12,
+  "trophies":  { "titles": [], "hideTitles": [], "ranks": ["-E"], "columns": 0, "rows": 0, "marginW": 14, "marginH": 14, "padding": 20, "align": "center", "style": "cup", "parts": ["title", "label", "score", "bar"],
                  "noBg": false, "noFrame": false, "extra": ["Issues", "Reviews"], "title": null },
   "heatmap":   { "mode": "grid", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },   // mode: "snake" = animated snake (snakePath: smart, busy, nearest, sweep, rows, spiral); cell: square, round, triangle, snowflake, moon, mixed
   "export":    { "png": false, "gif": false },   // local CLI only, see "Local CLI, PNG and GIF"
@@ -213,7 +213,7 @@ Names follow the three projects the card is built on. A `—` means the original
 | stats | `hide`, `show`, `icons`, `numberFormat`, `numberPrecision`, `textBold`, `lineHeight`, `title`, `commitsYear`, `excludeRepos` | `hide`, `show`, `show_icons`, `number_format`, `number_precision`, `text_bold`, `line_height`, `custom_title`, `commits_year`, `exclude_repo` | `show` adds `prsMerged`, `prsMergedPercentage`, `discussionsStarted`, `discussionsAnswered` (extra GraphQL calls, only when requested) |
 | streak | `hide`, `mode`, `excludeDays`, `startingYear`, `dateFormat`, `shortNumbers`, `excludeDaysLabel`, `title` | `hide_*_streak`, `mode`, `exclude_days`, `starting_year`, `date_format`, `short_numbers` | `weekly` counts Sunday–Saturday weeks; excluded days neither extend nor break a streak; `[...]` in `dateFormat` is hidden for the current year |
 | languages | `layout`, `count`, `hide`, `excludeRepos`, `hideProgress`, `statsFormat`, `sizeWeight`, `countWeight`, `title` | `layout`, `langs_count`, `hide`, `exclude_repo`, `hide_progress`, `stats_format`, `size_weight`, `count_weight` | `bar` `compact` `donut` `donut-vertical` `pie`; `bytes` shows sizes instead of percentages; score = `bytes^sizeWeight × repos^countWeight` |
-| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `noBg`, `noFrame`, `extra`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies |
+| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `padding`, `align`, `style`, `parts`, `noBg`, `noFrame`, `extra`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies |
 | heatmap | `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | grid size and shape, Monday start, legend and month labels |
 | root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
 
@@ -298,7 +298,7 @@ Flags override `config.json`. Any config key can be set with `--set path=value` 
 ## How the numbers are computed
 
 - **Rank:** `1 − Σwᵢ·cdf(xᵢ/medianᵢ) / Σwᵢ`, using exponential CDFs for commits (median 1000, w=2), PRs (50, w=3), issues (25, w=1) and reviews (2, w=1), and log-normal CDFs for stars (50, w=4) and followers (10, w=1). The percentile is mapped to S+ / S / A / B / C / D / E at 1 / 10 / 25 / 50 / 70 / 85 / 100.
-- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with seven levels (S+ → E), drawn like github-profile-trophy (cup, laurel for S and A; `darkhub` palette in dark mode, `default` in light mode). Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, AncientUser, OGUser and AllSuperRank (see the [guide](GUIDE.md) for the exact rules).
+- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with seven levels (S+ → E), drawn as a cup, medal, shield, gem or letter in the colour of the level. Secret trophies appear only once earned: MultiLanguage (10+ languages), LongTimeUser (10+ years), Organizations (3+ orgs), Joined2020, AncientUser, OGUser and AllSuperRank (see the [guide](GUIDE.md) for the exact rules).
 - **Streak:** computed from your daily contribution calendar across every year since you joined, in the configured time zone.
 
 ## Development
