@@ -180,7 +180,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 | `rankStyle` | `ring` `hexagon` `shield` | `ring` |
 | `rankThickness` | 4–16 | `8` |
 | `rankIcon` | what the rank shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
-| `flag` | path of a 4:3 flag image (svg/png) drawn next to the name; skipped when the name is too long | `null` |
+| `flag` | path of a 4:3 flag image (svg/png) drawn at the start of the "joined" line under the name | `null` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
 |---|---|---|

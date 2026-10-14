@@ -136,6 +136,7 @@ function headerSection(d, X) {
   const hs = k.header;
   const showAvatar = hs.avatar !== "hide";
   const nx = showAvatar ? 172 : 40;
+  const fx = k.flagData ? 34 : 0; // the flag sits at the start of the "joined" line
   const joined = new Date(d.createdAt).toLocaleDateString(tag, { month: "short", year: "numeric", timeZone: "UTC" });
   const FACTS = {
     contributionsThisYear: ["zap", tr("inYear", { n: num(d.facts.thisYear), y: d.days.at(-1)[0].slice(0, 4) })],
@@ -223,10 +224,10 @@ function headerSection(d, X) {
   }
   <g${A.a(0.15, 0.6, { o: 0, ty: 12 })}>
     <text x="${nx}" y="78" font-size="32" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(trunc(d.name, showAvatar ? 24 : 30))}</text>
-    ${flag(k.flagData, nx + textWidth(trunc(d.name, showAvatar ? 24 : 30), 32) + 14, 53)}
     <text x="${nx}" y="106" font-size="16" font-weight="600" fill="${c.accent}">@${esc(d.login)}${k.title ? `<tspan dx="4" font-weight="400" fill="${c.muted}">· ${esc(k.title)}</tspan>` : ""}</text>
-    ${icon("history", nx, 122, 14, c.muted)}
-    <text x="${nx + 21}" y="134" font-size="13" fill="${c.muted}">${esc(tr("joined", { d: joined, n: tr(d.years === 1 ? "year" : "years", { n: d.years }) }))}</text>
+    ${flag(k.flagData, nx, 119)}
+    ${icon("history", nx + fx, 122, 14, c.muted)}
+    <text x="${nx + fx + 21}" y="134" font-size="13" fill="${c.muted}">${esc(tr("joined", { d: joined, n: tr(d.years === 1 ? "year" : "years", { n: d.years }) }))}</text>
   </g>
   ${facts
     .map(
@@ -240,10 +241,10 @@ function headerSection(d, X) {
   };
 }
 
-/** The flag next to the name: 4:3 image (embedded as a data URI by the caller) with rounded corners and a hairline. */
+/** The flag at the start of the "joined" line: 4:3 image (embedded as a data URI by the caller) with rounded corners and a hairline. */
 const flag = (data, x, y) =>
-  data && x + 36 < 550 // not over the facts column
-    ? `<clipPath id="flagclip"><rect x="${r3(x)}" y="${y}" width="36" height="27" rx="4"/></clipPath><image href="${data}" x="${r3(x)}" y="${y}" width="36" height="27" preserveAspectRatio="xMidYMid slice" clip-path="url(#flagclip)"/><rect x="${r3(x)}" y="${y}" width="36" height="27" rx="4" fill="none" stroke="#808080" stroke-opacity="0.35"/>`
+  data
+    ? `<clipPath id="flagclip"><rect x="${r3(x)}" y="${y}" width="26" height="19.5" rx="3"/></clipPath><image href="${data}" x="${r3(x)}" y="${y}" width="26" height="19.5" preserveAspectRatio="xMidYMid slice" clip-path="url(#flagclip)"/><rect x="${r3(x)}" y="${y}" width="26" height="19.5" rx="3" fill="none" stroke="#808080" stroke-opacity="0.35"/>`
     : "";
 
 function statsSection(d, X, W = 460) {

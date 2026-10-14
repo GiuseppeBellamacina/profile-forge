@@ -104,7 +104,7 @@
       "properties": {
         "avatar": { "enum": ["circle", "rounded", "hide"], "default": "circle" },
         "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S flames, S+ aurora). Colour: colors.frameColor, default the level colour." },
-        "flag": { "type": ["string", "null"], "default": null, "description": "Path of a flag image (svg/png, 4:3) drawn next to the name, e.g. assets/img/flags/it.svg." },
+        "flag": { "type": ["string", "null"], "default": null, "description": "Path of a flag image (svg/png, 4:3) drawn under the name, e.g. assets/img/flags/it.svg." },
         "rankStyle": { "enum": ["ring", "hexagon", "shield"], "default": "ring", "description": "The shape of the rank indicator." },
         "rankThickness": { "type": "number", "minimum": 4, "maximum": 16, "default": 8 },
         "frameAnimation": { "enum": ["default", "none", "spin", "pulse", "twinkle"], "default": "default", "description": "default: the frame's own motion. none: still. spin / pulse / twinkle: override it where it makes sense." },
