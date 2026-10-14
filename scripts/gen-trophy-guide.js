@@ -11,7 +11,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const UNITS = { stars: "stars", commits: "commits", followers: "followers", prs: "pull requests", repos: "repositories", issues: "issues", reviews: "reviews", experience: "years on GitHub" };
 // Experience is counted in days / 100 in the table; the card shows years
-const need = (t, min) => (t.key === "experience" ? `${Math.round((min * 100) / 365.25)}+ years` : `${min}+ ${UNITS[t.key]}`);
+const need = (t, min) => (t.key === "experience" ? `~${Math.round((min * 100) / 365.25)} years` : `${min}+ ${UNITS[t.key]}`);
 
 let md = `# Trophy guide
 
