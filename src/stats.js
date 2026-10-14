@@ -1,5 +1,6 @@
 import { normalize } from "./config.js";
 import { ALL_LEVELS, TOP, levelOfPercentile } from "./levels.js";
+import { SECRETS, funFacts } from "./secrets.js";
 
 // Pure scoring functions. Algorithms ported from MIT-licensed projects:
 //   rank      -> anuraghazra/github-readme-stats (src/calculateRank.js)
@@ -156,7 +157,14 @@ export const trophyMatches = (title, tokens) => {
   return tokens.has(t) || (ALIASES[t] ?? []).some((a) => tokens.has(a));
 };
 
-/** s: { stars, commits, followers, issues, prs, repos, reviews, experience(days/100), years, organizations, languageCount, firstYear }; extra: Set of "issues"/"reviews" */
+/** The base trophies and what each level needs, for the guide: [{ title, key, optional, levels: [{ level, min, label }] }] (highest first). */
+export const trophyTable = () =>
+  TROPHIES.map(([title, key, reqs, labels, optional]) => ({
+    title, key, optional: !!optional,
+    levels: LEVEL_TIER.map((t, i) => ({ level: TROPHY_LEVELS[i], min: reqs[t], label: labels[t] })),
+  }));
+
+/** s: { fun (see funFacts, optional), stars, commits, followers, issues, prs, repos, reviews, experience(days/100), years, organizations, languageCount, firstYear }; extra: Set of "issues"/"reviews" */
 export function trophies(s, extra = new Set()) {
   const list = TROPHIES.filter((t) => !t[4] || extra.has(t[0].toLowerCase())).map(([title, key, reqs, labels]) => {
     const score = s[key];
@@ -166,16 +174,13 @@ export function trophies(s, extra = new Set()) {
     const progress = i === -1 ? Math.min(score / lreqs.at(-1), 1) : i === 0 ? 1 : (score - lreqs[i]) / (lreqs[i - 1] - lreqs[i]);
     return { title, rank, label: i === -1 ? "Unknown" : labels[LEVEL_TIER[i]], score: key === "experience" ? s.years : score, progress };
   });
-  const secret = [
-    [s.languageCount >= 10, "MultiLanguage", "Rainbow Lang User"],
-    [s.years >= 10, "LongTimeUser", "Village Elder"],
-    [s.organizations >= 3, "Organizations", "Jack of all Trades"],
-    [s.firstYear === 2020, "Joined2020", "Everything started..."],
-    [s.firstYear <= 2010, "AncientUser", "Ancient User"],
-    [s.firstYear <= 2008, "OGUser", "OG User"],
-    [list.filter((t) => BASE.includes(t.title)).every((t) => t.rank === "S" || t.rank === TOP), "AllSuperRank", "S Rank Hacker"],
-  ];
-  for (const [ok, title, label] of secret) if (ok) list.push({ title, rank: "SECRET", label, score: null, progress: 1 });
+  const allSuper = list.filter((t) => BASE.includes(t.title)).every((t) => t.rank === "S" || t.rank === TOP);
+  const ctx = { ...s, allSuper };
+  const f = s.fun ?? funFacts({});
+  for (const d of SECRETS) {
+    if (!d.when(ctx, f)) continue;
+    list.push({ title: d.title, rank: "SECRET", label: d.label, score: null, progress: 1, secret: { glyph: d.glyph, tone: d.tone, hint: d.hint, special: d.special ?? null, value: d.value?.(ctx, f) ?? null } });
+  }
   return list;
 }
 
@@ -196,14 +201,23 @@ export function summarize(p, k = normalize(), now = Date.now()) {
     prsMerged: p.mergedPrs ?? 0, discussionsStarted: p.discussionsStarted ?? 0, discussionsAnswered: p.discussionsAnswered ?? 0,
   };
   s.prsMergedPercentage = p.prs ? (s.prsMerged / p.prs) * 100 : 0;
+  const streak = computeStreak(p.days, k.streak.excludeDays, k.streak.mode);
+  const facts = calendarFacts(p.days);
+  const fun = funFacts(p, {
+    streak,
+    langs: topLanguages(p.repos, { limit: 1000, excludeRepos: [...new Set([...skip, ...k.languages.excludeRepos])] }),
+    busiest: facts.busiestWeekday,
+    birthday: k.trophies.birthday,
+    today: new Intl.DateTimeFormat("en-CA", { timeZone: k.timezone, month: "2-digit", day: "2-digit" }).format(now).slice(-5).replace("/", "-"),
+  });
   return {
     ...p,
     stats: s,
     years,
     rank: calculateRank(s),
     languages,
-    streak: computeStreak(p.days, k.streak.excludeDays, k.streak.mode),
-    facts: calendarFacts(p.days),
+    streak,
+    facts,
     trophies: trophies(
       {
         ...s,
@@ -212,6 +226,7 @@ export function summarize(p, k = normalize(), now = Date.now()) {
         organizations: p.organizations,
         languageCount: languages.total,
         firstYear: new Date(p.earliest).getUTCFullYear(),
+        fun,
       },
       k.trophies.extra,
     ),

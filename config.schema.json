@@ -170,7 +170,8 @@
         "parts": { "type": "array", "items": { "enum": ["title", "label", "score", "bar"] }, "default": ["title", "label", "score", "bar"], "description": "Which texts and the progress bar to show on each trophy." },
         "noBg": { "type": "boolean", "default": false },
         "noFrame": { "type": "boolean", "default": false },
-        "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." }
+        "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." },
+        "birthday": { "type": ["string", "null"], "pattern": "^(\\d{4}-)?\\d{2}-\\d{2}$", "default": null, "description": "Your birthday as MM-DD (or YYYY-MM-DD): the Happy Birthday secret trophy shows on that day, in the card's time zone." }
       }
     },
     "heatmap": {

@@ -1,3 +1,5 @@
+import { AUTHOR } from "./secrets.js";
+
 // GitHub GraphQL data fetching. Two requests (+ repo pagination), no REST search.
 
 const API = "https://api.github.com/graphql";
@@ -18,6 +20,12 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
     name login avatarUrl createdAt
     followers { totalCount }
     organizations { totalCount }
+    gists { totalCount }
+    following { totalCount }
+    starredRepositories { totalCount }
+    sponsors { totalCount }
+    sponsoring { totalCount }
+    isGitHubStar isCampusExpert isBountyHunter isDeveloperProgramMember isEmployee
     pullRequests { totalCount }
     mergedPrs: pullRequests(states: MERGED) @include(if: $extras) { totalCount }
     discussionsStarted: repositoryDiscussions @include(if: $extras) { totalCount }
@@ -29,7 +37,7 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
-        name isFork stargazerCount createdAt
+        name isFork isArchived stargazerCount forkCount createdAt licenseInfo { key }
         languages(first: 10, orderBy: { field: SIZE, direction: DESC }) { edges { size node { name color } } }
       }
     }
@@ -47,6 +55,16 @@ const toBase64 = (buf) => {
 
 /** "YYYY-MM-DD" for now in the given IANA time zone. */
 export const todayIn = (tz) => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
+
+/** True when `a` follows `b` (REST: 204 yes, 404 no). Any failure counts as "no" so a missing permission never breaks the card. */
+async function follows(token, a, b) {
+  try {
+    const res = await fetch(`https://api.github.com/users/${a}/following/${b}`, { headers: { Authorization: `bearer ${token}`, "User-Agent": "profile-forge" } });
+    return res.status === 204;
+  } catch {
+    return false;
+  }
+}
 
 export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC", startingYear = null, extras = false, endpoint = API }) {
   const privacy = includePrivate ? null : "PUBLIC";
@@ -91,6 +109,9 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   const avatar = await fetch(`${user.avatarUrl}${user.avatarUrl.includes("?") ? "&" : "?"}s=200`);
   const avatarData = `data:${avatar.headers.get("content-type") ?? "image/png"};base64,${toBase64(await avatar.arrayBuffer())}`;
 
+  // a friend of the author: you follow each other (only checked on github.com)
+  const friend = endpoint === API && user.login.toLowerCase() !== AUTHOR.toLowerCase() && (await follows(token, user.login, AUTHOR)) && (await follows(token, AUTHOR, user.login));
+
   const earliest = Math.min(new Date(user.createdAt), ...repos.map((r) => new Date(r.createdAt)));
   return {
     name: user.name || user.login,
@@ -111,10 +132,20 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     mergedPrs: user.mergedPrs?.totalCount ?? 0,
     discussionsStarted: user.discussionsStarted?.totalCount ?? 0,
     discussionsAnswered: user.discussionsAnswered?.totalCount ?? 0,
+    friend,
+    gists: user.gists.totalCount,
+    following: user.following.totalCount,
+    starred: user.starredRepositories.totalCount,
+    sponsors: user.sponsors.totalCount,
+    sponsoring: user.sponsoring.totalCount,
+    badges: { star: user.isGitHubStar, campus: user.isCampusExpert, bounty: user.isBountyHunter, devProgram: user.isDeveloperProgramMember, employee: user.isEmployee },
     repos: repos.map((r) => ({
       name: r.name,
       stars: r.stargazerCount,
       isFork: r.isFork,
+      isArchived: r.isArchived,
+      forkCount: r.forkCount,
+      licensed: !!r.licenseInfo,
       languages: r.languages.edges.map((e) => ({ name: e.node.name, color: e.node.color, size: e.size })),
     })),
     days: [...calendar.entries()].sort(([a], [b]) => (a < b ? -1 : 1)),

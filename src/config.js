@@ -23,7 +23,7 @@ export const DEFAULTS = {
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
-  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [] },
+  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [], birthday: null },
   heatmap: { mode: "grid", snakePath: "smart", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
@@ -162,6 +162,11 @@ export function normalize(raw = {}) {
   const facts = c.header.facts;
   for (const f of facts) if (!FACTS.includes(f)) throw new Error(`Config "header.facts": unknown fact "${f}". Valid: ${FACTS.join(", ")}`);
   if (facts.length > 4) throw new Error(`Config "header.facts": at most 4 facts`);
+  const birthday = c.trophies.birthday;
+  if (birthday != null) {
+    const m = /^(?:\d{4}-)?(\d{2})-(\d{2})$/.exec(String(birthday));
+    if (!m || +m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > new Date(Date.UTC(2024, +m[1], 0)).getUTCDate()) throw new Error(`Config "trophies.birthday": expected "MM-DD" or "YYYY-MM-DD" (got "${birthday}")`);
+  }
   for (const r of c.trophies.extra) if (!["issues", "reviews"].includes(r.toLowerCase())) throw new Error(`Config "trophies.extra": unknown trophy "${r}". Valid: Issues, Reviews`);
   const excludeDays = c.streak.excludeDays.map((x) => {
     const i = WEEKDAYS.indexOf(String(x).toLowerCase().slice(0, 3));
