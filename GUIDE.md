@@ -423,13 +423,27 @@ A day with zero contributions *today* does not break the current streak.
 | `parts` | `title` `label` `score` `bar` | all | What each trophy shows besides the cup |
 | `noBg`, `noFrame` | boolean | `false` | Remove the trophy background / frame |
 | `extra` | `Issues` `Reviews` | `[]` | Opt-in trophies |
+| `birthday` | `MM-DD` or `YYYY-MM-DD` | none | Your birthday: the Happy Birthday secret trophy shows that day |
 | `title` | string | translated | Custom panel title |
 
-Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience. Secret trophies show up only once earned: MultiLanguage, LongTimeUser, Organizations, Joined2020, AncientUser, OGUser, AllSuperRank.
+Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
+
+### Secret trophies
+
+There are 66 secret trophies, drawn as a cut gem with their own glyph instead of a cup (the colour is the family of the trophy, not a level). They appear only once earned. Select them with `ranks: ["SECRET"]`, hide them with `hideRanks: ["SECRET"]` or one by one with `hideTitles`.
+
+<img src="docs/guide/trophies-secret-all.png">
+
+Two of them are configurable or special:
+
+- **Happy Birthday!** shows on your birthday. Set the date with `trophies.birthday` (`"MM-DD"` or `"YYYY-MM-DD"`, read in the card's `timezone`); without it the trophy never appears.
+- **Forge Friend** is a special trophy (pulsing frame, `FRIEND` tag) for friends of the author: you and [GiuseppeBellamacina](https://github.com/GiuseppeBellamacina) follow each other on GitHub.
+
+The full list, with what earns each one, is in the **[trophy guide](TROPHIES.md)**.
 
 ### Levels
 
-Each trophy is the classic cup in the colour of its level, and the higher the level the richer it gets: **A** adds the laurel, **S** a second cup, and the top 1% (**S+**) three cups with a pulsing border and a light that sweeps across the card (animated, like the rank). The level letter is on the cup. The levels are the same as the header rank (see [Rank levels](#rank-levels)), and `levelE` … `levelTop` change their colours.
+Each trophy (except the secret ones) is the classic cup in the colour of its level, and the higher the level the richer it gets: **A** adds the laurel, **S** a second cup, and the top 1% (**S+**) three cups with a pulsing border and a light that sweeps across the card (animated, like the rank). The level letter is on the cup. The levels are the same as the header rank (see [Rank levels](#rank-levels)), and `levelE` … `levelTop` change their colours.
 
 <img src="docs/guide/trophies-levels.png">
 
