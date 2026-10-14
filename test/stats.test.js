@@ -332,6 +332,7 @@ test("top 1% (S+) has looping effects on the ring and the trophies; other levels
   const view = (level, t) => {
     const [d, k] = make({ layout: ["header", "trophies"] });
     d.rank = { level, percentile: level === "S+" ? 0.4 : 30 };
+    d.trophies = d.trophies.filter((t) => t.rank !== "SECRET"); // secret trophies twinkle at every level
     if (level === "S+") for (const tr of d.trophies) if (tr.rank === "S") tr.rank = "S+";
     return render(d, { k, t });
   };
@@ -413,4 +414,51 @@ test("level colours: the same distinct palette in every theme, overridable", asy
   assert.equal(resolveTheme("matrix").lvD, resolveTheme("dracula").lvD, "not tied to the theme");
   assert.equal(resolveTheme("dark", parseColors({ levelS: "112233" })).lvS, "#112233");
   assert.notEqual(resolveTheme("light").lvA, resolveTheme("dark").lvA, "light themes are a little darker");
+});
+
+test("secret trophies: earned from calendar and profile curiosities, drawn as gems", async () => {
+  const { funFacts } = await import("../src/secrets.js");
+  const day = (i) => new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10);
+  const days = Array.from({ length: 800 }, (_, i) => [day(i), i >= 300 && i < 330 ? 0 : i === 100 ? 120 : 1]);
+  const p = {
+    login: "ada", createdAt: "2015-03-01T00:00:00Z", earliest: "2015-03-01T00:00:00Z", days,
+    repos: [
+      { name: "ada", stars: 150, isFork: false, forkCount: 3, licensed: true, languages: [{ name: "Rust", size: 100 }] },
+      { name: "dotfiles", stars: 1, isFork: false, languages: [{ name: "Brainfuck", size: 1 }] },
+    ],
+    gists: 12, sponsors: 1, badges: { star: true }, friend: true,
+  };
+  const f = funFacts(p, { streak: { longest: { length: 400 } }, langs: topLanguages(p.repos, { limit: 1000 }), birthday: "1990-03-01", today: "03-01" });
+  assert.ok(f.md.has("12-25") && f.perfectWeek && f.perfectMonth && f.bestDay === 120 && f.dotfiles && f.selfRepo && f.esoteric === "brainfuck");
+  const list = trophies({ stars: 1, commits: 1, followers: 1, issues: 0, prs: 0, repos: 2, reviews: 0, experience: 3, years: 11, organizations: 0, languageCount: 2, firstYear: 2015, fun: f });
+  const got = new Set(list.filter((t) => t.rank === "SECRET").map((t) => t.title));
+  for (const id of ["FullOrbit", "HundredDays", "Marathon", "SantasHelper", "Dotfiles", "ProfileCrafter", "HitSingle", "Esolang", "Snippets", "Backed", "GitHubStar", "Birthday", "LongTimeUser", "Friend"])
+    assert.ok(got.has(id), id);
+  assert.ok(!got.has("Friday13") || f.friday13);
+  // unknown facts never crash and earn nothing special
+  assert.ok(!trophies({ stars: 0, commits: 0, followers: 0, issues: 0, prs: 0, repos: 0, reviews: 0, experience: 0, years: 0, organizations: 0, languageCount: 0, firstYear: 2023 }).some((t) => t.rank === "SECRET"));
+  const [d, k] = make({ layout: ["trophies"], trophies: { ranks: ["SECRET"] } });
+  d.trophies = list.filter((t) => t.rank === "SECRET");
+  const svg = render(d, { k, t: 1 });
+  assert.ok(svg.includes("<polygon") && svg.includes("Full Orbit") && svg.includes(">SECRET<") && !svg.includes("viewBox=\"0 0 30 30\""));
+  assert.ok(!svg.includes("undefined") && !svg.includes("NaN"));
+});
+
+test("birthday trophy: the date comes from the config; the friend trophy is special", () => {
+  assert.equal(normalize({ trophies: { birthday: "03-01" } }).trophies.birthday, "03-01");
+  assert.equal(normalize({ trophies: { birthday: "1990-02-29" } }).trophies.birthday, "1990-02-29");
+  assert.throws(() => normalize({ trophies: { birthday: "13-01" } }), /trophies\.birthday/);
+  assert.throws(() => normalize({ trophies: { birthday: "tomorrow" } }), /trophies\.birthday/);
+  const earned = (raw, now, friend = false) => {
+    const k = normalize({ timezone: "UTC", ...raw });
+    return summarize({ ...RAW, days: DAYS, friend }, k, now).trophies.filter((t) => t.rank === "SECRET").map((t) => t.title);
+  };
+  const day = Date.UTC(2026, 2, 1, 12);
+  assert.ok(earned({ trophies: { birthday: "1990-03-01" } }, day).includes("Birthday"));
+  assert.ok(!earned({ trophies: { birthday: "03-02" } }, day).includes("Birthday"));
+  assert.ok(!earned({}, day).includes("Birthday"), "no date in the config, no trophy");
+  assert.ok(!earned({}, day).includes("Friend") && earned({}, day, true).includes("Friend"));
+  const [d, k] = make({ layout: ["trophies"] });
+  d.trophies = [{ title: "Friend", rank: "SECRET", label: "Forge Friend", score: null, progress: 1, secret: { glyph: "g:bond", tone: "gold", special: "FRIEND", hint: "x", value: null } }];
+  assert.ok(render(d, { k, t: 1 }).includes(">FRIEND<"));
 });

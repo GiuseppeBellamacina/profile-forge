@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FRAMES } from "../src/frames.js";
+import { SECRETS, SECRET_GROUPS } from "../src/secrets.js";
 import { THEME_NAMES } from "../src/themes.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -93,7 +94,14 @@ const CASES = {
   "trophies-grid": { ...only("trophies"), trophies: { columns: 4, rows: 2, marginW: 16, marginH: 16 } },
   "trophies-extra": { ...only("trophies"), trophies: { extra: ["Issues", "Reviews"], ranks: ["-E"], columns: 4 } },
   "trophies-filter": { ...only("trophies"), trophies: { titles: ["Star", "Commit", "PR", "Followers"], title: "Highlights" } },
-  "trophies-secret": { ...only("trophies"), trophies: { ranks: ["SECRET"] } },
+  "trophies-secret": { ...only("trophies"), trophies: { ranks: ["SECRET"], columns: 6 }, args: ["--secrets", "7,12"] },
+  "trophies-secret-all": { ...only("trophies"), trophies: { ranks: ["SECRET"], columns: 10, marginW: 10, marginH: 10, padding: 16 }, args: ["--secrets", "all"] },
+  // one picture per group of secret trophies (the trophy guide)
+  ...Object.fromEntries(SECRET_GROUPS.map(([, first], g) => {
+    const from = SECRETS.findIndex((d) => d.title === first);
+    const to = g + 1 < SECRET_GROUPS.length ? SECRETS.findIndex((d) => d.title === SECRET_GROUPS[g + 1][1]) : SECRETS.length;
+    return [`trophies-secret-${g + 1}`, { ...only("trophies"), trophies: { ranks: ["SECRET"], columns: Math.min(6, to - from), marginW: 12 }, args: ["--secrets", `${from},${to - from}`] }];
+  })),
   "trophies-clean": { ...only("trophies"), trophies: { noBg: true, noFrame: true, columns: 6 } },
   // heatmap
   "heatmap-square": only("heatmap"),
@@ -165,6 +173,8 @@ for (const file of readdirSync(join(root, "presets")).filter((f) => f.endsWith("
   if (wanted.length && !wanted.includes(name)) continue;
   execFileSync("node", [demo, join(root, "presets", file), join(root, "docs", "presets", name)], { stdio: "inherit" });
 }
+
+if (!wanted.length || wanted.includes("trophy-guide")) execFileSync("node", [join(root, "scripts", "gen-trophy-guide.js")], { stdio: "inherit" });
 
 // one small preview of the default card per built-in theme (docs/themes, shown by the README and the configurator's fallback)
 mkdirSync(join(root, "docs", "themes"), { recursive: true });

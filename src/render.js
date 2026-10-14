@@ -4,6 +4,7 @@ import { intlTag, translator } from "./i18n.js";
 import { drawFrame, frameFor } from "./frames.js";
 import { isTop, levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
+import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
 import { mix, parseColors, resolveTheme } from "./themes.js";
 
@@ -426,6 +427,56 @@ function languagesSection(d, X, w) {
 export const TROPHY_PARTS = ["title", "label", "score", "bar"];
 const abridge = (n) => (n < 1 ? "0pt" : n > 999 ? `${(n / 1000).toFixed(1)}kpt` : `${n}pt`);
 
+/**
+ * A secret trophy: a cut gem in the colour of its family with its own glyph, a few sparkles and its name. No cup, no level.
+ * Same 110 x 110 card and the same parts (title, label, score, bar) as the others.
+ */
+function secretTrophy(tr, X, o, i) {
+  const { c, A } = X;
+  const sec = tr.secret ?? {};
+  const tone = TONES[sec.tone] ?? TONES.violet;
+  const has = (p) => o.parts.has(p);
+  const cx = 55;
+  const cy = 50;
+  const R = 25;
+  const vertex = (k, r) => [r3(cx + r * Math.cos(((k * 60 - 90) * Math.PI) / 180)), r3(cy + r * Math.sin(((k * 60 - 90) * Math.PI) / 180))];
+  // the facets, lit from the top left
+  const shade = [mix(tone, "#ffffff", 0.3), mix(tone, "#ffffff", 0.05), mix(tone, "#000000", 0.22), mix(tone, "#000000", 0.4), mix(tone, "#000000", 0.12), mix(tone, "#ffffff", 0.45)];
+  const facets = shade.map((f, k) => `<polygon points="${cx},${cy} ${vertex(k, R).join(",")} ${vertex(k + 1, R).join(",")}" fill="${f}" stroke="${mix(tone, "#000000", 0.5)}" stroke-width="0.4" stroke-linejoin="round"/>`).join("");
+  const ring = `<polygon points="${[0, 1, 2, 3, 4, 5].map((k) => vertex(k, R).join(",")).join(" ")}" fill="none" stroke="${mix(tone, "#ffffff", 0.55)}" stroke-width="1" stroke-linejoin="round" opacity="0.8"/>`;
+  const ink = mix(tone, "#ffffff", 0.82);
+  const [kind, name] = (sec.glyph ?? "t:?").split(/:(.*)/s);
+  const GS = 22; // glyph box
+  let glyph;
+  if (kind === "t") {
+    const len = name.length;
+    glyph = `<text x="${cx}" y="${cy + (len > 3 ? 3 : 4)}" text-anchor="middle" font-size="${len > 3 ? 8.5 : len > 2 ? 10.5 : 12.5}" font-weight="800" font-family="${FD}" fill="${ink}">${esc(name)}</text>`;
+  } else {
+    const body = kind === "i" ? `<g transform="scale(1.5)" fill="currentColor">${ICONS[name] ?? ""}</g>` : GLYPHS[name] ?? "";
+    glyph = `<g transform="translate(${cx - GS / 2} ${cy - GS / 2}) scale(${GS / 24})" color="${ink}">${body}</g>`;
+  }
+  const spark = (x, y, sz, delay) =>
+    `<path d="M${x} ${r3(y - sz)}L${r3(x + sz * 0.28)} ${r3(y - sz * 0.28)}L${r3(x + sz)} ${y}L${r3(x + sz * 0.28)} ${r3(y + sz * 0.28)}L${x} ${r3(y + sz)}L${r3(x - sz * 0.28)} ${r3(y + sz * 0.28)}L${r3(x - sz)} ${y}L${r3(x - sz * 0.28)} ${r3(y - sz * 0.28)}Z" fill="${mix(tone, "#ffffff", 0.7)}"${A.loop({ "0%,100%": "opacity:0;transform:scale(.3)", "50%": "opacity:1;transform:scale(1)" }, { dur: 2.6, delay: 1.6 + delay + (i % 5) * 0.2, origin: [x, y], still: ' opacity="0.85"' })}/>`;
+  const body = [
+    `<title>${esc(`${tr.label}: ${sec.hint ?? "secret"}`)}</title>`,
+    `<ellipse cx="${cx}" cy="${cy + 4}" rx="30" ry="26" fill="${tone}" opacity="0.1"/>`,
+    sec.special ? `<polygon points="${[0, 1, 2, 3, 4, 5].map((k) => vertex(k, R + 5).join(",")).join(" ")}" fill="none" stroke="${tone}" stroke-width="1.4" stroke-linejoin="round" opacity="0.6"${A.loop({ "0%,100%": "opacity:.2", "50%": "opacity:.9" }, { dur: 2.2, delay: 1.6 })}/>` : "",
+    facets,
+    ring,
+    `<circle cx="${cx}" cy="${cy}" r="16.500" fill="${mix(tone, "#000000", 0.7)}" stroke="${mix(tone, "#ffffff", 0.35)}" stroke-width="1"/>`,
+    `<circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="${tone}" stroke-width="0.6" stroke-dasharray="1.2 2.2" opacity="0.8"/>`,
+    glyph,
+    spark(24, 33, 4.5, 0),
+    spark(87, 66, 3.6, 1.1),
+    spark(84, 27, 2.6, 0.6),
+    has("title") ? `<text x="55" y="14.500" text-anchor="middle" font-size="${textWidth(tr.label, 12) > 102 ? 10.5 : 12}" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(fit(tr.label, textWidth(tr.label, 12) > 102 ? 10.5 : 12, 104))}</text>` : "",
+    has("label") ? `<text x="55" y="${sec.value ? 85 : 91}" text-anchor="middle" font-size="8.500" font-weight="700" letter-spacing="2" font-family="${FD}" fill="${mix(tone, c.text, 0.25)}">${esc(sec.special ?? "SECRET")}</text>` : "",
+    has("score") && sec.value ? `<text x="55" y="97" text-anchor="middle" font-size="9.500" font-weight="700" font-family="${FD}" fill="${c.muted}">${esc(fit(String(sec.value), 9.5, 96))}</text>` : "",
+    has("bar") ? `<rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${tone}"/>` : "",
+  ].join("\n      ");
+  return { defs: "", body, bar: has("bar") ? { x: 15, y: 101, w: 80, h: 3.2, color: tone } : null };
+}
+
 /** One 110 x 110 card. Returns the svg body, the gradient it needs and where the progress bar sits (the section animates the fill). */
 function trophy(tr, X, o) {
   const { c, A } = X;
@@ -501,7 +552,7 @@ function trophiesSection(d, X, W = 940) {
           const rowW = inRow * s + gx * (inRow - 1);
           const x = 30 + (o.align === "left" ? pad : (W - rowW) / 2) + (i % cols) * (s + gx);
           const y = 546 + row * (s + gy);
-          const { defs: g, body, bar } = trophy(tr_, X, o);
+          const { defs: g, body, bar } = tr_.rank === "SECRET" ? secretTrophy(tr_, X, o, i) : trophy(tr_, X, o);
           defs.push(g);
           return `<g${A.a(1.45 + i * 0.08, 0.5, { o: 0, s: 0.6 }, {}, [r3(x + s / 2), r3(y + s / 2)])}>
     <svg x="${r3(x)}" y="${r3(y)}" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">

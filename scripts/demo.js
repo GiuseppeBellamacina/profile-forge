@@ -3,18 +3,19 @@
 // Used to generate the images in docs/ and presets/. Needs `npm install` for PNG output.
 //   node scripts/demo.js <config.json> <out-prefix> [--slot dark] [--scale 1] [--svg]
 //   showcase options: --top (a top 1% profile), --rank <E|D|C|B|A|S|S+> (force the header level),
-//                     --levels (one trophy per level), --crop x,y,w,h (only that part of the card)
+//                     --levels (one trophy per level), --secrets <all|first,count> (the secret trophies), --crop x,y,w,h (only that part of the card)
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { needsExtras, normalize } from "../src/config.js";
 import { render } from "../src/render.js";
+import { SECRETS } from "../src/secrets.js";
 import { summarize } from "../src/stats.js";
 
 const { values: o, positionals: [configPath, prefix] } = parseArgs({
   allowPositionals: true,
-  options: { slot: { type: "string" }, scale: { type: "string", default: "1" }, svg: { type: "boolean" }, top: { type: "boolean" }, rank: { type: "string" }, levels: { type: "boolean" }, crop: { type: "string" } },
+  options: { slot: { type: "string" }, scale: { type: "string", default: "1" }, svg: { type: "boolean" }, top: { type: "boolean" }, rank: { type: "string" }, levels: { type: "boolean" }, secrets: { type: "string" }, crop: { type: "string" } },
 });
 if (!configPath || !prefix) throw new Error("usage: node scripts/demo.js <config.json> <out-prefix> [--slot dark] [--scale 1] [--svg]");
 
@@ -55,6 +56,10 @@ const profile = {
 };
 
 if (o.top) Object.assign(profile, { followers: 4200, prs: 1800, issues: 900, stars: 52000, commits: 30000, reviews: 400, repoCount: 60 }); // a top 1% profile, to see the special level
+function secretTrophy(d) {
+  const fake = new Proxy({}, { get: () => 42 });
+  return { title: d.title, rank: "SECRET", label: d.label, score: null, progress: 1, secret: { glyph: d.glyph, tone: d.tone, hint: d.hint, special: d.special ?? null, value: d.value?.(fake, fake) ?? null } };
+}
 const raw = JSON.parse(await readFile(configPath, "utf8"));
 const k = normalize(raw);
 const data = summarize(profile, k);
@@ -65,7 +70,12 @@ if (o.levels) {
   const names = ["Stars", "Commits", "Followers", "PullRequest", "Repositories", "Experience", "Stars"];
   const labels = ["First Star", "First Friend", "Middle Pull", "High Puller", "Hyper Repo Creator", "Master Dev", "Super Stargazer"];
   data.trophies = ["E", "D", "C", "B", "A", "S", "S+"].map((rank, i) => ({ title: names[i], rank, label: labels[i], score: [3, 25, 60, 140, 340, 720, 2400][i], progress: [0.3, 0.45, 0.6, 0.5, 0.7, 0.8, 1][i] }));
-  data.trophies.push({ title: "OGUser", rank: "SECRET", label: "OG User", score: null, progress: 1 });
+  data.trophies.push(secretTrophy(SECRETS.find((d) => d.title === "OGUser")));
+}
+if (o.secrets) {
+  // every secret trophy, or "from,count" of them; the values are made up
+  const [from, count] = o.secrets === "all" ? [0, SECRETS.length] : o.secrets.split(",").map(Number);
+  data.trophies = SECRETS.slice(from, from + count).map(secretTrophy);
 }
 
 // Tech stack images are paths relative to the config, embedded as data URIs (same as the CLI).
