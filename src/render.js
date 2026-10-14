@@ -223,6 +223,7 @@ function headerSection(d, X) {
   }
   <g${A.a(0.15, 0.6, { o: 0, ty: 12 })}>
     <text x="${nx}" y="78" font-size="32" font-weight="700" font-family="${FD}" fill="${c.text}">${esc(trunc(d.name, showAvatar ? 24 : 30))}</text>
+    ${flag(k.flagData, nx + textWidth(trunc(d.name, showAvatar ? 24 : 30), 32) + 14, 53)}
     <text x="${nx}" y="106" font-size="16" font-weight="600" fill="${c.accent}">@${esc(d.login)}${k.title ? `<tspan dx="4" font-weight="400" fill="${c.muted}">· ${esc(k.title)}</tspan>` : ""}</text>
     ${icon("history", nx, 122, 14, c.muted)}
     <text x="${nx + 21}" y="134" font-size="13" fill="${c.muted}">${esc(tr("joined", { d: joined, n: tr(d.years === 1 ? "year" : "years", { n: d.years }) }))}</text>
@@ -238,6 +239,12 @@ function headerSection(d, X) {
   ${X.showRank ? rank() : ""}`,
   };
 }
+
+/** The flag next to the name: 4:3 image (embedded as a data URI by the caller) with rounded corners and a hairline. */
+const flag = (data, x, y) =>
+  data && x + 36 < 550 // not over the facts column
+    ? `<clipPath id="flagclip"><rect x="${r3(x)}" y="${y}" width="36" height="27" rx="4"/></clipPath><image href="${data}" x="${r3(x)}" y="${y}" width="36" height="27" preserveAspectRatio="xMidYMid slice" clip-path="url(#flagclip)"/><rect x="${r3(x)}" y="${y}" width="36" height="27" rx="4" fill="none" stroke="#808080" stroke-opacity="0.35"/>`
+    : "";
 
 function statsSection(d, X, W = 460) {
   const { c, A, k, tr, num } = X;
@@ -833,15 +840,15 @@ function workingSection(d, X, W = 940) {
   };
 }
 
-/** Two endless marquee rows of tech logos (order shuffled at generation time), moving in opposite directions. */
+/** Endless marquee rows of tech logos (`marquee`: rows, speed, order), moving in alternating directions. */
 function stackSection(d, X, W = 940) {
   const { c, A, k, tr, defs } = X;
   const items = k.stack ?? [];
   if (!items.length) return null;
-  const half = Math.ceil(items.length / 2);
-  const rows = [items.slice(0, half), items.slice(half)].filter((r) => r.length);
+  const per = Math.ceil(items.length / Math.min(k.marquee.rows, items.length));
+  const rows = Array.from({ length: Math.ceil(items.length / per) }, (_, i) => items.slice(i * per, (i + 1) * per));
   const step = 84;
-  const speed = 28; // px per second
+  const speed = k.marquee.speed; // px per second
   const h = 54 + rows.length * 84 + 6;
   return {
     w: W, top: 0, nx: 30, h,

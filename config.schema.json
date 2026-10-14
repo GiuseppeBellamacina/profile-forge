@@ -104,6 +104,7 @@
       "properties": {
         "avatar": { "enum": ["circle", "rounded", "hide"], "default": "circle" },
         "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S flames, S+ aurora). Colour: colors.frameColor, default the level colour." },
+        "flag": { "type": ["string", "null"], "default": null, "description": "Path of a flag image (svg/png, 4:3) drawn next to the name, e.g. assets/img/flags/it.svg." },
         "rankStyle": { "enum": ["ring", "hexagon", "shield"], "default": "ring", "description": "The shape of the rank indicator." },
         "rankThickness": { "type": "number", "minimum": 4, "maximum": 16, "default": 8 },
         "frameAnimation": { "enum": ["default", "none", "spin", "pulse", "twinkle"], "default": "default", "description": "default: the frame's own motion. none: still. spin / pulse / twinkle: override it where it makes sense." },
@@ -172,6 +173,15 @@
         "noFrame": { "type": "boolean", "default": false },
         "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." },
         "birthday": { "type": ["string", "null"], "pattern": "^(\\d{4}-)?\\d{2}-\\d{2}$", "default": null, "description": "Your birthday as MM-DD (or YYYY-MM-DD): the Happy Birthday secret trophy shows on that day, in the card's time zone." }
+      }
+    },
+    "marquee": {
+      "type": "object", "additionalProperties": false, "description": "The Tech stack section: scrolling logos.",
+      "properties": {
+        "speed": { "type": "number", "minimum": 5, "maximum": 200, "default": 28, "description": "Pixels per second." },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 4, "default": 2, "description": "Rows of logos, scrolling in alternating directions." },
+        "order": { "enum": ["shuffle", "config", "name"], "default": "shuffle", "description": "shuffle: random at every generation. config: as listed. name: A-Z." },
+        "byCategory": { "type": "boolean", "default": false, "description": "Order / shuffle inside each category and keep the categories in sequence, instead of mixing everything." }
       }
     },
     "heatmap": {

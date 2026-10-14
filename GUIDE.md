@@ -180,6 +180,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 | `rankStyle` | `ring` `hexagon` `shield` | `ring` |
 | `rankThickness` | 4–16 | `8` |
 | `rankIcon` | what the rank shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
+| `flag` | path of a 4:3 flag image (svg/png) drawn next to the name; skipped when the name is too long | `null` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
 |---|---|---|
@@ -635,7 +636,8 @@ These turn the card into your whole README.
 | `about` | Paragraphs, wrapped automatically |
 | `workingOn` | Project cards: `title` (required), `description`, `url` |
 | `links` | One clickable button per link (see below). `label` and `url` are required; `icon` and `color` optional |
-| `techStack` | Categories with items `{ name, image }`. Two rows scroll in opposite directions; the order is reshuffled every time the card is generated |
+| `techStack` | Categories with items `{ name, image }`. Rows scroll in alternating directions; see `marquee` below |
+| `marquee` | `{ speed: 28, rows: 2, order: "shuffle", byCategory: false }`: scroll speed (px/s, 5–200), number of rows (1–4), `order` (`shuffle` is reshuffled at every generation, `config` as listed, `name` A–Z) and `byCategory` (order inside each category and keep categories in sequence) |
 
 <img src="docs/guide/content-about.png" width="60%">
 

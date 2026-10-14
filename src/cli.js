@@ -3,7 +3,7 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { needsExtras, normalize, setPath } from "./config.js";
+import { needsExtras, normalize, setPath, stackItems } from "./config.js";
 import { fetchProfile } from "./github.js";
 import { render, renderButton } from "./render.js";
 import { summarize } from "./stats.js";
@@ -112,25 +112,17 @@ const profile = await fetchProfile({
 const data = summarize(profile, k);
 
 const MIME = { ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
-const shuffle = (a) => {
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
 // Images are embedded as data URIs: GitHub's image proxy blocks external loads inside SVGs.
 const base = configPath ? dirname(resolve(configPath)) : process.cwd();
-const items = k.techStack.flatMap((cat) => cat.items);
-k.stack = shuffle(
-  await Promise.all(
-    items.map(async (it, n) => ({
+k.stack = await Promise.all(
+    stackItems(k.techStack, k.marquee).map(async (it, n) => ({
       name: it.name,
       id: `i${n}`,
       data: `data:${MIME[extname(it.image).toLowerCase()] ?? "image/png"};base64,${(await readFile(join(base, it.image))).toString("base64")}`,
     })),
-  ),
 );
+
+if (k.header.flag) k.flagData = `data:${MIME[extname(k.header.flag).toLowerCase()] ?? "image/png"};base64,${(await readFile(join(base, k.header.flag))).toString("base64")}`;
 
 // Webfonts are embedded as data URIs: GitHub shows README SVGs as images, which can't fetch fonts.
 const fontDir = join(dirname(fileURLToPath(import.meta.url)), "..", "fonts");

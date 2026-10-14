@@ -19,11 +19,12 @@ export const DEFAULTS = {
   layout: ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
   hideSections: [],
   grid: null, // [{ section, cols, height? }]: free 6-column grid instead of `layout` (see GUIDE)
-  header: { avatar: "circle", frame: "ring", frameAnimation: "default", rankStyle: "ring", rankThickness: 8, facts: ["contributionsThisYear", "bestDay", "busiestWeekday"], rankIcon: "level" },
+  header: { avatar: "circle", frame: "ring", frameAnimation: "default", rankStyle: "ring", rankThickness: 8, facts: ["contributionsThisYear", "bestDay", "busiestWeekday"], rankIcon: "level", flag: null },
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
   trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [], birthday: null },
+  marquee: { speed: 28, rows: 2, order: "shuffle", byCategory: false },
   heatmap: { mode: "grid", snakePath: "smart", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
@@ -34,13 +35,13 @@ const ENUMS = {
   "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
-  "trophies.align": ["center", "left"],
+  "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"],
   "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
-  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16],
+  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4],
 };
 // Keys whose value shape isn't described by the default's type.
 const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
@@ -197,6 +198,21 @@ export function normalize(raw = {}) {
       parts: must("trophies.parts", c.trophies.parts.map(nk), ["title", "label", "score", "bar"]),
     },
   };
+}
+
+/** The tech stack logos in the order they scroll. `shuffle` takes `rand` (inject a seeded one for a stable preview); `byCategory` orders inside each category and keeps the categories in sequence. */
+export function stackItems(techStack, { order, byCategory }, rand = Math.random) {
+  const arrange = (a) => {
+    if (order === "name") return [...a].sort((x, y) => x.name.localeCompare(y.name));
+    if (order !== "shuffle") return a;
+    a = [...a];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  return byCategory ? techStack.flatMap((c) => arrange(c.items)) : arrange(techStack.flatMap((c) => c.items));
 }
 
 /** True when stats need the extra GraphQL fields (merged PRs / discussions). */

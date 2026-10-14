@@ -462,3 +462,14 @@ test("birthday trophy: the date comes from the config; the friend trophy is spec
   d.trophies = [{ title: "Friend", rank: "SECRET", label: "Forge Friend", score: null, progress: 1, secret: { glyph: "g:bond", tone: "gold", special: "FRIEND", hint: "x", value: null } }];
   assert.ok(render(d, { k, t: 1 }).includes(">FRIEND<"));
 });
+
+test("header flag and tech stack marquee options", () => {
+  const [d, k] = make({ header: { flag: "assets/img/flags/it.svg" }, marquee: { rows: 3, speed: 50 } });
+  k.flagData = "data:image/svg+xml;base64,AAAA";
+  k.stack = Array.from({ length: 9 }, (_, n) => ({ name: `T${n}`, id: `i${n}`, data: "data:image/png;base64," }));
+  const svg = render(d, { theme: "dark", k });
+  assert.ok(svg.includes('id="flagclip"'));
+  assert.equal((svg.match(/@keyframes m\d/g) ?? []).length, 3);
+  k.flagData = undefined;
+  assert.ok(!render(d, { theme: "dark", k }).includes("flagclip"));
+});
