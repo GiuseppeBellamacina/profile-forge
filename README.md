@@ -181,13 +181,9 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
 > [!NOTE]
 > Every preset is a plain `config.json`: copy it, change what you like, done.
 
-Copy one of the [`presets/`](presets) to `config.json` and tweak it: `matrix`, `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
+Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
 
 <table>
-<tr>
-<td><img src="docs/presets/matrix-dark.png" alt="matrix preset, dark"></td>
-<td><img src="docs/presets/matrix-light.png" alt="matrix preset, light"></td>
-</tr>
 <tr>
 <td><img src="docs/presets/dashboard-dark.png" alt="dashboard preset"></td>
 <td><img src="docs/presets/cyberpunk-dark.png" alt="cyberpunk preset"></td>

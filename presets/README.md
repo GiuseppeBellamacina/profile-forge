@@ -3,14 +3,13 @@
 Ready-to-use `config.json` files. Copy one to the root of your profile repo as `config.json` and edit it.
 
 ```bash
-curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/presets/matrix.json
+curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/presets/dashboard.json
 ```
 
 Every preset defines a `dark` and a `light` slot, so the README `<picture>` snippet stays the same. All options are explained in the [configuration guide](../GUIDE.md). Previews use demo data.
 
 | Preset | Idea |
 |---|---|
-| [`matrix`](matrix.json) | Green rain on black: the `matrix` theme with a custom light twin, grid background, glitch avatar frame, `> stats` titles |
 | [`minimal`](minimal.json) | Small and quiet: no border, no glow, a few numbers |
 | [`dashboard`](dashboard.json) | Dracula / Gruvbox, donut languages, trophies, round heatmap |
 | [`terminal`](terminal.json) | Green-on-black hacker look, grid background, `$ stats` titles |
@@ -22,14 +21,6 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | [`open-source`](open-source.json) | Merged PRs, discussions, weighted languages, selected trophies |
 
 `portfolio` reads its tech stack icons from `assets/img/` (relative to `config.json`): copy [`assets/img/`](assets/img) next to your config, and replace the placeholder text, URLs and `your-login`.
-
-## matrix
-
-[`matrix.json`](matrix.json)
-
-| Dark | Light |
-|---|---|
-| <img src="../docs/presets/matrix-dark.png"> | <img src="../docs/presets/matrix-light.png"> |
 
 ## minimal
 
