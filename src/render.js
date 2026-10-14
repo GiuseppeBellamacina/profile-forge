@@ -539,6 +539,11 @@ function trophiesSection(d, X, W = 940) {
       !o.hideRanks.has(t.rank),
   );
   if (!list.length) return null;
+  // `titles` is also the order: the trophies appear in the order they are listed there
+  if (o.titles.size) {
+    const at = (t) => [...o.titles].findIndex((x) => trophyMatches(t.title, new Set([x])));
+    list = list.map((t) => [at(t), t]).sort((a, b) => a[0] - b[0]).map(([, t]) => t);
+  }
   const gx = o.marginW;
   const gy = o.marginH;
   const pad = o.padding;

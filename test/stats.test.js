@@ -473,3 +473,10 @@ test("header flag and tech stack marquee options", () => {
   k.flagData = undefined;
   assert.ok(!render(d, { theme: "dark", k }).includes("flagclip"));
 });
+
+test("trophies.titles also sets the order", () => {
+  const [d, k] = make({ layout: ["trophies"], trophies: { titles: ["Followers", "Stars", "Commits"], columns: 3 } });
+  const svg = render(d, { theme: "dark", k, t: 1 });
+  const pos = ["Followers", "Stars", "Commits"].map((n) => svg.indexOf(`>${n}<`));
+  assert.ok(pos.every((p) => p > 0) && pos[0] < pos[1] && pos[1] < pos[2], pos.join());
+});

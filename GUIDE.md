@@ -412,7 +412,7 @@ A day with zero contributions *today* does not break the current streak.
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
-| `titles` | trophy names | `[]` | Show only these. Aliases from the original project work: `Star`, `Commit`, `Follower`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`… |
+| `titles` | trophy names | `[]` | Show only these, in the order listed. Aliases from the original project work: `Star`, `Commit`, `Follower`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`… |
 | `hideTitles` | trophy names | `[]` | Hide these |
 | `ranks` | `E D C B A S S+ SECRET` | `[]` | Only these ranks. A `-` prefix drops one: `["-E"]`. `SECRET` selects the secret trophies. The old names SSS, SS, AAA and AA are gone: use `S+`, `S` and `B` |
 | `hideRanks` | same | `[]` | Drop ranks |
