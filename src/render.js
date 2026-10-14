@@ -687,19 +687,30 @@ function heatmapSection(d, X, W = 940) {
   let plan = null; // the route and its timing, computed once per card (inside draw, when the section delay is known)
   const snakePlan = () => {
     if (plan) return plan;
-    const { pts: route, eaten } = snakeRoute(o.snakePath, weeks, level, SNAKE_LEN);
+    const { pts: cells, eaten } = snakeRoute(o.snakePath, weeks, level, SNAKE_LEN);
+    const end = cells.length - 1; // the last cell it eats
+    // then it keeps going in the same direction until it has left the grid completely, tail included (the clip hides it)
+    const a = cells[Math.max(0, end - 1)], b = cells[end];
+    const [dw, di] = end > 0 && b.w !== a.w ? [Math.sign(b.w - a.w), 0] : [0, Math.sign(b.i - a.i) || 1];
+    const route = [...cells];
+    let out = 0;
+    for (let n = 1; out < SNAKE_LEN + 1; n++) {
+      const w = b.w + dw * n, i = b.i + di * n;
+      route.push({ w, i });
+      if (w < 0 || w >= weeks.length || i < 0 || i >= 7) out++;
+    }
     const pts = route.map(({ w, i }) => ({ x: x0 + w * step, y: y0 + i * step }));
     const last = pts.length - 1;
     // a long route is played faster so one loop never takes much longer than half a minute
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));
     const T = r3((last + SNAKE_LEN) * DT + SNAKE_PAUSE);
-    plan = { route, eaten, pts, last, DT, T, pct: (t) => r3((t / T) * 100), delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) }; // after the grid has faded in
+    plan = { route, eaten, pts, end, last, DT, T, pct: (t) => r3((t / T) * 100), delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) }; // after the grid has faded in
     return plan;
   };
   // a day with contributions, drawn on top of its empty-day look and faded out when the snake gets there
   const snakeDay = (w, i, lvl, title) => {
-    const { eaten, last, DT, T, pct, delay } = snakePlan();
-    const j = eaten.get(`${w},${i}`) ?? last;
+    const { eaten, end, DT, T, pct, delay } = snakePlan();
+    const j = eaten.get(`${w},${i}`) ?? end;
     A.css.push(`@keyframes ce${w}_${i}{0%,${pct(j * DT)}%{opacity:1}${pct(j * DT + 0.1)}%,99.5%{opacity:0}100%{opacity:1}}`);
     return cell(w, i, 0) + cell(w, i, lvl, title).replace(/^<(\w+)/, `<$1 style="animation:ce${w}_${i} ${T}s linear ${delay}s infinite"`);
   };
@@ -709,7 +720,7 @@ function heatmapSection(d, X, W = 940) {
     const kind = o.cell === "mixed" ? "round" : o.cell;
     // triangles alternate up / down from cell to cell like the grid
     const tri = kind === "triangle";
-    const upAt = (j) => (route[j].w + route[j].i) % 2 === 0;
+    const upAt = (j) => (Math.abs(route[j].w + route[j].i) % 2) === 0;
     const seg = (k, attrs, up = true) => cellShape(kind, 0, 0, c.snake, { lvl: 4, up, dim: c.snake, rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * 0.1)}" ${attrs}`);
     if (A.t !== undefined) {
       // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
