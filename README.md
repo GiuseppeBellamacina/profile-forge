@@ -10,7 +10,7 @@
 ![Themes](https://img.shields.io/badge/themes-47-8b5cf6)
 ![Locales](https://img.shields.io/badge/languages-8-f59e0b)
 
-[**Web configurator**](https://giuseppebellamacina.github.io/profile-forge-configurator/) · [**Quick start**](#quick-start-github-action) · [**Full guide**](GUIDE.md) · [**Presets**](presets) · [**Themes**](docs/themes)
+[**Web configurator**](https://giuseppebellamacina.github.io/profile-forge-configurator/) · [**Quick start**](#quick-start-github-action) · [**Full guide**](GUIDE.md) · [**Presets**](presets) · [**Trophies**](TROPHIES.md) · [**Themes**](docs/themes)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/profile-forge-dark.svg">
@@ -181,9 +181,13 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
 > [!NOTE]
 > Every preset is a plain `config.json`: copy it, change what you like, done.
 
-Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
+Copy one of the [`presets/`](presets) to `config.json` and tweak it: `matrix`, `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
 
 <table>
+<tr>
+<td><img src="docs/presets/matrix-dark.png" alt="matrix preset, dark"></td>
+<td><img src="docs/presets/matrix-light.png" alt="matrix preset, light"></td>
+</tr>
 <tr>
 <td><img src="docs/presets/dashboard-dark.png" alt="dashboard preset"></td>
 <td><img src="docs/presets/cyberpunk-dark.png" alt="cyberpunk preset"></td>
@@ -231,7 +235,7 @@ Names follow the three projects the card is built on. A `—` means the original
 | stats | `hide`, `show`, `icons`, `numberFormat`, `numberPrecision`, `textBold`, `lineHeight`, `title`, `commitsYear`, `excludeRepos` | `hide`, `show`, `show_icons`, `number_format`, `number_precision`, `text_bold`, `line_height`, `custom_title`, `commits_year`, `exclude_repo` | `show` adds `prsMerged`, `prsMergedPercentage`, `discussionsStarted`, `discussionsAnswered` (extra GraphQL calls, only when requested) |
 | streak | `hide`, `mode`, `excludeDays`, `startingYear`, `dateFormat`, `shortNumbers`, `excludeDaysLabel`, `title` | `hide_*_streak`, `mode`, `exclude_days`, `starting_year`, `date_format`, `short_numbers` | `weekly` counts Sunday–Saturday weeks; excluded days neither extend nor break a streak; `[...]` in `dateFormat` is hidden for the current year |
 | languages | `layout`, `count`, `hide`, `excludeRepos`, `hideProgress`, `statsFormat`, `sizeWeight`, `countWeight`, `title` | `layout`, `langs_count`, `hide`, `exclude_repo`, `hide_progress`, `stats_format`, `size_weight`, `count_weight` | `bar` `compact` `donut` `donut-vertical` `pie`; `bytes` shows sizes instead of percentages; score = `bytes^sizeWeight × repos^countWeight` |
-| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `padding`, `align`, `parts`, `noBg`, `noFrame`, `extra`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies; `birthday` (`MM-DD`) sets the day of the Happy Birthday trophy |
+| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `padding`, `align`, `parts`, `noBg`, `noFrame`, `extra`, `birthday`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies; `birthday` (`MM-DD`) sets the day of the Happy Birthday trophy |
 | heatmap | `mode`, `snakePath`, `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | `grid` or `snake` (routes `smart` `busy` `nearest` `sweep` `rows` `spiral`); cells `square` `round` `triangle` `snowflake` `moon` `mixed`; grid size, Monday start, legend and month labels |
 | root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
 
@@ -329,12 +333,13 @@ npm test     # node:test, zero deps
 src/config.js   config.json schema: defaults, validation, normalization
 src/themes.js   built-in themes, color overrides, custom themes
 src/i18n.js     label dictionaries (en it es fr de pt-br ja zh)
-src/github.js   GraphQL fetching (profile, repos, per-year calendars)
-src/stats.js    rank, languages, streak, trophies (pure functions)
+src/github.js   GraphQL fetching (profile, repos, per-year calendars) and the friend check
+src/stats.js    rank, languages, streak, level trophies (pure functions)
+src/secrets.js  the 66 secret trophies: facts from the calendar and profile, glyphs, tones
 src/render.js   SVG renderer + themes + animation timeline
 src/export.js   PNG/GIF export (optional deps)
 src/cli.js      CLI entry point (used by action.yml)
-scripts/        demo.js (render a config with demo data), gen-docs.js (regenerate docs/guide + docs/presets)
+scripts/        demo.js (render a config with demo data), gen-docs.js (regenerate docs/guide + docs/presets), gen-trophy-guide.js (writes TROPHIES.md)
 fonts/          Inter + Space Grotesk (OFL), embedded into the SVG as data URIs
 ```
 

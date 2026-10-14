@@ -49,11 +49,12 @@ Precedence: **action inputs / CLI flags › `config.json` › defaults**. Any ke
 Ready-to-use configs live in [`presets/`](presets). Copy one to `config.json` in your profile repo and edit from there. Each one defines a `dark` and a `light` slot, so the README `<picture>` snippet never changes.
 
 ```bash
-curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/presets/dashboard.json
+curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/presets/matrix.json
 ```
 
 | Preset | Idea |
 |---|---|
+| [`matrix`](presets/matrix.json) | Green rain on black: the `matrix` theme with a custom light twin, grid background, glitch avatar frame, `> stats` titles |
 | [`minimal`](presets/minimal.json) | Small and quiet: no border, no glow, a few numbers |
 | [`dashboard`](presets/dashboard.json) | Dracula / Gruvbox, donut languages, trophies, round heatmap |
 | [`terminal`](presets/terminal.json) | Green-on-black hacker look, grid background, `$ stats` titles |
@@ -63,6 +64,8 @@ curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profil
 | [`portfolio`](presets/portfolio.json) | Replaces your whole README: about, projects, links, tech stack |
 | [`streak-focus`](presets/streak-focus.json) | Consistency view: streaks, weekdays only, heatmap |
 | [`open-source`](presets/open-source.json) | Merged PRs, discussions, weighted languages, selected trophies |
+
+<p align="center"><b>matrix</b><br><img src="docs/presets/matrix-dark.png" width="70%"></p>
 
 <table>
 <tr>
@@ -83,9 +86,9 @@ curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profil
 </tr>
 </table>
 
-**portfolio** (full README replacement) and the light variants:
+**portfolio** (full README replacement) and the light twin of **matrix**:
 
-<img src="docs/presets/portfolio-dark.png" width="60%"> <img src="docs/presets/cyberpunk-light.png" width="38%">
+<img src="docs/presets/portfolio-dark.png" width="60%"> <img src="docs/presets/matrix-light.png" width="38%">
 
 The `portfolio` preset reads its tech stack icons from `assets/img/` (paths are relative to `config.json`). The icons are in [`presets/assets/img/`](presets/assets/img); copy them next to your config. Replace the placeholder text, URLs and `your-login`.
 
@@ -700,9 +703,10 @@ Not ported from the original projects: `card_width` / `card_height` (the card is
 
 ```bash
 npm install                 # resvg, used for the PNGs
-node scripts/gen-docs.js    # all of docs/guide/ and docs/presets/
+node scripts/gen-docs.js    # all of docs/guide/ and docs/presets/, and TROPHIES.md
 node scripts/gen-docs.js dashboard stats-short   # only some
-node scripts/demo.js presets/dashboard.json out/dashboard --scale 2   # any config, demo data
+node scripts/demo.js presets/matrix.json out/matrix --scale 2   # any config, demo data
+node scripts/demo.js presets/matrix.json out/gems --slot dark --secrets all   # every secret trophy, made-up values
 ```
 
 `scripts/demo.js` renders a config with fixed demo data, so you can try a config without a token. Output is `<prefix>-<slot>.png` (or `<prefix>.png` with `--slot dark`); add `--svg` for the animated SVG.
