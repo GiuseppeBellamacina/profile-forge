@@ -20,13 +20,16 @@ export function planSnake(weeks, level, len = 6, maxSteps = 1600, order = "quiet
   const tier = new Map(); // key -> level of a day that has contributions
   for (const [w, wk] of weeks.entries()) for (const [, n, i] of wk) { exists.add(key(w, i)); if (n) tier.set(key(w, i), level(n)); }
   const uneaten = new Set(tier.keys());
+  // A cell with a single neighbour (today, alone in the last week) is a trap: once in, the body closes the way back. The snake
+  // does not aim for it; it is eaten when the snake leaves through the last column.
+  const deadEnd = new Set([...exists].filter((k) => { const [w, i] = k.split(",").map(Number); return DIRS.filter(([dw, di]) => exists.has(key(w + dw, i + di))).length <= 1; }));
   const pts = [{ w: -1, i: 3 }]; // enters from the left, in the middle row
   const eaten = new Map();
   let body = Array.from({ length: len }, (_, k) => key(-1 - k, 3)); // head first
 
   // the rank decides what is eaten first (lower rank first); "nearest" ignores how busy a day was
   const rank = (k) => (order === "busy" ? 5 - tier.get(k) : order === "quiet" ? tier.get(k) : 1);
-  const lowest = () => { let m = Infinity; for (const k of uneaten) m = Math.min(m, rank(k)); return m; };
+  const lowest = () => { let m = Infinity; for (const k of uneaten) if (!deadEnd.has(k)) m = Math.min(m, rank(k)); return m; };
 
   // cheapest routes from the head to every cell, honouring the body (a segment frees its cell after len - idx moves)
   const routes = (head, cur) => {
@@ -95,33 +98,48 @@ export function planSnake(weeks, level, len = 6, maxSteps = 1600, order = "quiet
   const enter = () => { const k = key(0, 3); const [w, i] = k.split(",").map(Number); head = { w, i }; pts.push(head); body = [k, ...body.slice(0, len - 1)]; if (uneaten.delete(k)) eaten.set(k, pts.length - 1); };
   if (exists.has(key(0, 3))) enter();
 
-  while (uneaten.size && pts.length < maxSteps) {
-    const cur = lowest();
+  // A snake that goes round in circles without eating is stuck (an area it cannot cross yet, a dead-end rule that keeps
+  // undoing its last step). After STALL moves without a bite it stops being picky: nearest day of any kind, straight
+  // path, no dead-end avoidance. After GIVE_UP it quits and leaves; what is left is eaten on the way out.
+  const STALL = ROWS * 6;
+  const GIVE_UP = STALL * 3;
+  let stall = 0;
+  while ([...uneaten].some((k) => !deadEnd.has(k)) && pts.length < maxSteps && stall < GIVE_UP) {
+    const desperate = stall >= STALL;
+    const cur = desperate ? Infinity : lowest();
     const { dist, prev } = routes(head, cur);
     const hk = key(head.w, head.i);
     let target = null;
-    for (const wantTier of [cur, ...[1, 2, 3, 4].filter((t) => t > cur)]) {
-      const reachable = [...uneaten].filter((k) => rank(k) === wantTier && dist.has(k)).sort((a, b) => dist.get(a) - dist.get(b) || (a < b ? -1 : 1));
+    for (const wantTier of desperate ? [null] : [cur, ...[1, 2, 3, 4].filter((t) => t > cur)]) {
+      const reachable = [...uneaten].filter((k) => !deadEnd.has(k) && (wantTier === null || rank(k) === wantTier) && dist.has(k)).sort((a, b) => dist.get(a) - dist.get(b) || (a < b ? -1 : 1));
       if (reachable.length) { target = reachable[0]; break; }
     }
     if (!target) break; // boxed in by its own body: the rest is eaten when the snake leaves
-    const next = chooseStep(prev, hk, target);
+    const next = desperate ? firstStep(prev, hk, target) : chooseStep(prev, hk, target);
     const [w, i] = next.split(",").map(Number);
     head = { w, i };
     pts.push(head);
     body = [next, ...body.slice(0, len - 1)];
-    if (uneaten.delete(next)) eaten.set(next, pts.length - 1);
+    if (uneaten.delete(next)) (eaten.set(next, pts.length - 1), (stall = 0));
+    else stall++;
   }
 
   // leave through the right edge: walk to the last column, then step off the grid
   if (W) {
     let guard = 0;
-    while (head.w < W - 1 && guard++ < maxSteps) {
+    let waits = 0;
+    while (head.w < W - 1 && guard++ < 4 * (W + ROWS)) {
       const { dist, prev } = routes(head, 5);
       let target = null;
       let bestD = Infinity;
       for (let i = 0; i < ROWS; i++) { const k = key(W - 1, i); if (dist.has(k) && dist.get(k) < bestD) { bestD = dist.get(k); target = k; } }
-      if (!target) break;
+      if (!target) {
+        // its own body is in the way: stand still while the tail moves off, instead of jumping out of the grid
+        if (waits++ >= len) break;
+        pts.push({ ...head });
+        body = [key(head.w, head.i), ...body.slice(0, len - 1)];
+        continue;
+      }
       const next = firstStep(prev, key(head.w, head.i), target);
       const [w, i] = next.split(",").map(Number);
       head = { w, i };

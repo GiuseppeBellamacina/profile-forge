@@ -87,3 +87,30 @@ test("spiral and rows follow their shapes; the planner is deterministic", () => 
   assert.deepEqual(snakeRoute("rows", weeks, level).pts.slice(1, 4).map((p) => `${p.w},${p.i}`), ["0,0", "1,0", "2,0"]);
   assert.deepEqual(snakeRoute("nearest", grid(30), level), snakeRoute("nearest", grid(30), level));
 });
+
+test("smart snake never goes round in circles: the route stays short and every step is to a neighbour", async () => {
+  const { planSnake } = await import("../src/snake.js");
+  let seed = 9;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil(n / 8)));
+  for (let t = 0; t < 4; t++) {
+    const weeks = Array.from({ length: 53 }, (_, w) => Array.from({ length: 7 }, (_, i) => ["d", rnd() < 0.05 + 0.6 * (w / 52) ** 2 ? 1 + Math.floor(rnd() * 30) : 0, i]));
+    for (const order of ["quiet", "busy", "nearest"]) {
+      const { pts } = planSnake(weeks, level, 6, 1600, order);
+      assert.ok(pts.length < 1000, `${order}: ${pts.length} steps`);
+      for (let j = 1; j < pts.length - 1; j++) assert.ok(Math.abs(pts[j].w - pts[j - 1].w) + Math.abs(pts[j].i - pts[j - 1].i) <= 1, `${order}: jump at ${j}`);
+    }
+  }
+});
+
+test("smart snake does not get trapped chasing today when it is alone in the last week", async () => {
+  const { planSnake } = await import("../src/snake.js");
+  let seed = 4;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const weeks = Array.from({ length: 53 }, (_, w) => Array.from({ length: w === 52 ? 1 : 7 }, (_, i) => ["d", rnd() < 0.05 + 0.7 * (w / 52) ** 2 ? 1 + Math.floor(rnd() * 40) : 0, i]));
+  weeks[52][0][1] = 5; // a contribution today
+  const { pts, eaten } = planSnake(weeks, (n) => (n === 0 ? 0 : Math.min(4, Math.ceil(n / 10))), 6, 1600, "quiet");
+  assert.ok(pts.length < 800, `${pts.length} steps`);
+  const left = [...eaten.values()].filter((v) => v === pts.length - 1).length;
+  assert.ok(left <= 1, `${left} days left behind`); // at most today itself, eaten on the way out
+});
