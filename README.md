@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![Themes](https://img.shields.io/badge/themes-47-8b5cf6)
+![Themes](https://img.shields.io/badge/themes-72-8b5cf6)
 ![Locales](https://img.shields.io/badge/languages-8-f59e0b)
 
 [**Web configurator**](https://giuseppebellamacina.github.io/profile-forge-configurator/) · [**Quick start**](#quick-start-github-action) · [**Full guide**](GUIDE.md) · [**Presets**](presets) · [**Trophies**](TROPHIES.md) · [**Themes**](docs/themes)
@@ -67,7 +67,9 @@ profile-forge works differently:
 | Streak | Total contributions, current streak and longest streak with date ranges (a day with zero contributions *today* does not break the streak) |
 | Top languages | Animated stacked bar and legend, with configurable `size_weight` / `count_weight` ranking |
 | Trophies | The classic cup in the colour of its level (laurel from A, two cups at S, three and a shimmer at S+), plus 66 secret trophies (gems with their own glyph) earned from your calendar, repos, languages and profile |
-| Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes or moons, or as an animated snake that eats them |
+| Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes or moons, or as an animated snake that eats them (any length, classic, rainbow or glowing) |
+| Terminal | A terminal window whose commands type themselves, with your own lines |
+| Rhythm | When you code: average contributions per weekday and total per month, as animated bars |
 | Avatar | A frame around it, like Discord avatar decorations (13 styles, most of them animated, or one that follows your level) |
 
 ### Levels, trophies and frames
@@ -181,7 +183,7 @@ Put a `config.json` at the root of your profile repo and the action picks it up 
 > [!NOTE]
 > Every preset is a plain `config.json`: copy it, change what you like, done.
 
-Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`. Previews and details are in the [guide](GUIDE.md#presets).
+Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, `dashboard`, `terminal`, `pastel-it`, `trophy-case`, `cyberpunk`, `portfolio`, `streak-focus`, `open-source`, `aurora`, `zen`, `showcase`. Previews and details are in the [guide](GUIDE.md#presets).
 
 <table>
 <tr>
@@ -198,7 +200,7 @@ Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, 
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord`, `monokai`, `gruvbox`, `gruvbox-light`, `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `solarized-dark`, `solarized-light`, `rose-pine`, `one-dark`, `synthwave`, `radical`, `ocean`, `crimson`, `material-palenight`, `nightowl`, `cobalt2`, `shades-of-purple`, `ayu-mirage`, `aura`, `aura-dark`, `horizon`, `everforest-dark`, `everforest-light`, `kanagawa-paper`, `nightfox`, `dawnfox`, `dayfox`, `carbonfox`, `oceanic-next`, `midnight-purple`, `merko`, `matrix`, `hacker`, `neon`, `outrun`, `vue-dark`, `discord`, `ambient-gradient`, `sunset-gradient`. Previews: [`docs/themes/`](docs/themes).
+Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord`, `monokai`, `gruvbox`, `gruvbox-light`, `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `solarized-dark`, `solarized-light`, `rose-pine`, `one-dark`, `synthwave`, `radical`, `ocean`, `crimson`, `material-palenight`, `nightowl`, `cobalt2`, `shades-of-purple`, `ayu-mirage`, `aura`, `aura-dark`, `horizon`, `everforest-dark`, `everforest-light`, `kanagawa-paper`, `nightfox`, `dawnfox`, `dayfox`, `carbonfox`, `oceanic-next`, `midnight-purple`, `merko`, `matrix`, `hacker`, `neon`, `outrun`, `vue-dark`, `discord`, `ambient-gradient`, `sunset-gradient`, `tokyo-night`, `tokyo-night-storm`, `tokyo-night-day`, `kanagawa-wave`, `moonlight`, `poimandres`, `vesper`, `rose-pine-moon`, `rose-pine-dawn`, `night-owl-light`, `andromeda`, `panda`, `everblush`, `cyberdream`, `nord-light`, `aurora-gradient`, `ocean-gradient`, `candy-gradient`, `sakura`, `lava`, `glacier`, `forest-night`, `coffee`, `amber`, `paper`. Previews: [`docs/themes/`](docs/themes).
 
 **Colors.** Overrides use the names of the original projects. Values are hex with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`):
 
@@ -218,7 +220,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 
 ### Layout
 
-`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`. A nested pair puts two sections side by side at half width: any two of them except `header` (`[["about", "workingOn"], ["trophies", "heatmap"]]`). `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width, so on their own they are centered. In a pair, `workingOn` stacks its cards, `trophies` wraps to as many per row as fit, `heatmap` shows the last weeks that fit and `techStack` keeps scrolling. For free sizes and positions use the 6-column `grid` instead (see the [guide](GUIDE.md#free-grid-grid)). `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`) are skipped.
+`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`, `terminal`, `rhythm`. A nested pair puts two sections side by side at half width: any two of them except `header` (`[["about", "workingOn"], ["trophies", "heatmap"]]`). `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width, so on their own they are centered. In a pair, `workingOn` stacks its cards, `trophies` wraps to as many per row as fit, `heatmap` shows the last weeks that fit and `techStack` keeps scrolling. For free sizes and positions use the 6-column `grid` instead (see the [guide](GUIDE.md#free-grid-grid)). `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`, `terminal`) are skipped.
 
 ### Options, by section
 
@@ -231,8 +233,10 @@ Names follow the three projects the card is built on. A `—` means the original
 | stats | `hide`, `show`, `icons`, `numberFormat`, `numberPrecision`, `textBold`, `lineHeight`, `title`, `commitsYear`, `excludeRepos` | `hide`, `show`, `show_icons`, `number_format`, `number_precision`, `text_bold`, `line_height`, `custom_title`, `commits_year`, `exclude_repo` | `show` adds `prsMerged`, `prsMergedPercentage`, `discussionsStarted`, `discussionsAnswered` (extra GraphQL calls, only when requested) |
 | streak | `hide`, `mode`, `excludeDays`, `startingYear`, `dateFormat`, `shortNumbers`, `excludeDaysLabel`, `title` | `hide_*_streak`, `mode`, `exclude_days`, `starting_year`, `date_format`, `short_numbers` | `weekly` counts Sunday–Saturday weeks; excluded days neither extend nor break a streak; `[...]` in `dateFormat` is hidden for the current year |
 | languages | `layout`, `count`, `hide`, `excludeRepos`, `hideProgress`, `statsFormat`, `sizeWeight`, `countWeight`, `title` | `layout`, `langs_count`, `hide`, `exclude_repo`, `hide_progress`, `stats_format`, `size_weight`, `count_weight` | `bar` `compact` `donut` `donut-vertical` `pie`; `bytes` shows sizes instead of percentages; score = `bytes^sizeWeight × repos^countWeight` |
-| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `padding`, `align`, `parts`, `noBg`, `noFrame`, `extra`, `birthday`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies; `birthday` (`MM-DD`) sets the day of the Happy Birthday trophy |
-| heatmap | `mode`, `snakePath`, `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | `grid` or `snake` (routes `smart` `busy` `nearest` `sweep` `rows` `spiral`); cells `square` `round` `triangle` `snowflake` `moon` `mixed`; grid size, Monday start, legend and month labels |
+| trophies | `titles`, `hideTitles`, `ranks`, `hideRanks`, `columns`, `rows`, `marginW`, `marginH`, `padding`, `align`, `parts`, `noBg`, `noFrame`, `extra`, `birthday`, `title` | `title`, `rank`, `column`, `row`, `margin-w`, `margin-h`, `no-bg`, `no-frame` | titles accept the originals' aliases (`Star`, `Commit`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`…); `-C` drops a rank, `SECRET` selects secret trophies; `extra` adds the `Issues` and `Reviews` trophies; `birthday` (`MM-DD`) sets the day of the Happy Birthday trophy; `sort` (`default` `rank` `name`) and `highlight` (titles drawn with a pulsing glow) |
+| heatmap | `mode`, `snakePath`, `snakeLength`, `snakeStyle`, `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | `grid` or `snake` (routes `smart` `busy` `nearest` `sweep` `rows` `spiral`, 3–12 cells long, `classic` `rainbow` `glow`); cells `square` `round` `triangle` `snowflake` `moon` `mixed`; grid size, Monday start, legend and month labels |
+| terminal | `lines`, `title` | — | lines starting with `$ ` are typed as commands, the others are their output |
+| rhythm | `show`, `title` | — | `weekdays` and / or `months` |
 | root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
 
 Not ported: `card_width` / `card_height` (the card is fixed at 1000 px wide), `cache_seconds` and `type=png|json` (the output is a static file; use `export.png` / `export.gif`).

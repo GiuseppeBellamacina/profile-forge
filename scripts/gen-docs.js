@@ -47,6 +47,10 @@ const CASES = {
   ...Object.fromEntries(["triangle", "snowflake", "moon", "mixed"].map((s) => [`heatmap-${s}`, { ...only("heatmap"), heatmap: { cell: s } }])),
   "heatmap-snake-animated": { ...only("heatmap"), heatmap: { mode: "snake" }, svg: true },
   "heatmap-snake-spiral-animated": { ...only("heatmap"), heatmap: { mode: "snake", snakePath: "spiral" }, svg: true },
+  "heatmap-snake-rainbow-animated": { ...only("heatmap"), heatmap: { mode: "snake", snakeStyle: "rainbow", snakeLength: 9 }, svg: true },
+  "heatmap-snake-glow-animated": { ...only("heatmap"), heatmap: { mode: "snake", snakeStyle: "glow", cell: "round" }, svg: true },
+  "terminal-animated": { ...only("terminal"), terminal: { lines: ["$ whoami", "Ada Demo, AI engineer", "$ cat focus.txt", "LLM systems · retrieval · evaluation", "$ git log --oneline | wc -l", "4691"] }, svg: true },
+  rhythm: only("rhythm"),
   "heatmap-snake-moon-animated": { ...only("heatmap"), heatmap: { mode: "snake", cell: "moon", snakePath: "busy" }, colors: { snakeColor: "ffd23f" }, svg: true },
   // layout / card
   "layout-default": { layout: ["header", ["stats", "streak"], "languages", "heatmap"] },

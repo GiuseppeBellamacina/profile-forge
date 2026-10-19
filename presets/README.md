@@ -19,6 +19,9 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | [`portfolio`](portfolio.json) | Replaces your whole README: about, projects, links, tech stack |
 | [`streak-focus`](streak-focus.json) | Consistency view: streaks, weekdays only, heatmap |
 | [`open-source`](open-source.json) | Merged PRs, discussions, weighted languages, selected trophies |
+| [`aurora`](aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake |
+| [`zen`](zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, trophies by level |
+| [`showcase`](showcase.json) | Tokyo Night with every new piece: terminal, rhythm, rainbow snake, highlighted trophies |
 
 `portfolio` reads its tech stack icons from `assets/img/` (relative to `config.json`): copy [`assets/img/`](assets/img) next to your config, and replace the placeholder text, URLs and `your-login`.
 
@@ -94,3 +97,26 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 |---|---|
 | <img src="../docs/presets/open-source-dark.png"> | <img src="../docs/presets/open-source-light.png"> |
 
+## aurora
+
+[`aurora.json`](aurora.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/aurora-dark.png"> | <img src="../docs/presets/aurora-light.png"> |
+
+## zen
+
+[`zen.json`](zen.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/zen-dark.png"> | <img src="../docs/presets/zen-light.png"> |
+
+## showcase
+
+[`showcase.json`](showcase.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/showcase-dark.png"> | <img src="../docs/presets/showcase-light.png"> |

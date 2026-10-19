@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": { "dark": "rose-pine-moon", "light": "paper" },
+  "card": { "radius": 16, "hideBorder": true, "background": { "glow": false } },
+  "layout": ["header", "rhythm", ["streak", "trophies"], "heatmap"],
+  "header": { "avatar": "rounded", "frame": "none", "rankIcon": "percentile", "facts": ["bestDay", "busiestWeekday"] },
+  "trophies": { "sort": "rank", "rows": 1, "parts": ["title", "label"] },
+  "streak": { "hide": ["total"] },
+  "heatmap": { "cell": "round", "legend": false, "weeks": 40 }
+}

@@ -73,6 +73,34 @@ const THEMES = {
   discord: dv("dark", "#23272a", "#ffffff", "#7289da", "#eb459e", "#fee75c"),
   "ambient-gradient": dv("dark", "#2b2250", "#ffffff", "#ffcc70", "#c850c0", "#ffcc70", { bgGradient: "35,#4158d0,#c850c0,#ffcc70", border: "#ae58a1", muted: "#efe6ff" }),
   "sunset-gradient": dv("dark", "#3a1030", "#ffffff", "#ffe3b3", "#ffb199", "#fb8c00", { bgGradient: "45,#8a2386,#e94056,#f27120", border: "#b13a4a", muted: "#ffe9dc" }),
+  // Editor palettes
+  "tokyo-night": dv("dark", "#1a1b26", "#a9b1d6", "#7aa2f7", "#bb9af7", "#ff9e64", { heat: ["#232433", "#283457", "#3d59a1", "#7aa2f7", "#7dcfff"] }),
+  "tokyo-night-storm": dv("dark", "#24283b", "#c0caf5", "#2ac3de", "#9d7cd8", "#e0af68"),
+  "tokyo-night-day": dv("light", "#e1e2e7", "#3760bf", "#2e7de9", "#9854f1", "#b15c00"),
+  "kanagawa-wave": dv("dark", "#1f1f28", "#dcd7ba", "#7fb4ca", "#d27e99", "#ffa066", { accent2: "#957fb8" }),
+  moonlight: dv("dark", "#222436", "#c8d3f5", "#82aaff", "#c099ff", "#ff966c"),
+  poimandres: dv("dark", "#1b1e28", "#e4f0fb", "#5de4c7", "#add7ff", "#fffac2"),
+  vesper: dv("dark", "#101010", "#ffffff", "#ffc799", "#99ffe4", "#ff8080"),
+  "rose-pine-moon": dv("dark", "#232136", "#e0def4", "#c4a7e7", "#ea9a97", "#f6c177"),
+  "rose-pine-dawn": dv("light", "#faf4ed", "#575279", "#907aa9", "#d7827e", "#ea9d34"),
+  "night-owl-light": dv("light", "#fbfbfb", "#403f53", "#4876d6", "#994cc3", "#c96765"),
+  andromeda: dv("dark", "#23262e", "#d5ced9", "#00e8c6", "#c74ded", "#f39c12"),
+  panda: dv("dark", "#292a2b", "#e6e6e6", "#19f9d8", "#ff75b5", "#ffb86c"),
+  everblush: dv("dark", "#141b1e", "#dadada", "#67b0e8", "#c47fd5", "#e5c76b"),
+  cyberdream: dv("dark", "#16181a", "#ffffff", "#5ef1ff", "#ff5ef1", "#ffbd5e"),
+  "nord-light": dv("light", "#eceff4", "#2e3440", "#5e81ac", "#b48ead", "#d08770"),
+  // Gradients
+  "aurora-gradient": dv("dark", "#0b1d2a", "#e8fff7", "#5cffc8", "#7aa8ff", "#ffd36e", { bgGradient: "160,#04131f,#0b3b45,#1b2a5c", border: "#2a6f78", muted: "#b6e3e0" }),
+  "ocean-gradient": dv("dark", "#06263a", "#eaf6ff", "#4fd1ff", "#7cffcb", "#ffc46b", { bgGradient: "200,#021b2e,#05436b,#0a7a8f", border: "#1d6a8a", muted: "#bcdcee" }),
+  "candy-gradient": dv("dark", "#3b1d4a", "#ffffff", "#fff27a", "#7af0ff", "#ffb35c", { bgGradient: "120,#ff6fb1,#9b5cff,#4fb3ff", border: "#c48bff", muted: "#fbe9ff" }),
+  // Originals
+  sakura: dv("light", "#fff5f8", "#4a2c3a", "#e05a8a", "#8a5cc2", "#e07a3f", { heat: ["#f6e3ea", "#f7c4d6", "#f193b4", "#e0628e", "#b83a6a"] }),
+  lava: dv("dark", "#140806", "#ffe9e0", "#ff5a1f", "#ffb020", "#ff2e2e", { heat: ["#2a1410", "#5c1d0f", "#a3300f", "#e24a14", "#ffb020"] }),
+  glacier: dv("light", "#f2f8fc", "#16324a", "#1b8ec2", "#5a6fd6", "#e07b39", { heat: ["#e2edf5", "#bfe0f2", "#84c4e6", "#3d9fd1", "#16699a"] }),
+  "forest-night": dv("dark", "#0f1a14", "#d9eadf", "#5fd38d", "#c2e07a", "#f2a65a", { heat: ["#1a2a21", "#1f4a32", "#2d7a4c", "#4fb36f", "#a6e88a"] }),
+  coffee: dv("dark", "#1e1612", "#ecdcc9", "#d4a373", "#a3b18a", "#e76f51", { heat: ["#2b211b", "#4a3426", "#7a5236", "#b37c4f", "#e3b27c"] }),
+  amber: dv("dark", "#0d0800", "#ffb000", "#ffcc33", "#ff8c00", "#ffe066", { muted: "#b37a00", heat: ["#1f1500", "#4d3300", "#805500", "#cc8800", "#ffcc33"] }),
+  paper: dv("light", "#fbfaf7", "#1c1c1c", "#2b2b2b", "#8a6d3b", "#b4532a", { heat: ["#ecebe6", "#c9c7bf", "#97948a", "#5e5b53", "#1c1c1c"] }),
 };
 
 // Override keys follow the original projects' names where they exist (bg_color, border_color, currStreakNum, ...).

@@ -2,7 +2,7 @@ import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
 import { drawFrame, frameFor } from "./frames.js";
-import { isTop, levelColor } from "./levels.js";
+import { ALL_LEVELS, isTop, levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
 import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
@@ -544,6 +544,10 @@ function trophiesSection(d, X, W = 940) {
     const at = (t) => [...o.titles].findIndex((x) => trophyMatches(t.title, new Set([x])));
     list = list.map((t) => [at(t), t]).sort((a, b) => a[0] - b[0]).map(([, t]) => t);
   }
+  // `sort` wins over the order of `titles`: rank = highest level first (secret ones after), name = A-Z
+  const lvl = (t) => (t.rank === "SECRET" ? -1 : ALL_LEVELS.indexOf(t.rank));
+  if (o.sort === "rank") list = [...list].sort((a, b) => lvl(b) - lvl(a));
+  if (o.sort === "name") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
   const gx = o.marginW;
   const gy = o.marginH;
   const pad = o.padding;
@@ -571,6 +575,7 @@ function trophiesSection(d, X, W = 940) {
     <svg x="${r3(x)}" y="${r3(y)}" width="${r3(s)}" height="${r3(s)}" viewBox="0 0 110 110">
       <rect x="0.5" y="0.5" rx="4.5" width="109" height="109" fill="${o.noBg ? "none" : c.bg1}" stroke="${o.noFrame ? "none" : c.border}"/>
       ${body}
+      ${trophyMatches(tr_.title, o.highlight) ? `<rect x="1.5" y="1.5" rx="4" width="107" height="107" fill="none" stroke="${c.accent}" stroke-width="2.5"${A.loop({ "0%,100%": "opacity:.3", "50%": "opacity:1" }, { dur: 2, delay: 1.6, still: ' opacity="0.85"' })}/>` : ""}
       ${bar ? `<g${A.a(1.8 + i * 0.08, 0.9, { sx: 0 }, {}, [bar.x, r3(bar.y + 2)])}><rect x="${bar.x}" y="${bar.y}" rx="1.5" width="${r3(bar.w * tr_.progress)}" height="${bar.h}" fill="${bar.color}"/></g>` : ""}
     </svg>
   </g>`;
@@ -587,6 +592,7 @@ function trophiesSection(d, X, W = 940) {
 // day (moons are drawn as an empty disc with the lit part on top). `grow` makes the shape a little larger, used to hide
 // what lies underneath. `inner` is a <title> for tooltips.
 const CELL = 13.5;
+const RAINBOW = ["#ff5f6d", "#ff9f43", "#ffd93d", "#6bdb7a", "#4fd1ff", "#7c8cff", "#c77dff", "#ff6fd8"];
 export const CELL_SHAPES = ["square", "round", "triangle", "snowflake", "moon", "mixed"];
 const MIXED = ["square", "round", "triangle"];
 /** The shape of cell (w, i): fixed for a given grid, random among the geometric ones for "mixed". */
@@ -687,7 +693,7 @@ function heatmapSection(d, X, W = 940) {
     : "";
   // Snake mode: a snake crawls through the grid column by column and eats the contributions, then the cycle restarts.
   // Every moving part is plain CSS (opacity / transform keyframes), so it also runs inside a README <img>.
-  const SNAKE_LEN = 6;
+  const SNAKE_LEN = o.snakeLength;
   const SNAKE_PAUSE = 1.5;
   let plan = null; // the route and its timing, computed once per card (inside draw, when the section delay is known)
   const snakePlan = () => {
@@ -726,10 +732,17 @@ function heatmapSection(d, X, W = 940) {
     // triangles alternate up / down from cell to cell like the grid
     const tri = kind === "triangle";
     const upAt = (j) => (Math.abs(route[j].w + route[j].i) % 2) === 0;
-    const seg = (k, attrs, up = true) => cellShape(kind, 0, 0, c.snake, { lvl: 4, up, dim: c.snake, rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * 0.1)}" ${attrs}`);
+    // rainbow: every segment its own colour; the tail fades out whatever the length
+    const fill = (k) => (o.snakeStyle === "rainbow" ? RAINBOW[k % RAINBOW.length] : c.snake);
+    const fade = Math.min(0.1, 0.6 / SNAKE_LEN);
+    const seg = (k, attrs, up = true) => cellShape(kind, 0, 0, fill(k), { lvl: 4, up, dim: fill(k), rx }).replace(/^<(\w+)/, `<$1 opacity="${r3(1 - k * fade)}" ${attrs}`);
+    // glow: a soft halo around the body (an SVG blur, so it also shows in PNG / GIF)
+    const glowDef = o.snakeStyle === "glow" ? `<filter id="snkglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : "";
+    const wrapBody = (s) => (glowDef ? `${glowDef}<g filter="url(#snkglow)">${s}</g>` : s);
     if (A.t !== undefined) {
       // static frame (PNG / GIF / animations off): the snake waits at the start of the grid
-      return Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[SNAKE_LEN - k]; return seg(k, `transform="translate(${r3(p.x)} ${r3(p.y)})"`, upAt(SNAKE_LEN - k)); }).join("");
+      const at0 = (k) => Math.min(SNAKE_LEN - k, pts.length - 1);
+      return wrapBody(Array.from({ length: SNAKE_LEN }, (_, k) => { const p = pts[at0(k)]; return seg(k, `transform="translate(${r3(p.x)} ${r3(p.y)})"`, upAt(at0(k))); }).join(""));
     }
     const corners = pts.map((_, j) => j).filter((j) => {
       if (tri) return true; // one keyframe per cell, to turn the triangle at each step
@@ -745,7 +758,7 @@ function heatmapSection(d, X, W = 940) {
     let body = "";
     for (let k = 0; k < SNAKE_LEN; k++) body += seg(k, `style="${tri ? "transform-origin:6.75px 6.75px;" : ""}animation:sn ${T}s linear ${r3(delay + k * DT)}s infinite"`);
     return `<clipPath id="snkclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath>
-  <g clip-path="url(#snkclip)">${body}</g>`;
+  <g clip-path="url(#snkclip)">${wrapBody(body)}</g>`;
   };
   return {
     w: W, top: 674, nx: 30, h: 180,
@@ -857,6 +870,135 @@ function workingSection(d, X, W = 940) {
   };
 }
 
+const FM = "'JetBrains Mono', 'Cascadia Code', Consolas, 'DejaVu Sans Mono', monospace";
+
+/**
+ * A terminal window. Lines starting with "$ " are commands, typed one character at a time (a cover that slides off in
+ * steps); the other lines are their output and appear right after. Static frames show everything at once.
+ */
+function terminalSection(d, X, W = 940) {
+  const { c, A, k } = X;
+  const o = k.terminal;
+  const size = 13;
+  const lh = 21;
+  const cw = size * 0.6; // monospace advance
+  const max = Math.max(8, Math.floor((W - 96) / cw));
+  const rows = o.lines.map((l) => {
+    const cmd = l.startsWith("$ ") || l === "$";
+    const text = cmd ? l.slice(2) : l;
+    return { cmd, text: text.length > max ? text.slice(0, max - 1) + "…" : text };
+  });
+  const top = 74;
+  const h = top + rows.length * lh + 18;
+  const scr = mix(c.panel, c.base === "light" ? "#ffffff" : "#000000", c.base === "light" ? 0.5 : 0.35);
+  return {
+    w: W, top: 0, nx: 30, h,
+    draw: (H) => {
+      const still = A.t !== undefined;
+      let at = 0.45; // seconds after the panel appears
+      const x0 = 52;
+      const line = (r, n) => {
+        const y = top + n * lh;
+        const tx = r.cmd ? x0 + 2 * cw : x0;
+        const prompt = r.cmd ? `<text x="${x0}" y="${y}" font-size="${size}" font-weight="700" font-family="${FM}" fill="${c.accent}">$</text>` : "";
+        const text = `<text x="${r3(tx)}" y="${y}" font-size="${size}" font-family="${FM}" fill="${r.cmd ? c.text : c.muted}" xml:space="preserve">${esc(r.text)}</text>`;
+        if (still) return prompt + text;
+        const start = at;
+        if (!r.cmd) {
+          at += 0.12;
+          return `<g${A.a(start, 0.2, { o: 0 })}>${text}</g>`;
+        }
+        const chars = Math.max(1, [...r.text].length);
+        const dur = Math.min(2.2, chars * 0.045);
+        at += dur + 0.3;
+        const w = r3(chars * cw + 3);
+        A.css.push(`@keyframes ty${n}{from{transform:translateX(0)}to{transform:translateX(${w}px)}}`);
+        const cover = `<rect x="${r3(tx - 1)}" y="${y - size}" width="${w}" height="${lh}" fill="${scr}" style="animation:ty${n} ${r3(dur)}s steps(${chars}) ${r3(A.dt + start + 0.1)}s both"/>`;
+        return `<g${A.a(start, 0.1, { o: 0 })}>${prompt}${text}${cover}</g>`;
+      };
+      const body = rows.map(line).join("");
+      const yl = top + rows.length * lh;
+      const cursor = `<g${still ? "" : A.a(at, 0.1, { o: 0 })}><text x="${x0}" y="${yl}" font-size="${size}" font-weight="700" font-family="${FM}" fill="${c.accent}">$</text><rect x="${r3(x0 + 2 * cw)}" y="${yl - size + 2}" width="${r3(cw)}" height="${size}" fill="${c.accent}"${A.loop({ "0%,49%": "opacity:1", "50%,100%": "opacity:0" }, { dur: 1, ease: "steps(1)", delay: at })}/></g>`;
+      const title = o.title ?? `${d.login}@github: ~`;
+      return `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, H, c)}
+    <circle cx="52" cy="24" r="5.5" fill="#ff5f57"/><circle cx="70" cy="24" r="5.5" fill="#febc2e"/><circle cx="88" cy="24" r="5.5" fill="#28c840"/>
+    <text x="${30 + W / 2}" y="28" text-anchor="middle" font-size="11.5" font-family="${FM}" fill="${c.muted}">${esc(fit(title, 11.5, W - 160))}</text>
+    <rect x="42" y="44" width="${W - 24}" height="${r3(H - 56)}" rx="9" fill="${scr}" stroke="${c.border}" stroke-opacity="0.6"/></g>
+  <clipPath id="termclip"><rect x="42" y="44" width="${W - 24}" height="${r3(H - 56)}" rx="9"/></clipPath>
+  <g clip-path="url(#termclip)">${body}${cursor}</g>`;
+    },
+  };
+}
+
+/** When you code: average contributions per weekday and total per month over the last 12 months, as growing bars. */
+function rhythmSection(d, X, W = 940) {
+  const { c, A, k, tr, tag, num } = X;
+  const o = k.rhythm;
+  if (!o.show.size || !d.days.length) return null;
+  const days = d.days.slice(-365);
+  const wdSum = Array(7).fill(0);
+  const wdCnt = Array(7).fill(0);
+  const months = new Map();
+  for (const [key, n] of days) {
+    const wd = new Date(key + "T00:00:00Z").getUTCDay();
+    wdSum[wd] += n;
+    wdCnt[wd]++;
+    months.set(key.slice(0, 7), (months.get(key.slice(0, 7)) ?? 0) + n);
+  }
+  const blocks = [];
+  if (o.show.has("weekdays"))
+    blocks.push({
+      name: tr("byWeekday"),
+      vals: wdSum.map((s, i) => (wdCnt[i] ? s / wdCnt[i] : 0)),
+      labels: [0, 1, 2, 3, 4, 5, 6].map((i) => weekday(tag, i, "short")),
+      fmt: (v) => (v >= 10 ? num(Math.round(v)) : v.toFixed(1)),
+    });
+  if (o.show.has("months")) {
+    const keys = [...months.keys()].slice(-12);
+    blocks.push({
+      name: tr("byMonth"),
+      vals: keys.map((m) => months.get(m)),
+      labels: keys.map((m) => new Date(m + "-01T00:00:00Z").toLocaleDateString(tag, { month: "short", timeZone: "UTC" })),
+      fmt: (v) => num(v),
+    });
+  }
+  const side = blocks.length === 2 && W >= 620;
+  const bh = 74; // tallest bar
+  const blockH = 30 + bh + 22;
+  const h = 50 + (side ? blockH : blocks.length * blockH) + 10;
+  return {
+    w: W, top: 0, nx: 30, h,
+    draw: (H) => {
+      let n = 0;
+      const drawn = blocks
+        .map((b, bi) => {
+          const bw = side ? (W - 60) / 2 : W - 40;
+          const bx = 50 + (side ? bi * (bw + 20) : 0);
+          const by = 50 + (side ? 0 : bi * blockH);
+          const max = Math.max(...b.vals, 0.0001);
+          const best = b.vals.indexOf(Math.max(...b.vals));
+          const slot = bw / b.vals.length;
+          const barW = Math.min(30, slot * 0.62);
+          const base = by + 26 + bh;
+          const bars = b.vals
+            .map((v, i) => {
+              const hgt = Math.max(2, (v / max) * bh);
+              const x = bx + i * slot + (slot - barW) / 2;
+              const isBest = i === best && v > 0;
+              const col = isBest ? c.accent : mix(c.track, c.accent2, 0.55);
+              const label = `<text x="${r3(x + barW / 2)}" y="${base + 15}" text-anchor="middle" font-size="10" fill="${isBest ? c.text : c.muted}">${esc(b.labels[i])}</text>`;
+              const val = isBest ? `<text x="${r3(x + barW / 2)}" y="${r3(base - hgt - 6)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${c.accent}">${esc(b.fmt(v))}</text>` : "";
+              return `<g${A.a(0.15 + n++ * 0.035, 0.6, { sx: 1, s: 0 }, {}, [r3(x + barW / 2), base])}><rect class="rbar" x="${r3(x)}" y="${r3(base - hgt)}" width="${r3(barW)}" height="${r3(hgt)}" rx="${r3(Math.min(5, barW / 3))}" fill="${col}"><title>${esc(b.labels[i])}: ${esc(b.fmt(v))}</title></rect></g>${label}${val}`;
+            })
+            .join("");
+          return `<text x="${bx}" y="${by + 6}" font-size="11" font-weight="600" fill="${c.muted}">${esc(b.name)}</text><line x1="${bx}" y1="${base + 0.5}" x2="${r3(bx + bw)}" y2="${base + 0.5}" stroke="${c.border}"/>${bars}`;
+        })
+        .join("");
+      return `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, H, c)}${icon("calendar", 50, 18, 14, c.accent)}${heading(72, 30, o.title ?? tr("rhythm"), c, sub(c, tr("rhythmSub")))}</g>${drawn}`;
+    },
+  };
+}
+
 /** Endless marquee rows of tech logos (`marquee`: rows, speed, order), moving in alternating directions. */
 function stackSection(d, X, W = 940) {
   const { c, A, k, tr, defs } = X;
@@ -920,7 +1062,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   };
   // Rows appear one after the other, top to bottom. BASE is the delay each section's own panel already has inside its
   // draw(); the row offset replaces it. The step shrinks with many rows so the last section still ends before DURATION.
-  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0 };
+  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0, terminal: 0, rhythm: 0.6 };
   const BUILD = {
     header: headerSection,
     about: (...a) => k.about.length && aboutSection(...a),
@@ -931,6 +1073,8 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
     trophies: trophiesSection,
     heatmap: heatmapSection,
     techStack: stackSection,
+    terminal: (...a) => k.terminal.lines.length && terminalSection(...a),
+    rhythm: rhythmSection,
   };
   // Both layout engines produce the same thing: where every section goes (x, y, w, h) and when it appears.
   const items = [];

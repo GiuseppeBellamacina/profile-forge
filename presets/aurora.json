@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": { "dark": "aurora-gradient", "light": "glacier" },
+  "card": { "radius": 22, "background": { "pattern": "dots" } },
+  "layout": ["header", "terminal", ["stats", "rhythm"], "heatmap"],
+  "header": { "frame": "aurora", "rankStyle": "hexagon", "facts": ["contributionsThisYear", "currentStreak", "topLanguage"] },
+  "terminal": { "lines": ["$ whoami", "a developer who likes calm, bright things", "$ cat now.txt", "building · learning · shipping"] },
+  "rhythm": { "show": ["weekdays"] },
+  "stats": { "numberFormat": "short", "hide": ["contributed", "reviews"] },
+  "heatmap": { "mode": "snake", "snakeStyle": "glow", "snakeLength": 8, "cell": "round" }
+}

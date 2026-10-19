@@ -23,7 +23,7 @@
         "bg_gradient": { "type": "string" }
       }
     },
-    "section": { "enum": ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"] }
+    "section": { "enum": ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm"] }
   },
   "properties": {
     "$schema": { "type": "string" },
@@ -98,7 +98,7 @@
       ],
       "default": null
     },
-    "hideSections": { "type": "array", "items": { "enum": ["rank", "header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"] } },
+    "hideSections": { "type": "array", "items": { "enum": ["rank", "header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm"] } },
     "header": {
       "type": "object", "additionalProperties": false,
       "properties": {
@@ -172,7 +172,9 @@
         "noBg": { "type": "boolean", "default": false },
         "noFrame": { "type": "boolean", "default": false },
         "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." },
-        "birthday": { "type": ["string", "null"], "pattern": "^(\\d{4}-)?\\d{2}-\\d{2}$", "default": null, "description": "Your birthday as MM-DD (or YYYY-MM-DD): the Happy Birthday secret trophy shows on that day, in the card's time zone." }
+        "birthday": { "type": ["string", "null"], "pattern": "^(\\d{4}-)?\\d{2}-\\d{2}$", "default": null, "description": "Your birthday as MM-DD (or YYYY-MM-DD): the Happy Birthday secret trophy shows on that day, in the card's time zone." },
+        "sort": { "enum": ["default", "rank", "name"], "default": "default", "description": "default: the order of `titles` (or the built-in order). rank: highest level first, secret trophies after. name: A-Z." },
+        "highlight": { "$ref": "#/definitions/strs", "description": "Trophy titles drawn with a pulsing glow." }
       }
     },
     "marquee": {
@@ -184,10 +186,26 @@
         "byCategory": { "type": "boolean", "default": false, "description": "Order / shuffle inside each category and keep the categories in sequence, instead of mixing everything." }
       }
     },
+    "terminal": {
+      "type": "object", "additionalProperties": false, "description": "A terminal window: lines starting with \"$ \" are typed like commands, the others appear as their output.",
+      "properties": {
+        "title": { "type": ["string", "null"], "default": null, "description": "Window title. Default: <login>@github: ~" },
+        "lines": { "$ref": "#/definitions/strs", "default": [] }
+      }
+    },
+    "rhythm": {
+      "type": "object", "additionalProperties": false, "description": "When you code: average contributions per weekday and total per month, last 12 months.",
+      "properties": {
+        "title": { "type": ["string", "null"], "default": null },
+        "show": { "type": "array", "items": { "enum": ["weekdays", "months"] }, "default": ["weekdays", "months"] }
+      }
+    },
     "heatmap": {
       "type": "object", "additionalProperties": false,
       "properties": {
         "mode": { "enum": ["grid", "snake"], "default": "grid", "description": "grid: the plain contribution grid. snake: an animated snake eats the contributions (loops forever, plain CSS)." },
+        "snakeLength": { "type": "integer", "minimum": 3, "maximum": 12, "default": 6, "description": "How many cells long the snake is." },
+        "snakeStyle": { "enum": ["classic", "rainbow", "glow"], "default": "classic", "description": "classic: the snake colour. rainbow: every segment its own colour. glow: a soft halo around the body." },
         "snakePath": { "enum": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "default": "smart", "description": "Route of the snake. smart: quietest days first, then busier ones. busy: busiest first. nearest: always the closest day. sweep: column by column. rows: row by row. spiral: outside in." },
         "weeks": { "type": "integer", "minimum": 4, "maximum": 53, "default": 53 },
         "cell": { "enum": ["square", "round", "triangle", "snowflake", "moon", "mixed"], "default": "square", "description": "Shape of a day. triangle: alternating up / down. snowflake: more contributions, brighter flake. moon: phases from empty to full by contributions. mixed: a random mix of square, round and triangle." },

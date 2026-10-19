@@ -63,6 +63,9 @@ curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profil
 | [`portfolio`](presets/portfolio.json) | Replaces your whole README: about, projects, links, tech stack |
 | [`streak-focus`](presets/streak-focus.json) | Consistency view: streaks, weekdays only, heatmap |
 | [`open-source`](presets/open-source.json) | Merged PRs, discussions, weighted languages, selected trophies |
+| [`aurora`](presets/aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake |
+| [`zen`](presets/zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, trophies by level |
+| [`showcase`](presets/showcase.json) | Tokyo Night with every new piece: terminal, rhythm, rainbow snake, highlighted trophies |
 
 <table>
 <tr>
@@ -81,6 +84,14 @@ curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profil
 <td align="center"><b>streak-focus</b><br><img src="docs/presets/streak-focus-dark.png" width="100%"></td>
 <td align="center"><b>open-source</b><br><img src="docs/presets/open-source-dark.png" width="100%"></td>
 </tr>
+<tr>
+<td align="center"><b>aurora</b><br><img src="docs/presets/aurora-dark.png" width="100%"></td>
+<td align="center"><b>zen</b><br><img src="docs/presets/zen-light.png" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><b>showcase</b><br><img src="docs/presets/showcase-dark.png" width="100%"></td>
+<td align="center"><b>showcase (light)</b><br><img src="docs/presets/showcase-light.png" width="100%"></td>
+</tr>
 </table>
 
 **portfolio** (full README replacement) and the light variants:
@@ -91,7 +102,7 @@ The `portfolio` preset reads its tech stack icons from `assets/img/` (paths are 
 
 ## Layout and sections
 
-`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`.
+`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`, `terminal`, `rhythm`.
 
 - A **nested pair** puts two sections side by side at half width: `["stats", "streak"]`, `["about", "workingOn"]`, `["trophies", "heatmap"]`. Any two sections can pair except `header`.
 - `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width; on their own they are centered.
@@ -110,11 +121,11 @@ For more control than rows, `grid` replaces `layout` with a 6-column grid. Every
 ]
 ```
 
-- `cols` is 1 to 6 (default 3; the header is always 6). Narrower than a section can be drawn is raised to its minimum: header 6, `stats` / `streak` / `languages` / `heatmap` 3, the rest 2.
+- `cols` is 1 to 6 (default 3; the header is always 6). Narrower than a section can be drawn is raised to its minimum: header 6, `stats` / `streak` / `languages` / `heatmap` / `rhythm` 3, the rest 2.
 - `height` (optional, pixels) makes a card taller than its content, for instance to line up with its neighbour. It never makes it shorter, so nothing is cut: a value below what the content needs is raised to it. Leave it out for automatic height.
 - Order matters: sections are placed one after the other, each in the lowest free spot (leftmost on a tie).
 - A section can appear once. `hideSections` still applies. When `grid` is set, `layout` is ignored; the web configurator writes `grid` for you.
-- `about`, `workingOn` and `techStack` are skipped when they have no content.
+- `about`, `workingOn`, `techStack` and `terminal` are skipped when they have no content.
 - `hideSections` removes sections (and `"rank"` removes only the ring in the header).
 
 Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"]`.
@@ -425,6 +436,8 @@ A day with zero contributions *today* does not break the current streak.
 | `noBg`, `noFrame` | boolean | `false` | Remove the trophy background / frame |
 | `extra` | `Issues` `Reviews` | `[]` | Opt-in trophies |
 | `birthday` | `MM-DD` or `YYYY-MM-DD` | none | Your birthday: the Happy Birthday secret trophy shows that day |
+| `sort` | `default` `rank` `name` | `default` | `default`: the order of `titles` (or the built-in one). `rank`: highest level first, secret trophies after. `name`: A–Z |
+| `highlight` | trophy names | `[]` | These get a pulsing outline in the accent colour |
 | `title` | string | translated | Custom panel title |
 
 Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
@@ -480,6 +493,8 @@ The top 1%:
 |---|---|---|
 | `mode` | `grid` `snake` | `grid` |
 | `snakePath` | `smart` `busy` `nearest` `sweep` `rows` `spiral` | `smart` |
+| `snakeLength` | 3–12 | `6` |
+| `snakeStyle` | `classic` `rainbow` `glow` | `classic` |
 | `weeks` | 4–53 | `53` |
 | `cell` | `square` `round` `triangle` `snowflake` `moon` `mixed` | `square` |
 | `weekStart` | `sun` `mon` | `sun` |
@@ -510,6 +525,32 @@ The top 1%:
 
 <img src="docs/guide/heatmap-snake-moon-animated.svg" width="500">
 
+**Snake length and style.** `snakeLength` makes it 3 to 12 cells long (the tail always fades out). `snakeStyle: "rainbow"` gives every segment its own colour, `"glow"` adds a soft halo (an SVG blur, so it also shows in PNG / GIF exports).
+
+| `snakeStyle: "rainbow"`, `snakeLength: 9` | `snakeStyle: "glow"` |
+|---|---|
+| <img src="docs/guide/heatmap-snake-rainbow-animated.svg" width="450"> | <img src="docs/guide/heatmap-snake-glow-animated.svg" width="450"> |
+
+## Terminal
+
+```json
+{ "terminal": { "title": null, "lines": ["$ whoami", "Ada, AI engineer", "$ cat focus.txt", "LLM systems · retrieval"] } }
+```
+
+A terminal window. Lines that start with `$ ` are commands: they type themselves one character at a time, and the lines after them (the output) appear when the command is done. A blinking cursor waits at the end. `title` replaces the window title (default `<login>@github: ~`). Long lines are cut to the width of the card. In PNG / GIF exports everything is shown at once. Without lines the section is skipped.
+
+<img src="docs/guide/terminal-animated.svg" width="70%">
+
+## Rhythm
+
+```json
+{ "rhythm": { "title": null, "show": ["weekdays", "months"] } }
+```
+
+When you code, from the contributions already used by the heatmap (no extra API calls): the average per weekday and the total per month over the last 12 months, as bars that grow in. The busiest weekday and month are drawn in the accent colour with their value. `show` picks one or both blocks; at half width they stack.
+
+<img src="docs/guide/rhythm.png" width="70%">
+
 ## Themes, custom themes and colors
 
 ### `themes`
@@ -520,7 +561,7 @@ A list (`["dracula", "nord"]` → `profile-forge-dracula.svg`, `profile-forge-no
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-There are 47 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
+There are 72 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
 
 | | |
 |---|---|
@@ -531,7 +572,9 @@ There are 47 built-in themes. Previews of all of them are in [`docs/themes/`](do
 | **Nature / Fox** | `everforest-dark` `everforest-light` `nightfox` `dawnfox` `dayfox` `carbonfox` |
 | **Bold** | `synthwave` `radical` `ocean` `crimson` `midnight-purple` `outrun` `neon` |
 | **Terminal** | `merko` `matrix` `hacker` |
-| **Gradient** | `ambient-gradient` `sunset-gradient` |
+| **More editor themes** | `tokyo-night` `tokyo-night-storm` `tokyo-night-day` `kanagawa-wave` `moonlight` `poimandres` `vesper` `rose-pine-moon` `rose-pine-dawn` `night-owl-light` `andromeda` `panda` `everblush` `cyberdream` `nord-light` |
+| **Gradient** | `ambient-gradient` `sunset-gradient` `aurora-gradient` `ocean-gradient` `candy-gradient` |
+| **Originals** | `sakura` `lava` `glacier` `forest-night` `coffee` `amber` `paper` |
 
 Dark themes use the dark trophy palette and light themes the light one (`base`).
 
@@ -692,8 +735,11 @@ Not ported from the original projects: `card_width` / `card_height` (the card is
   "languages": { "title": null, "layout": "bar", "count": 8, "hide": [], "excludeRepos": [], "hideProgress": false,
                  "statsFormat": "percentages", "sizeWeight": 1, "countWeight": 0 },
   "trophies": { "title": null, "titles": [], "hideTitles": [], "ranks": [], "hideRanks": [], "columns": 0, "rows": 0,
-                "marginW": 14, "marginH": 14, "padding": 20, "align": "center", "parts": ["title", "label", "score", "bar"], "noBg": false, "noFrame": false, "extra": [] },
-  "heatmap": { "mode": "grid", "snakePath": "smart", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
+                "marginW": 14, "marginH": 14, "padding": 20, "align": "center", "parts": ["title", "label", "score", "bar"], "noBg": false, "noFrame": false, "extra": [],
+                "birthday": null, "sort": "default", "highlight": [] },
+  "terminal": { "title": null, "lines": [] },
+  "rhythm": { "title": null, "show": ["weekdays", "months"] },
+  "heatmap": { "mode": "grid", "snakePath": "smart", "snakeLength": 6, "snakeStyle": "classic", "weeks": 53, "cell": "square", "weekStart": "sun", "legend": true, "monthLabels": true },
   "export": { "png": false, "gif": false }
 }
 ```

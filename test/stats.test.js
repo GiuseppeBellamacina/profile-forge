@@ -480,3 +480,41 @@ test("trophies.titles also sets the order", () => {
   const pos = ["Followers", "Stars", "Commits"].map((n) => svg.indexOf(`>${n}<`));
   assert.ok(pos.every((p) => p > 0) && pos[0] < pos[1] && pos[1] < pos[2], pos.join());
 });
+
+test("terminal: commands are typed, output follows, static frames show everything, no lines = no section", () => {
+  const [d, k] = make({ layout: ["terminal"], terminal: { lines: ["$ whoami", "ada", "$ echo hi"] } });
+  const anim = render(d, { theme: "dark", k });
+  assert.equal((anim.match(/@keyframes ty\d/g) ?? []).length, 2); // one typewriter per command
+  assert.ok(anim.includes("steps(6)") && anim.includes(">whoami<") && anim.includes(">ada<"));
+  const still = render(d, { theme: "dark", k, t: 1 });
+  assert.ok(!still.includes("@keyframes ty") && still.includes(">echo hi<"));
+  const [d2, k2] = make({ layout: ["terminal", "stats"] });
+  assert.ok(!render(d2, { theme: "dark", k: k2, t: 1 }).includes("termclip"));
+  assert.throws(() => normalize({ terminal: { lines: [1] } }), /terminal.lines\[0\]/);
+});
+
+test("rhythm: 7 weekday bars and up to 12 month bars, the busiest one marked", () => {
+  const [d, k] = make({ layout: ["rhythm"] });
+  const svg = render(d, { theme: "dark", k, t: 1 });
+  const bars = (svg.match(/class="rbar"/g) ?? []).length;
+  assert.ok(bars > 7 && bars <= 19, String(bars));
+  const [, k1] = make({ layout: ["rhythm"], rhythm: { show: ["weekdays"] } });
+  assert.equal((render(d, { theme: "dark", k: k1, t: 1 }).match(/class="rbar"/g) ?? []).length, 7);
+  assert.throws(() => normalize({ rhythm: { show: ["hours"] } }), /rhythm.show/);
+});
+
+test("snake length and style; trophies sort and highlight", () => {
+  const [d, k] = make({ layout: ["heatmap", "trophies"], heatmap: { mode: "snake", snakeLength: 9, snakeStyle: "rainbow" }, trophies: { sort: "name", highlight: ["Stars"] } });
+  const svg = render(d, { theme: "dark", k });
+  assert.equal((svg.match(/animation:sn /g) ?? []).length, 9);
+  assert.ok(svg.includes("#ff5f6d") && svg.includes("#c77dff"));
+  const glow = make({ layout: ["heatmap"], heatmap: { mode: "snake", snakeStyle: "glow" } });
+  assert.ok(render(glow[0], { theme: "dark", k: glow[1] }).includes('filter="url(#snkglow)"'));
+  assert.throws(() => normalize({ heatmap: { snakeLength: 20 } }), /between 3 and 12/);
+  assert.throws(() => normalize({ heatmap: { snakeStyle: "neon" } }), /one of/);
+  // sort by name: A-Z; one highlighted trophy has the pulsing outline
+  const order = ["Commits", "Followers", "Stars"].map((n) => svg.indexOf(`>${n}<`));
+  assert.ok(order.every((p) => p > 0) && order[0] < order[1] && order[1] < order[2], order.join());
+  assert.equal((svg.match(/width="107" height="107" fill="none"/g) ?? []).length, 1);
+  assert.throws(() => normalize({ trophies: { sort: "random" } }), /one of/);
+});

@@ -3,11 +3,11 @@ import { LOCALES, normLocale } from "./i18n.js";
 import { ALL_LEVELS, OLD_RANKS } from "./levels.js";
 import { hasTheme, parseColors, registerThemes, THEME_NAMES } from "./themes.js";
 
-export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack"];
+export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm"];
 export const STATS_ITEMS = ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"];
 export const STATS_EXTRA = ["prsmerged", "prsmergedpercentage", "discussionsstarted", "discussionsanswered"];
 // Narrowest width (in grid columns, out of 6) each section can be drawn at; the header always spans the card.
-export const MIN_SPAN = { header: 6, about: 2, workingOn: 2, stats: 3, streak: 3, languages: 3, trophies: 2, heatmap: 3, techStack: 2 };
+export const MIN_SPAN = { header: 6, about: 2, workingOn: 2, stats: 3, streak: 3, languages: 3, trophies: 2, heatmap: 3, techStack: 2, terminal: 2, rhythm: 3 };
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 export const DEFAULTS = {
@@ -23,9 +23,11 @@ export const DEFAULTS = {
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
-  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [], birthday: null },
+  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [], birthday: null, sort: "default", highlight: [] },
   marquee: { speed: 28, rows: 2, order: "shuffle", byCategory: false },
-  heatmap: { mode: "grid", snakePath: "smart", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
+  terminal: { title: null, lines: [] },
+  rhythm: { title: null, show: ["weekdays", "months"] },
+  heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
 
@@ -35,13 +37,13 @@ const ENUMS = {
   "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
-  "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"],
+  "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"], "trophies.sort": ["default", "rank", "name"], "heatmap.snakeStyle": ["classic", "rainbow", "glow"],
   "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
-  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4],
+  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12],
 };
 // Keys whose value shape isn't described by the default's type.
 const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
@@ -169,6 +171,8 @@ export function normalize(raw = {}) {
     if (!m || +m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > new Date(Date.UTC(2024, +m[1], 0)).getUTCDate()) throw new Error(`Config "trophies.birthday": expected "MM-DD" or "YYYY-MM-DD" (got "${birthday}")`);
   }
   for (const r of c.trophies.extra) if (!["issues", "reviews"].includes(r.toLowerCase())) throw new Error(`Config "trophies.extra": unknown trophy "${r}". Valid: Issues, Reviews`);
+  for (const [n, l] of c.terminal.lines.entries()) if (typeof l !== "string") throw new Error(`Config "terminal.lines[${n}]" must be a string`);
+  if (!Number.isInteger(c.heatmap.snakeLength)) throw new Error(`Config "heatmap.snakeLength" must be a whole number`);
   const excludeDays = c.streak.excludeDays.map((x) => {
     const i = WEEKDAYS.indexOf(String(x).toLowerCase().slice(0, 3));
     if (i < 0) throw new Error(`Config "streak.excludeDays": invalid day "${x}" (use Sun, Mon, ...)`);
@@ -196,7 +200,9 @@ export function normalize(raw = {}) {
       hideRanks: new Set([...c.trophies.hideRanks.map((r) => r.toUpperCase()), ...ranks.filter((r) => r.startsWith("-")).map((r) => r.slice(1))]),
       extra: new Set(c.trophies.extra.map((x) => x.toLowerCase())),
       parts: must("trophies.parts", c.trophies.parts.map(nk), ["title", "label", "score", "bar"]),
+      highlight: new Set(c.trophies.highlight.map(normKey)),
     },
+    rhythm: { ...c.rhythm, show: must("rhythm.show", c.rhythm.show.map((x) => String(x).toLowerCase()), ["weekdays", "months"]) },
   };
 }
 
