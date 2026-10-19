@@ -561,7 +561,7 @@ A list (`["dracula", "nord"]` → `profile-forge-dracula.svg`, `profile-forge-no
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-There are 72 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
+There are 73 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
 
 | | |
 |---|---|
@@ -570,7 +570,7 @@ There are 72 built-in themes. Previews of all of them are in [`docs/themes/`](do
 | **Catppuccin** | `catppuccin-mocha` `catppuccin-macchiato` `catppuccin-frappe` `catppuccin-latte` |
 | **Editor themes** | `nightowl` `cobalt2` `shades-of-purple` `ayu-mirage` `material-palenight` `oceanic-next` `kanagawa-paper` `aura` `aura-dark` `horizon` `vue-dark` `discord` |
 | **Nature / Fox** | `everforest-dark` `everforest-light` `nightfox` `dawnfox` `dayfox` `carbonfox` |
-| **Bold** | `synthwave` `radical` `ocean` `crimson` `midnight-purple` `outrun` `neon` |
+| **Bold** | `synthwave` `radical` `ocean` `crimson` `blood-moon` `midnight-purple` `outrun` `neon` |
 | **Terminal** | `merko` `matrix` `hacker` |
 | **More editor themes** | `tokyo-night` `tokyo-night-storm` `tokyo-night-day` `kanagawa-wave` `moonlight` `poimandres` `vesper` `rose-pine-moon` `rose-pine-dawn` `night-owl-light` `andromeda` `panda` `everblush` `cyberdream` `nord-light` |
 | **Gradient** | `ambient-gradient` `sunset-gradient` `aurora-gradient` `ocean-gradient` `candy-gradient` |

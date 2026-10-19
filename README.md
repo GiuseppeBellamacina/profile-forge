@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![Themes](https://img.shields.io/badge/themes-72-8b5cf6)
+![Themes](https://img.shields.io/badge/themes-73-8b5cf6)
 ![Locales](https://img.shields.io/badge/languages-8-f59e0b)
 
 [**Web configurator**](https://giuseppebellamacina.github.io/profile-forge-configurator/) · [**Quick start**](#quick-start-github-action) · [**Full guide**](GUIDE.md) · [**Presets**](presets) · [**Trophies**](TROPHIES.md) · [**Themes**](docs/themes)
@@ -200,7 +200,7 @@ Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, 
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord`, `monokai`, `gruvbox`, `gruvbox-light`, `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `solarized-dark`, `solarized-light`, `rose-pine`, `one-dark`, `synthwave`, `radical`, `ocean`, `crimson`, `material-palenight`, `nightowl`, `cobalt2`, `shades-of-purple`, `ayu-mirage`, `aura`, `aura-dark`, `horizon`, `everforest-dark`, `everforest-light`, `kanagawa-paper`, `nightfox`, `dawnfox`, `dayfox`, `carbonfox`, `oceanic-next`, `midnight-purple`, `merko`, `matrix`, `hacker`, `neon`, `outrun`, `vue-dark`, `discord`, `ambient-gradient`, `sunset-gradient`, `tokyo-night`, `tokyo-night-storm`, `tokyo-night-day`, `kanagawa-wave`, `moonlight`, `poimandres`, `vesper`, `rose-pine-moon`, `rose-pine-dawn`, `night-owl-light`, `andromeda`, `panda`, `everblush`, `cyberdream`, `nord-light`, `aurora-gradient`, `ocean-gradient`, `candy-gradient`, `sakura`, `lava`, `glacier`, `forest-night`, `coffee`, `amber`, `paper`. Previews: [`docs/themes/`](docs/themes).
+Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord`, `monokai`, `gruvbox`, `gruvbox-light`, `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `solarized-dark`, `solarized-light`, `rose-pine`, `one-dark`, `synthwave`, `radical`, `ocean`, `crimson`, `material-palenight`, `nightowl`, `cobalt2`, `shades-of-purple`, `ayu-mirage`, `aura`, `aura-dark`, `horizon`, `everforest-dark`, `everforest-light`, `kanagawa-paper`, `nightfox`, `dawnfox`, `dayfox`, `carbonfox`, `oceanic-next`, `midnight-purple`, `merko`, `matrix`, `hacker`, `neon`, `outrun`, `vue-dark`, `discord`, `ambient-gradient`, `sunset-gradient`, `blood-moon`, `tokyo-night`, `tokyo-night-storm`, `tokyo-night-day`, `kanagawa-wave`, `moonlight`, `poimandres`, `vesper`, `rose-pine-moon`, `rose-pine-dawn`, `night-owl-light`, `andromeda`, `panda`, `everblush`, `cyberdream`, `nord-light`, `aurora-gradient`, `ocean-gradient`, `candy-gradient`, `sakura`, `lava`, `glacier`, `forest-night`, `coffee`, `amber`, `paper`. Previews: [`docs/themes/`](docs/themes).
 
 **Colors.** Overrides use the names of the original projects. Values are hex with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`):
 

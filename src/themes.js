@@ -42,6 +42,8 @@ const THEMES = {
   synthwave: mk("dark", "#2b213a", "#1f1730", "#34294a", "#4b3a6b", "#f6f0ff", "#b4a6d6", "#ff7edb", "#36f9f6", "#fede5d", "#4b3a6b"),
   radical: mk("dark", "#141321", "#0e0d19", "#1b1a2e", "#2d2b4a", "#a9fef7", "#8d8bb0", "#fe428e", "#f8d847", "#f8d847", "#2d2b4a"),
   ocean: mk("dark", "#151a28", "#0f131f", "#1b2236", "#2a3552", "#c3dbe8", "#7a95a8", "#21d4fd", "#6d8bff", "#ffb347", "#2a3552"),
+  // crimson, darker: black background, deep blood red
+  "blood-moon": dv("dark", "#070304", "#f2dadd", "#d1162b", "#8e0f1d", "#ff5a3c", { panel: "#120708", border: "#2e0d12", muted: "#a3757b", track: "#1f0b0e", heat: ["#1f0b0e", "#4d0b15", "#80101f", "#b5152a", "#e8323f"] }),
   crimson: mk("dark", "#1a0f12", "#120a0c", "#231418", "#3d1f26", "#f5dfe2", "#b08a90", "#ff4d5e", "#ff8a5c", "#ffb454", "#3d1f26"),
   // Derived themes: dv(base, bg, text, accent, accent2, fire)
   "catppuccin-frappe": dv("dark", "#303446", "#c6d0f5", "#8caaee", "#ca9ee6", "#ef9f76"),
