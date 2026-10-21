@@ -998,7 +998,8 @@ function rhythmSection(d, X, W = 940) {
               return `<g${A.a(0.15 + n++ * 0.035, 0.6, { sx: 1, s: 0 }, {}, [r3(x + barW / 2), base])}><rect class="rbar" x="${r3(x)}" y="${r3(base - hgt)}" width="${r3(barW)}" height="${r3(hgt)}" rx="${r3(Math.min(5, barW / 3))}" fill="${col}"><title>${esc(b.labels[i])}: ${esc(b.fmt(v))}</title></rect></g>${label}${val}`;
             })
             .join("");
-          return `<text x="${bx}" y="${by + 6}" font-size="11" font-weight="600" fill="${c.muted}">${esc(b.name)}</text><line x1="${bx}" y1="${base + 0.5}" x2="${r3(bx + bw)}" y2="${base + 0.5}" stroke="${c.border}"/>${bars}`;
+          // labels, axis and bars fade in with the panel, not before it
+          return `<g${A.a(0.1, 0.5, { o: 0 })}><text x="${bx}" y="${by + 6}" font-size="11" font-weight="600" fill="${c.muted}">${esc(b.name)}</text><line x1="${bx}" y1="${base + 0.5}" x2="${r3(bx + bw)}" y2="${base + 0.5}" stroke="${c.border}"/>${bars}</g>`;
         })
         .join("");
       return `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, H, c)}${icon("calendar", 50, 18, 14, c.accent)}${heading(72, 30, o.title ?? tr("rhythm"), c, sub(c, tr("rhythmSub")))}</g>${drawn}`;
