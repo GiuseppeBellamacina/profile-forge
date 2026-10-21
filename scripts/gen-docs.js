@@ -110,6 +110,8 @@ const CASES = {
   // heatmap
   "heatmap-square": only("heatmap"),
   "heatmap-round": { ...only("heatmap"), heatmap: { cell: "round", weekStart: "mon" } },
+  "heatmap-hexagon": { ...only("heatmap"), heatmap: { cell: "hexagon" } },
+  "heatmap-snake-hexagon-animated": { ...only("heatmap"), heatmap: { mode: "snake", cell: "hexagon", snakeStyle: "glow" }, svg: true },
   "heatmap-compact": { ...only("heatmap"), heatmap: { weeks: 26, legend: false, monthLabels: false } },
   // locale
   "locale-it": { locale: "it", ...only("header", ["stats", "streak"]) },

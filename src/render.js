@@ -593,7 +593,7 @@ function trophiesSection(d, X, W = 940) {
 // what lies underneath. `inner` is a <title> for tooltips.
 const CELL = 13.5;
 const RAINBOW = ["#ff5f6d", "#ff9f43", "#ffd93d", "#6bdb7a", "#4fd1ff", "#7c8cff", "#c77dff", "#ff6fd8"];
-export const CELL_SHAPES = ["square", "round", "triangle", "snowflake", "moon", "mixed"];
+export const CELL_SHAPES = ["square", "round", "triangle", "snowflake", "moon", "hexagon", "mixed"];
 const MIXED = ["square", "round", "triangle"];
 /** The shape of cell (w, i): fixed for a given grid, random among the geometric ones for "mixed". */
 export const shapeAt = (kind, w, i) => (kind === "mixed" ? MIXED[(((w * 73856093) ^ (i * 19349663)) >>> 0) % MIXED.length] : kind);
@@ -606,6 +606,12 @@ function cellShape(kind, x, y, fill, { lvl = 0, up = true, grow = 0, inner = "",
   switch (kind) {
     case "round":
       return `<rect x="${r3(x - g)}" y="${r3(y - g)}" width="${r3(CELL + 2 * g)}" height="${r3(CELL + 2 * g)}" rx="${r3(h + g)}" fill="${fill}">${inner}</rect>`;
+    case "hexagon": {
+      // flat-top hexagon; the heatmap shifts every other week down half a step, so they nest like a honeycomb
+      const R = h + 1 + g;
+      const pts = [0, 1, 2, 3, 4, 5].map((k) => `${r3(cx + R * Math.cos((k * Math.PI) / 3))},${r3(cy + R * Math.sin((k * Math.PI) / 3))}`);
+      return `<polygon class="hex" points="${pts.join(" ")}" fill="${fill}">${inner}</polygon>`;
+    }
     case "triangle": {
       const r = h + g + 0.4;
       const t = up ? [[cx, cy - r * 0.92], [cx + r, cy + r * 0.78], [cx - r, cy + r * 0.78]] : [[cx - r, cy - r * 0.78], [cx + r, cy - r * 0.78], [cx, cy + r * 0.92]];
@@ -675,10 +681,11 @@ function heatmapSection(d, X, W = 940) {
   const x0 = 78;
   const y0 = 722;
   const rx = 3;
+  const yOf = (w, i) => y0 + i * step + (o.cell === "hexagon" && w % 2 ? step / 2 : 0); // honeycomb: odd weeks half a step lower
   // one cell of the grid; `grow` / `lvl` let the snake cover it with the empty-day look
   const cell = (w, i, lvl, inner = "", grow = 0) => {
     const kind = shapeAt(o.cell, w, i);
-    return cellShape(kind, r3(x0 + w * step), r3(y0 + i * step), c.heat[lvl], { lvl, up: (w + i) % 2 === 0, grow, inner, dim: c.heat[0], rx });
+    return cellShape(kind, r3(x0 + w * step), r3(yOf(w, i)), c.heat[lvl], { lvl, up: (w + i) % 2 === 0, grow, inner, dim: c.heat[0], rx });
   };
   let month = "";
   const months = o.monthLabels
@@ -710,7 +717,7 @@ function heatmapSection(d, X, W = 940) {
       route.push({ w, i });
       if (w < 0 || w >= weeks.length || i < 0 || i >= 7) out++;
     }
-    const pts = route.map(({ w, i }) => ({ x: x0 + w * step, y: y0 + i * step }));
+    const pts = route.map(({ w, i }) => ({ x: x0 + w * step, y: yOf(w, i) }));
     const last = pts.length - 1;
     // a long route is played faster so one loop never takes much longer than half a minute
     const DT = Math.min(0.06, Math.max(0.02, 30 / (last + SNAKE_LEN)));

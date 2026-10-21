@@ -278,6 +278,8 @@ test("heatmap shapes: each kind draws its own element, mixed is stable, the snak
   };
   assert.ok(svg({ cell: "triangle" }).includes("<polygon"));
   assert.ok(svg({ cell: "snowflake" }).includes('stroke-linecap="round"'));
+  const hex = svg({ cell: "hexagon" });
+  assert.ok(hex.includes('class="hex"') && !hex.includes('rx="3" fill'), "hexagons only");
   assert.ok(svg({ cell: "moon" }).includes("<circle") && svg({ cell: "moon" }).includes("A"));
   const mixed = svg({ cell: "mixed" });
   assert.ok(mixed.includes("<polygon") && mixed.includes('rx="3"') && mixed.includes('rx="6.75"'), "square, round and triangle all appear");

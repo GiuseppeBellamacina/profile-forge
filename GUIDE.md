@@ -496,7 +496,7 @@ The top 1%:
 | `snakeLength` | 3–12 | `6` |
 | `snakeStyle` | `classic` `rainbow` `glow` | `classic` |
 | `weeks` | 4–53 | `53` |
-| `cell` | `square` `round` `triangle` `snowflake` `moon` `mixed` | `square` |
+| `cell` | `square` `round` `triangle` `snowflake` `moon` `hexagon` `mixed` | `square` |
 | `weekStart` | `sun` `mon` | `sun` |
 | `legend` | boolean | `true` |
 | `monthLabels` | boolean | `true` |
@@ -505,7 +505,7 @@ The top 1%:
 |---|---|---|
 | <img src="docs/guide/heatmap-square.png"> | <img src="docs/guide/heatmap-round.png"> | <img src="docs/guide/heatmap-compact.png"> |
 
-**Shapes.** `cell` picks what a day looks like: `square`, `round`, `triangle` (up and down alternating, so they tile), `snowflake` (a brighter flake for more contributions), `moon` (the moon phase grows with the contributions, from an empty disc to a full moon) and `mixed` (a random but stable mix of square, round and triangle).
+**Shapes.** `cell` picks what a day looks like: `square`, `round`, `triangle` (up and down alternating, so they tile), `snowflake` (a brighter flake for more contributions), `moon` (the moon phase grows with the contributions, from an empty disc to a full moon), `hexagon` (every other week sits half a step lower, so the cells nest like a honeycomb) and `mixed` (a random but stable mix of square, round and triangle).
 
 | `triangle` | `snowflake` |
 |---|---|
@@ -514,6 +514,10 @@ The top 1%:
 | `moon` | `mixed` |
 |---|---|
 | <img src="docs/guide/heatmap-moon.png" width="460"> | <img src="docs/guide/heatmap-mixed.png" width="460"> |
+
+| `hexagon` | `hexagon` with the snake |
+|---|---|
+| <img src="docs/guide/heatmap-hexagon.png" width="460"> | <img src="docs/guide/heatmap-snake-hexagon-animated.svg" width="460"> |
 
 **Snake.** `"mode": "snake"` turns the heatmap into the animated snake from [Platane/snk](https://github.com/Platane/snk): a snake crawls through the grid column by column and eats the contributions, then starts over. It is the heatmap itself, so you do not need a separate snake image next to the card (use either the plain grid or the snake, not both). With `"snakePath": "smart"` (default) the route is planned when the card is generated: the snake eats the quietest days first and works up to the busiest ones, finding the cheapest way to the next day of the current tier (Dijkstra on the grid), steering around its own body and out of dead ends, and avoiding busier days that are not due yet. The finished route is written into the SVG, so nothing is computed when the image is viewed. The other routes: `busy` eats the busiest days first, `nearest` always goes to the closest day, `sweep` goes column by column, `rows` row by row and `spiral` from the outside in. The snake colour is the colour override `snakeColor` (default: the theme's `ring_color`). A long route is played faster, so one loop lasts about 30 seconds at most. It is plain CSS, so it animates inside a README `<img>`; it adds about 80 KB to the SVG, and in PNG / GIF exports the snake waits at the start of the grid.
 
