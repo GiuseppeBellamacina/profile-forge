@@ -1069,7 +1069,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   };
   // Rows appear one after the other, top to bottom. BASE is the delay each section's own panel already has inside its
   // draw(); the row offset replaces it. The step shrinks with many rows so the last section still ends before DURATION.
-  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0, terminal: 0, rhythm: 0.6 };
+  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0, terminal: 0, rhythm: 0 };
   const BUILD = {
     header: headerSection,
     about: (...a) => k.about.length && aboutSection(...a),

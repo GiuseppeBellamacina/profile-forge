@@ -187,8 +187,8 @@ Copy one of the [`presets/`](presets) to `config.json` and tweak it: `minimal`, 
 
 <table>
 <tr>
-<td><img src="docs/presets/dashboard-dark.png" alt="dashboard preset"></td>
-<td><img src="docs/presets/cyberpunk-dark.png" alt="cyberpunk preset"></td>
+<td><img src="docs/presets/showcase-dark.png" alt="showcase preset"></td>
+<td><img src="docs/presets/aurora-dark.png" alt="aurora preset"></td>
 </tr>
 </table>
 
