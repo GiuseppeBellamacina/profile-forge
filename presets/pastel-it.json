@@ -5,9 +5,14 @@
   "themes": { "dark": "catppuccin-macchiato", "light": "catppuccin-latte" },
   "card": { "radius": 32, "background": { "pattern": "diagonal" } },
   "layout": ["header", ["languages", "stats"], "streak", "heatmap"],
-  "header": { "avatar": "rounded", "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"] },
+  "header": {
+    "avatar": "rounded",
+    "facts": ["contributionsThisYear", "bestDay", "busiestWeekday"],
+    "frame": "sakura",
+    "rankStyle": "hexagon"
+  },
   "languages": { "layout": "donut-vertical", "count": 6 },
   "stats": { "numberFormat": "short", "lineHeight": 32 },
   "streak": { "excludeDays": ["Sun"], "dateFormat": "j M[ Y]" },
-  "heatmap": { "cell": "round", "weekStart": "mon" }
+  "heatmap": { "cell": "moon", "weekStart": "mon" }
 }

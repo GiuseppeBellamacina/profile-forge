@@ -2,8 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
   "themes": { "dark": "crimson", "light": "everforest-light" },
   "card": { "background": { "pattern": "dots" } },
-  "layout": ["header", "streak", "heatmap"],
-  "header": { "facts": ["currentStreak", "longestStreak", "bestDay", "busiestWeekday"], "rankIcon": "level" },
+  "layout": ["header", "streak", "rhythm", "heatmap"],
+  "header": {
+    "facts": ["currentStreak", "longestStreak", "bestDay", "busiestWeekday"],
+    "rankIcon": "level",
+    "frame": "flames",
+    "rankStyle": "shield"
+  },
   "streak": { "excludeDays": ["Sat", "Sun"], "dateFormat": "M j[, Y]", "title": "Consistency" },
-  "heatmap": { "weekStart": "mon" }
+  "heatmap": { "weekStart": "mon", "mode": "snake", "snakePath": "rows", "cell": "hexagon", "snakeLength": 5 },
+  "rhythm": { "show": ["weekdays"] }
 }

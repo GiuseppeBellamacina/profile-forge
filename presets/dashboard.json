@@ -3,9 +3,9 @@
   "themes": { "dark": "dracula", "light": "gruvbox-light" },
   "card": { "background": { "pattern": "dots" } },
   "layout": ["header", ["languages", "streak"], "stats", "trophies", "heatmap"],
-  "header": { "facts": ["contributionsThisYear", "topLanguage", "currentStreak"], "rankIcon": "percentile" },
+  "header": { "facts": ["contributionsThisYear", "topLanguage", "currentStreak"], "rankIcon": "percentile", "frame": "double" },
   "languages": { "layout": "donut", "count": 8, "hide": ["HTML", "CSS"] },
   "stats": { "numberFormat": "short", "show": ["prsMerged"] },
   "trophies": { "ranks": ["-E"], "columns": 5, "extra": ["Reviews"] },
-  "heatmap": { "cell": "round" }
+  "heatmap": { "cell": "round", "mode": "snake", "snakePath": "busy", "snakeLength": 6 }
 }

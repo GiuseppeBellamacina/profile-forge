@@ -7,5 +7,6 @@
   "languages": { "layout": "compact", "count": 6 },
   "stats": { "icons": false, "textBold": false, "lineHeight": 28, "title": "$ stats" },
   "streak": { "title": "$ streak", "dateFormat": "Y-m-d" },
-  "heatmap": { "weekStart": "mon" }
+  "heatmap": { "weekStart": "mon", "mode": "snake", "snakePath": "sweep", "cell": "square", "snakeLength": 10 },
+  "colors": { "snakeColor": "8aff00" }
 }

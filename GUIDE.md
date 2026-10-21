@@ -54,17 +54,17 @@ curl -o config.json https://raw.githubusercontent.com/GiuseppeBellamacina/profil
 
 | Preset | Idea |
 |---|---|
-| [`minimal`](presets/minimal.json) | Small and quiet: no border, no glow, a few numbers |
-| [`dashboard`](presets/dashboard.json) | Dracula / Gruvbox, donut languages, trophies, round heatmap |
-| [`terminal`](presets/terminal.json) | Green-on-black hacker look, grid background, `$ stats` titles |
-| [`pastel-it`](presets/pastel-it.json) | Catppuccin, Italian labels, rounded corners, vertical donut |
-| [`trophy-case`](presets/trophy-case.json) | Trophies first, including the opt-in Issues and Reviews |
-| [`cyberpunk`](presets/cyberpunk.json) | Two `customThemes` (neon dark + a matching light), pie chart |
-| [`portfolio`](presets/portfolio.json) | Replaces your whole README: about, projects, links, tech stack |
-| [`streak-focus`](presets/streak-focus.json) | Consistency view: streaks, weekdays only, heatmap |
-| [`open-source`](presets/open-source.json) | Merged PRs, discussions, weighted languages, selected trophies |
-| [`aurora`](presets/aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake |
-| [`zen`](presets/zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, trophies by level |
+| [`minimal`](presets/minimal.json) | Small and quiet: no border, no glow, a few numbers, plain square grid |
+| [`dashboard`](presets/dashboard.json) | Dracula / Gruvbox, donut languages, trophies, snake that eats the busiest days first |
+| [`terminal`](presets/terminal.json) | Green-on-black hacker look, `$ stats` titles, a long lime snake sweeping column by column |
+| [`pastel-it`](presets/pastel-it.json) | Catppuccin, Italian labels, sakura frame, vertical donut, moon-phase heatmap |
+| [`trophy-case`](presets/trophy-case.json) | Trophies first by level, two highlighted, laurel frame, triangle heatmap |
+| [`cyberpunk`](presets/cyberpunk.json) | Two `customThemes` (neon dark + a matching light), pie chart, glitch frame, glowing spiral snake on triangles |
+| [`portfolio`](presets/portfolio.json) | Replaces your whole README: about, projects, links, tech stack by category, mixed-shape heatmap |
+| [`streak-focus`](presets/streak-focus.json) | Consistency view: streaks, weekday rhythm, flames frame, snake row by row on a honeycomb |
+| [`open-source`](presets/open-source.json) | Merged PRs, discussions, weighted languages, trophies by level, monthly rhythm, snowflake heatmap |
+| [`aurora`](presets/aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake that always goes to the closest day |
+| [`zen`](presets/zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, halo frame, honeycomb heatmap, trophies by level |
 | [`showcase`](presets/showcase.json) | Tokyo Night with every new piece: terminal, rhythm, rainbow snake, highlighted trophies |
 
 <table>

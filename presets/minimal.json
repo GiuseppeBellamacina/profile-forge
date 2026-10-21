@@ -3,8 +3,8 @@
   "themes": { "dark": "github-dark", "light": "light" },
   "card": { "radius": 12, "hideBorder": true, "background": { "glow": false } },
   "layout": ["header", ["stats", "streak"], "heatmap"],
-  "header": { "avatar": "rounded", "facts": ["contributionsThisYear", "currentStreak"], "rankIcon": "github" },
+  "header": { "avatar": "rounded", "facts": ["contributionsThisYear", "currentStreak"], "rankIcon": "github", "frame": "none" },
   "stats": { "numberFormat": "short", "hide": ["issues", "contributed", "reviews", "followers"] },
   "streak": { "hide": ["total"] },
-  "heatmap": { "weeks": 40, "legend": false, "monthLabels": false }
+  "heatmap": { "weeks": 40, "legend": false, "monthLabels": false, "cell": "square" }
 }

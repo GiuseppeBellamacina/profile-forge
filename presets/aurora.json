@@ -7,5 +7,5 @@
   "terminal": { "lines": ["$ whoami", "a developer who likes calm, bright things", "$ cat now.txt", "building · learning · shipping"] },
   "rhythm": { "show": ["weekdays"] },
   "stats": { "numberFormat": "short", "hide": ["contributed", "reviews"] },
-  "heatmap": { "mode": "snake", "snakeStyle": "glow", "snakeLength": 8, "cell": "round" }
+  "heatmap": { "mode": "snake", "snakeStyle": "glow", "snakeLength": 8, "cell": "round", "snakePath": "nearest" }
 }

@@ -4,21 +4,32 @@
   "customThemes": {
     "cyber": {
       "base": "synthwave",
-      "bg_color": "0d0221", "panel_color": "190535", "border_color": "ff2a6d",
-      "text_color": "f1f1f1", "muted_color": "b9a7d9",
-      "icon_color": "05d9e8", "ring_color": "ff2a6d", "fire_color": "f9f871",
+      "bg_color": "0d0221",
+      "panel_color": "190535",
+      "border_color": "ff2a6d",
+      "text_color": "f1f1f1",
+      "muted_color": "b9a7d9",
+      "icon_color": "05d9e8",
+      "ring_color": "ff2a6d",
+      "fire_color": "f9f871",
       "bg_gradient": "135,0d0221,261447,0d0221"
     },
     "cyber-day": {
       "base": "light",
-      "bg_color": "fff5fa", "panel_color": "ffe8f2", "border_color": "ff8fb8",
-      "text_color": "2b0a3d", "muted_color": "7a4f8c",
-      "icon_color": "0097a7", "ring_color": "e5195f", "fire_color": "c77700"
+      "bg_color": "fff5fa",
+      "panel_color": "ffe8f2",
+      "border_color": "ff8fb8",
+      "text_color": "2b0a3d",
+      "muted_color": "7a4f8c",
+      "icon_color": "0097a7",
+      "ring_color": "e5195f",
+      "fire_color": "c77700"
     }
   },
   "card": { "radius": 6, "background": { "pattern": "diagonal" } },
   "layout": ["header", ["stats", "languages"], "streak", "heatmap"],
   "languages": { "layout": "pie", "count": 6 },
   "stats": { "numberFormat": "short", "show": ["prsMerged", "discussionsStarted"] },
-  "heatmap": { "cell": "round" }
+  "heatmap": { "cell": "triangle", "mode": "snake", "snakePath": "spiral", "snakeStyle": "glow", "snakeLength": 7 },
+  "header": { "frame": "glitch", "rankStyle": "hexagon" }
 }

@@ -4,7 +4,10 @@
   "card": { "radius": 18, "background": { "pattern": "grid" } },
   "layout": ["header", "terminal", ["languages", "rhythm"], "trophies", "heatmap"],
   "header": { "frame": "auto", "rankStyle": "shield" },
-  "terminal": { "title": "~/profile", "lines": ["$ profile-forge --show everything", "themes: 72 · sections: 11 · trophies: 70+", "$ echo $FAVORITE_THING", "the snake"] },
+  "terminal": {
+    "title": "~/profile",
+    "lines": ["$ profile-forge --show everything", "themes: 72 · sections: 11 · trophies: 70+", "$ echo $FAVORITE_THING", "the snake"]
+  },
   "languages": { "layout": "donut", "count": 6 },
   "trophies": { "sort": "rank", "rows": 2, "highlight": ["Commits", "Stars"] },
   "heatmap": { "mode": "snake", "snakeStyle": "rainbow", "snakeLength": 9, "snakePath": "smart", "cell": "mixed" }

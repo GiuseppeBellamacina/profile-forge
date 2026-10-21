@@ -10,17 +10,17 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 
 | Preset | Idea |
 |---|---|
-| [`minimal`](minimal.json) | Small and quiet: no border, no glow, a few numbers |
-| [`dashboard`](dashboard.json) | Dracula / Gruvbox, donut languages, trophies, round heatmap |
-| [`terminal`](terminal.json) | Green-on-black hacker look, grid background, `$ stats` titles |
-| [`pastel-it`](pastel-it.json) | Catppuccin, Italian labels, rounded corners, vertical donut |
-| [`trophy-case`](trophy-case.json) | Trophies first, including the opt-in Issues and Reviews |
-| [`cyberpunk`](cyberpunk.json) | Two `customThemes` (neon dark + matching light), pie chart |
-| [`portfolio`](portfolio.json) | Replaces your whole README: about, projects, links, tech stack |
-| [`streak-focus`](streak-focus.json) | Consistency view: streaks, weekdays only, heatmap |
-| [`open-source`](open-source.json) | Merged PRs, discussions, weighted languages, selected trophies |
-| [`aurora`](aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake |
-| [`zen`](zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, trophies by level |
+| [`minimal`](minimal.json) | Small and quiet: no border, no glow, a few numbers, plain square grid |
+| [`dashboard`](dashboard.json) | Dracula / Gruvbox, donut languages, trophies, snake that eats the busiest days first |
+| [`terminal`](terminal.json) | Green-on-black hacker look, `$ stats` titles, a long lime snake sweeping column by column |
+| [`pastel-it`](pastel-it.json) | Catppuccin, Italian labels, sakura frame, vertical donut, moon-phase heatmap |
+| [`trophy-case`](trophy-case.json) | Trophies first by level, two highlighted, laurel frame, triangle heatmap |
+| [`cyberpunk`](cyberpunk.json) | Two `customThemes` (neon dark + a matching light), pie chart, glitch frame, glowing spiral snake on triangles |
+| [`portfolio`](portfolio.json) | Replaces your whole README: about, projects, links, tech stack by category, mixed-shape heatmap |
+| [`streak-focus`](streak-focus.json) | Consistency view: streaks, weekday rhythm, flames frame, snake row by row on a honeycomb |
+| [`open-source`](open-source.json) | Merged PRs, discussions, weighted languages, trophies by level, monthly rhythm, snowflake heatmap |
+| [`aurora`](aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake that always goes to the closest day |
+| [`zen`](zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, halo frame, honeycomb heatmap, trophies by level |
 | [`showcase`](showcase.json) | Tokyo Night with every new piece: terminal, rhythm, rainbow snake, highlighted trophies |
 
 `portfolio` reads its tech stack icons from `assets/img/` (relative to `config.json`): copy [`assets/img/`](assets/img) next to your config, and replace the placeholder text, URLs and `your-login`.

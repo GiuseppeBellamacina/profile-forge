@@ -3,7 +3,15 @@
   "themes": { "dark": "outrun", "light": "dayfox" },
   "card": { "background": { "pattern": "grid" } },
   "layout": ["header", "trophies", "heatmap"],
-  "header": { "facts": ["stars", "followers", "longestStreak"], "rankIcon": "percentile" },
-  "trophies": { "extra": ["Issues", "Reviews"], "columns": 5, "marginW": 16, "marginH": 16, "title": "Hall of fame" },
-  "heatmap": { "weeks": 26, "legend": false }
+  "header": { "facts": ["stars", "followers", "longestStreak"], "rankIcon": "percentile", "frame": "laurel", "rankStyle": "shield" },
+  "trophies": {
+    "extra": ["Issues", "Reviews"],
+    "columns": 5,
+    "marginW": 16,
+    "marginH": 16,
+    "title": "Hall of fame",
+    "sort": "rank",
+    "highlight": ["Stars", "Commits"]
+  },
+  "heatmap": { "weeks": 26, "legend": false, "cell": "triangle" }
 }
