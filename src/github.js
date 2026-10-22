@@ -34,7 +34,7 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
     discussionsAnswered: repositoryDiscussionComments(onlyAnswers: true) @include(if: $extras) { totalCount }
     openIssues: issues(states: OPEN) { totalCount }
     closedIssues: issues(states: CLOSED) { totalCount }
-    repositoriesContributedTo(first: 1, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, REPOSITORY]) { totalCount }
+    repositoriesContributedTo(first: 100, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, PULL_REQUEST_REVIEW, REPOSITORY]) { totalCount nodes { nameWithOwner } }
     repositories(first: 100, after: $after, ownerAffiliations: OWNER, privacy: $privacy) {
       totalCount
       pageInfo { hasNextPage endCursor }
@@ -111,9 +111,12 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
 
   // the organizations you contributed to, all years: contributions (commits, PRs, issues, reviews) and the stars of the repos
   const byOrg = new Map();
+  // every repository you do not own and contributed to, any year (GitHub's own count covers only the last year, without reviews)
+  const others = new Set((user.repositoriesContributedTo.nodes ?? []).map((r) => r.nameWithOwner.toLowerCase()));
   for (const y of yearly)
     for (const kind of ["commit", "pullRequest", "issue", "pullRequestReview"])
       for (const { contributions, repository: r } of y[`${kind}ContributionsByRepository`] ?? []) {
+        if (r.owner.login.toLowerCase() !== user.login.toLowerCase()) others.add(r.nameWithOwner.toLowerCase());
         if (r.owner.__typename !== "Organization") continue;
         const o = byOrg.get(r.owner.login) ?? { login: r.owner.login, avatarUrl: r.owner.avatarUrl, contributions: 0, repos: new Map() };
         o.contributions += contributions.totalCount;
@@ -178,7 +181,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     organizations: user.organizations.totalCount,
     prs: user.pullRequests.totalCount,
     issues: user.openIssues.totalCount + user.closedIssues.totalCount,
-    contributedTo: user.repositoriesContributedTo.totalCount,
+    contributedTo: Math.max(user.repositoriesContributedTo.totalCount, others.size),
     orgs,
     repoCount: user.repositories.totalCount,
     stars: repos.reduce((s, r) => s + r.stargazerCount, 0),
