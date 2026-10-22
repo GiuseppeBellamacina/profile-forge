@@ -573,3 +573,9 @@ test("orgs: chips of the organizations you contributed to, static or scrolling, 
   assert.ok(!render(summarize(RAW, k), { k, t: 1 }).includes('id="orgdot"'), "no orgs: no section");
   assert.throws(() => normalize({ orgs: { mode: "bounce" } }), /orgs\.mode/);
 });
+
+test("orgs: the heading counts the organizations on the card", () => {
+  const orgs = ["a", "b", "c"].map((login, i) => ({ login, avatar: null, contributions: i + 1, stars: 0 }));
+  const k = normalize({ layout: ["orgs"], orgs: { hide: ["b"] } });
+  assert.ok(render(summarize({ ...RAW, orgs }, k), { k, t: 1 }).includes("· 2</tspan>"));
+});

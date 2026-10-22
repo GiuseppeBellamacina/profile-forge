@@ -1085,7 +1085,7 @@ function orgsSection(d, X, W = 940) {
   return {
     w: W, top: 0, nx: 30, h,
     draw: (Hh) => {
-      const head = `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, Hh, c)}${icon("org", 50, 18, 14, c.accent)}${heading(72, 30, o.title ?? tr("contributed").toUpperCase(), c, sub(c, num(d.stats.contributedTo)))}</g>`;
+      const head = `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, Hh, c)}${icon("org", 50, 18, 14, c.accent)}${heading(72, 30, o.title ?? tr("contributed").toUpperCase(), c, sub(c, num(list.length)))}</g>`;
       if (!scroll) {
         const body = rows
           .map((row, r) => {
