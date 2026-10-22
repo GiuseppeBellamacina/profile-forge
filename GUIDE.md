@@ -191,6 +191,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 | `rankStyle` | `ring` `hexagon` `shield` | `ring` |
 | `rankThickness` | 4–16 | `8` |
 | `rankIcon` | what the rank shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
+| `rankEffect` | `auto` (by level), `none`, `halo`, `shine`, `flame`, `rainbow` | `auto` |
 | `flag` | path of a 4:3 flag image (svg/png) drawn at the start of the "joined" line under the name | `null` |
 
 | `avatar: "circle"` | `avatar: "rounded"` | `avatar: "hide"` |
@@ -215,7 +216,7 @@ One scale for the whole card, from low to high: **E, E+, D-, D, D+, C-, C, C+, B
 | **A+** | ≤ 10% | | **C+** | ≤ 45% | | **E** | the rest |
 | | | | **C** | ≤ 52% | | | |
 
-Trophies place their eight thresholds on the same scale (SSS, S+, S, A, B, C, D, E) and split the room between two thresholds into the levels in between, so a trophy climbs one step at a time; X is the header's alone. Every letter has its own colour, the same in every theme so the levels are easy to tell apart (grey, blue, green, purple, orange, gold, pink for SSS, electric cyan for X); `+` is a little brighter and `-` a little duller. Change them with `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS`, `levelTop` (SSS) and `levelX`.
+Trophies place their eight thresholds on the same scale (SSS, S+, S, A, B, C, D, E) and split the room between two thresholds into the levels in between, so a trophy climbs one step at a time; X is the header's alone. Every letter has its own colour, the same in every theme so the levels are easy to tell apart (grey, blue, green, purple, orange, gold, pink for SSS, red for X); `+` is a little brighter and `-` a little duller. Change them with `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS`, `levelTop` (SSS) and `levelX`.
 
 | `E` | `D` | `C` | `B-` | `B` | `B+` |
 |---|---|---|---|---|---|
@@ -225,11 +226,11 @@ Trophies place their eight thresholds on the same scale (SSS, S+, S, A, B, C, D,
 |---|---|---|---|
 | <img src="docs/guide/rank-A.png" width="200"> | <img src="docs/guide/rank-S.png" width="200"> | <img src="docs/guide/rank-top.png" width="200"> | <img src="docs/guide/rank-x.png" width="200"> |
 
-**The top levels are animated**, more and more as you climb: S-, S and S+ get a pulsing halo; SSS also a light that runs around the ring, twinkling sparkles and shimmering trophies; X all of that in rainbow colours, with a second ring turning the other way and more sparkles. It is plain CSS, so it plays inside a README image; PNG and GIF exports show the same drawing held still.
+**The top levels are animated**, more and more as you climb (`rankEffect: "auto"`): S-, S and S+ get a pulsing halo; SSS also a light that runs around the ring, twinkling sparkles and shimmering trophies; X, in red, burns inside a big flame that flickers. `rankEffect` can also pick one by hand at any level: `none`, `halo`, `shine` (light and sparkles), `flame` or `rainbow` (rainbow ring and sparkles, with a second ring turning the other way; never chosen automatically). It is plain CSS, so it plays inside a README image; PNG and GIF exports show the same drawing held still.
 
-| `S` | `SSS` | `X` |
-|---|---|---|
-| <img src="docs/guide/rank-s-animated.svg" width="200"> | <img src="docs/guide/rank-top-animated.svg" width="200"> | <img src="docs/guide/rank-x-animated.svg" width="200"> |
+| `S` | `SSS` | `X` | `rankEffect: "rainbow"` |
+|---|---|---|---|
+| <img src="docs/guide/rank-s-animated.svg" width="200"> | <img src="docs/guide/rank-top-animated.svg" width="200"> | <img src="docs/guide/rank-x-animated.svg" width="200"> | <img src="docs/guide/rank-rainbow-animated.svg" width="200"> |
 
 | Header of a top profile |
 |---|
@@ -251,7 +252,7 @@ Trophies place their eight thresholds on the same scale (SSS, S+, S, A, B, C, D,
 
 ### Avatar frames
 
-`frame` puts a decoration around the avatar, like Discord avatar decorations. `ring` is the classic gradient ring (the default), `none` removes it, the rest are decorations, and `auto` follows the letter of your level: E none, D ring, C double, B dashed, A neon, S flames, SSS the animated aurora and X the prism. They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
+`frame` puts a decoration around the avatar, like Discord avatar decorations. `ring` is the classic gradient ring (the default), `none` removes it, the rest are decorations, and `auto` follows the letter of your level: E none, D ring, C double, B dashed, A neon, S flames, SSS the animated aurora and X flames in its red. `prism` (rainbow) is never chosen automatically. They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
 
 | `ring` | `double` | `dashed` |
 |---|---|---|

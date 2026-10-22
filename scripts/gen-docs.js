@@ -30,6 +30,7 @@ const CASES = {
   "rank-s-animated": { ...only("header"), args: ["--rank", "S", ...RING], svg: true },
   "rank-x": { ...only("header"), args: ["--rank", "X", ...RING] },
   "rank-x-animated": { ...only("header"), args: ["--rank", "X", ...RING], svg: true },
+  "rank-rainbow-animated": { ...only("header"), header: { rankEffect: "rainbow" }, args: ["--rank", "A", ...RING], svg: true },
   "rank-hexagon": { ...only("header"), header: { rankStyle: "hexagon" }, args: ["--rank", "A", ...RING] },
   "rank-shield": { ...only("header"), header: { rankStyle: "shield" }, args: ["--rank", "A", ...RING] },
   "rank-thick": { ...only("header"), header: { rankThickness: 14 }, args: ["--rank", "B", ...RING] },
@@ -46,7 +47,7 @@ const CASES = {
   ...Object.fromEntries(FRAMES.filter((f) => f !== "none").map((f) => [`frame-${f}`, { ...only("header"), header: { frame: f }, args: ["--rank", f === "auto" ? "S" : "A", ...AVATAR] }])),
   "frame-rounded": { ...only("header"), header: { frame: "neon", avatar: "rounded" }, args: ["--rank", "A", ...AVATAR] },
   "frame-auto-top": { ...only("header"), header: { frame: "auto" }, args: ["--rank", "X"] },
-  ...Object.fromEntries(["neon", "flames", "stars", "aurora", "glitch", "orbit", "prism"].map((f) => [`frame-${f}-animated`, { ...only("header"), header: { frame: f }, args: ["--rank", { aurora: "SSS", prism: "X" }[f] ?? "A", ...AVATAR], svg: true }])),
+  ...Object.fromEntries(["neon", "flames", "stars", "aurora", "glitch", "orbit", "prism"].map((f) => [`frame-${f}-animated`, { ...only("header"), header: { frame: f }, args: ["--rank", { aurora: "SSS" }[f] ?? "A", ...AVATAR], svg: true }])),
   "frame-color": { ...only("header"), header: { frame: "double" }, colors: { frameColor: "00e5a0" }, args: ["--rank", "A", ...AVATAR] },
   // heatmap shapes and the snake
   ...Object.fromEntries(["triangle", "snowflake", "moon", "mixed"].map((s) => [`heatmap-${s}`, { ...only("heatmap"), heatmap: { cell: s } }])),

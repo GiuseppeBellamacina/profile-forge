@@ -12,8 +12,8 @@ const r3 = (n) => Math.round(n * 1000) / 1000;
 export const FRAMES = ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"];
 export const FRAME_ANIMATIONS = ["default", "none", "spin", "pulse", "twinkle"];
 
-/** The frame `auto` picks for each letter: richer as the level rises; SSS gets the aurora and X the prism. */
-export const AUTO_FRAME = { E: "none", D: "ring", C: "double", B: "dashed", A: "neon", S: "flames", SSS: "aurora", X: "prism" };
+/** The frame `auto` picks for each letter: richer as the level rises; SSS gets the aurora and X burns (flames in its red). */
+export const AUTO_FRAME = { E: "none", D: "ring", C: "double", B: "dashed", A: "neon", S: "flames", SSS: "aurora", X: "flames" };
 const PRISM = ["#ff5f6d", "#ff9f43", "#ffd93d", "#6bdb7a", "#4fd1ff", "#7c8cff", "#c77dff", "#ff6fd8"];
 
 // ---- geometry: the outline of the avatar (circle or rounded square), pushed out by `grow`
