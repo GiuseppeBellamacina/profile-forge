@@ -57,6 +57,8 @@ const CASES = {
   "heatmap-snake-glow-animated": { ...only("heatmap"), heatmap: { mode: "snake", snakeStyle: "glow", cell: "round" }, svg: true },
   "terminal-animated": { ...only("terminal"), terminal: { lines: ["$ whoami", "Ada Demo, AI engineer", "$ cat focus.txt", "LLM systems · retrieval · evaluation", "$ git log --oneline | wc -l", "4691"] }, svg: true },
   rhythm: only("rhythm"),
+  orgs: only("orgs"),
+  "orgs-scroll-animated": { ...only("orgs"), orgs: { mode: "scroll" }, svg: true },
   "heatmap-snake-moon-animated": { ...only("heatmap"), heatmap: { mode: "snake", cell: "moon", snakePath: "busy" }, colors: { snakeColor: "ffd23f" }, svg: true },
   // layout / card
   "layout-default": { layout: ["header", ["stats", "streak"], "languages", "heatmap"] },

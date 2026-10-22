@@ -549,3 +549,25 @@ test("snake length and style; trophies sort and highlight", () => {
   assert.equal((svg.match(/width="107" height="107" fill="none"/g) ?? []).length, 1);
   assert.throws(() => normalize({ trophies: { sort: "random" } }), /one of/);
 });
+
+test("orgs: chips of the organizations you contributed to, static or scrolling, chosen and sorted", () => {
+  const orgs = [
+    { login: "small", avatar: null, contributions: 9, stars: 5 },
+    { login: "famous", avatar: "data:image/png;base64,", contributions: 2, stars: 900 },
+    { login: "mid", avatar: null, contributions: 5, stars: 40 },
+  ];
+  const view = (o, still = true) => { const k = normalize({ layout: ["orgs"], orgs: o }); return render(summarize({ ...RAW, orgs }, k), still ? { k, t: 1 } : { k }); };
+  const order = (svg) => ["small", "famous", "mid"].map((n) => svg.indexOf(`>${n}<`));
+  const [s, f, m] = order(view({}));
+  assert.ok(s < m && m < f, "by contributions");
+  const [s2, f2, m2] = order(view({ sort: "popularity" }));
+  assert.ok(f2 < m2 && m2 < s2, "by popularity (stars)");
+  const only = view({ select: ["Mid", "small"], sort: "custom" });
+  assert.ok(!only.includes(">famous<") && only.indexOf(">mid<") < only.indexOf(">small<"), "select keeps and orders");
+  const scroll = view({ mode: "scroll", direction: "right", speed: 40 }, false);
+  assert.ok(/@keyframes orgrun\{from\{transform:translateX\(-[\d.]+px\)\}to\{transform:translateX\(0px\)\}\}/.test(scroll), "moves right");
+  assert.ok(!view({ mode: "scroll" }).includes("@keyframes"), "static frames hold still");
+  const k = normalize({ layout: ["orgs", "stats"] });
+  assert.ok(!render(summarize(RAW, k), { k, t: 1 }).includes('id="orgdot"'), "no orgs: no section");
+  assert.throws(() => normalize({ orgs: { mode: "bounce" } }), /orgs\.mode/);
+});

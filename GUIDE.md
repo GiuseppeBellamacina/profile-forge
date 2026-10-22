@@ -102,7 +102,7 @@ The `portfolio` preset reads its tech stack icons from `assets/img/` (paths are 
 
 ## Layout and sections
 
-`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`, `terminal`, `rhythm`.
+`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`, `terminal`, `rhythm`, `orgs`.
 
 - A **nested pair** puts two sections side by side at half width: `["stats", "streak"]`, `["about", "workingOn"]`, `["trophies", "heatmap"]`. Any two sections can pair except `header`.
 - `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width; on their own they are centered.
@@ -565,6 +565,27 @@ SSS:
 A terminal window. Lines that start with `$ ` are commands: they type themselves one character at a time, and the lines after them (the output) appear when the command is done. A blinking cursor waits at the end. `title` replaces the window title (default `<login>@github: ~`). Long lines are cut to the width of the card. In PNG / GIF exports everything is shown at once. Without lines the section is skipped.
 
 <img src="docs/guide/terminal-animated.svg" width="70%">
+
+## Contributed to (orgs)
+
+```json
+{ "orgs": { "title": null, "select": [], "sort": "contributions", "mode": "static", "direction": "left", "speed": 30 } }
+```
+
+The organizations you contributed to, from every year of your calendar (commits, pull requests, issues and reviews in their repositories), as chips with the organization's logo, its name and your contributions. The heading shows how many repositories you contributed to.
+
+| Key | Values | Default | Meaning |
+|---|---|---|---|
+| `select` | logins | `[]` | Only these organizations. Empty: all of them (the 30 most active) |
+| `sort` | `contributions` `popularity` `custom` | `contributions` | Most contributions first, most stars first (of the repositories you contributed to), or the order of `select` |
+| `mode` | `static` `scroll` | `static` | Chips in rows, or one row that keeps moving |
+| `direction` | `left` `right` | `left` | Where the row moves in `scroll` mode |
+| `speed` | 5–200 | `30` | Pixels per second in `scroll` mode |
+| `title` | string | translated | Custom panel title |
+
+| `mode: "static"` | `mode: "scroll"` |
+|---|---|
+| <img src="docs/guide/orgs.png"> | <img src="docs/guide/orgs-scroll-animated.svg"> |
 
 ## Rhythm
 

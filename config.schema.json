@@ -23,7 +23,7 @@
         "bg_gradient": { "type": "string" }
       }
     },
-    "section": { "enum": ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm"] }
+    "section": { "enum": ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm", "orgs"] }
   },
   "properties": {
     "$schema": { "type": "string" },
@@ -98,7 +98,7 @@
       ],
       "default": null
     },
-    "hideSections": { "type": "array", "items": { "enum": ["rank", "header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm"] } },
+    "hideSections": { "type": "array", "items": { "enum": ["rank", "header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm", "orgs"] } },
     "header": {
       "type": "object", "additionalProperties": false,
       "properties": {
@@ -193,6 +193,17 @@
       "properties": {
         "title": { "type": ["string", "null"], "default": null, "description": "Window title. Default: <login>@github: ~" },
         "lines": { "$ref": "#/definitions/strs", "default": [] }
+      }
+    },
+    "orgs": {
+      "type": "object", "additionalProperties": false, "description": "The organizations you contributed to (commits, PRs, issues, reviews, all years), as chips with their logo.",
+      "properties": {
+        "title": { "type": ["string", "null"], "default": null },
+        "select": { "$ref": "#/definitions/strs", "default": [], "description": "Only these organizations (logins). Empty: all of them. With sort \"custom\" this is also the order." },
+        "sort": { "enum": ["contributions", "popularity", "custom"], "default": "contributions", "description": "contributions: most contributions first. popularity: most stars (of the repos you contributed to) first. custom: the order of select." },
+        "mode": { "enum": ["static", "scroll"], "default": "static", "description": "static: chips in rows. scroll: one row that keeps moving." },
+        "direction": { "enum": ["left", "right"], "default": "left", "description": "Where the row moves in scroll mode." },
+        "speed": { "type": "number", "minimum": 5, "maximum": 200, "default": 30, "description": "Pixels per second in scroll mode." }
       }
     },
     "rhythm": {

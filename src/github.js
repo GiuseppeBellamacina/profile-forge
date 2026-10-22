@@ -15,6 +15,8 @@ async function gql(token, query, variables = {}, endpoint = API) {
   return json.data;
 }
 
+const BY_REPO = "contributions { totalCount } repository { nameWithOwner stargazerCount owner { __typename login avatarUrl } }";
+
 const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryPrivacy, $extras: Boolean = false) {
   user(login: $login) {
     name login avatarUrl createdAt
@@ -88,6 +90,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       (y) => `y${y}: contributionsCollection(from: "${y}-01-01T00:00:00Z", to: "${y}-12-31T23:59:59Z") {
         totalCommitContributions restrictedContributionsCount totalPullRequestReviewContributions
         contributionCalendar { weeks { contributionDays { date contributionCount } } }
+        ${["commit", "pullRequest", "issue", "pullRequestReview"].map((kind) => `${kind}ContributionsByRepository(maxRepositories: 100) { ${BY_REPO} }`).join("\n")}
       }`,
     )
     .join("\n")} } }`;
@@ -105,6 +108,29 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       for (const d of w.contributionDays) if (d.date <= today) calendar.set(d.date, d.contributionCount);
   }
   if (!calendar.has(today)) calendar.set(today, 0);
+
+  // the organizations you contributed to, all years: contributions (commits, PRs, issues, reviews) and the stars of the repos
+  const byOrg = new Map();
+  for (const y of yearly)
+    for (const kind of ["commit", "pullRequest", "issue", "pullRequestReview"])
+      for (const { contributions, repository: r } of y[`${kind}ContributionsByRepository`] ?? []) {
+        if (r.owner.__typename !== "Organization") continue;
+        const o = byOrg.get(r.owner.login) ?? { login: r.owner.login, avatarUrl: r.owner.avatarUrl, contributions: 0, repos: new Map() };
+        o.contributions += contributions.totalCount;
+        o.repos.set(r.nameWithOwner, r.stargazerCount);
+        byOrg.set(o.login, o);
+      }
+  // shortcut: avatars of the 30 most active orgs only (one request each), raise it if someone needs more chips
+  const orgs = await Promise.all(
+    [...byOrg.values()].sort((a, b) => b.contributions - a.contributions).slice(0, 30).map(async (o) => {
+      let logo = null;
+      try {
+        const res = await fetch(`${o.avatarUrl}${o.avatarUrl.includes("?") ? "&" : "?"}s=64`);
+        if (res.ok) logo = `data:${res.headers.get("content-type") ?? "image/png"};base64,${toBase64(await res.arrayBuffer())}`;
+      } catch {}
+      return { login: o.login, avatar: logo, contributions: o.contributions, stars: [...o.repos.values()].reduce((s, n) => s + n, 0) };
+    }),
+  );
 
   const avatar = await fetch(`${user.avatarUrl}${user.avatarUrl.includes("?") ? "&" : "?"}s=200`);
   const avatarData = `data:${avatar.headers.get("content-type") ?? "image/png"};base64,${toBase64(await avatar.arrayBuffer())}`;
@@ -124,6 +150,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     prs: user.pullRequests.totalCount,
     issues: user.openIssues.totalCount + user.closedIssues.totalCount,
     contributedTo: user.repositoriesContributedTo.totalCount,
+    orgs,
     repoCount: user.repositories.totalCount,
     stars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     commits,

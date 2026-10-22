@@ -70,6 +70,7 @@ profile-forge works differently:
 | Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes, moons or a honeycomb of hexagons, or as an animated snake that eats them (any length, classic, rainbow or glowing) |
 | Terminal | A terminal window whose commands type themselves, with your own lines |
 | Rhythm | When you code: average contributions per weekday and total per month, as animated bars |
+| Contributed to | The organizations you contributed to, with their logo and your contributions, in rows or scrolling left or right |
 | Avatar | A frame around it, like Discord avatar decorations (13 styles, most of them animated, or one that follows your level) |
 
 ### Levels, trophies and frames
@@ -220,7 +221,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 
 ### Layout
 
-`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`, `terminal`, `rhythm`. A nested pair puts two sections side by side at half width: any two of them except `header` (`[["about", "workingOn"], ["trophies", "heatmap"]]`). `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width, so on their own they are centered. In a pair, `workingOn` stacks its cards, `trophies` wraps to as many per row as fit, `heatmap` shows the last weeks that fit and `techStack` keeps scrolling. For free sizes and positions use the 6-column `grid` instead (see the [guide](GUIDE.md#free-grid-grid)). `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`, `terminal`) are skipped.
+`layout` is an ordered list of sections: `header`, `about`, `workingOn`, `stats`, `streak`, `languages`, `trophies`, `heatmap`, `techStack`, `terminal`, `rhythm`, `orgs`. A nested pair puts two sections side by side at half width: any two of them except `header` (`[["about", "workingOn"], ["trophies", "heatmap"]]`). `stats`, `streak` and `languages` with the `donut`, `donut-vertical` or `pie` layout are always half width, so on their own they are centered. In a pair, `workingOn` stacks its cards, `trophies` wraps to as many per row as fit, `heatmap` shows the last weeks that fit and `techStack` keeps scrolling. For free sizes and positions use the 6-column `grid` instead (see the [guide](GUIDE.md#free-grid-grid)). `hideSections` removes sections; `rank` hides just the ring in the header. Sections without content (`about`, `workingOn`, `techStack`, `terminal`) are skipped.
 
 ### Options, by section
 
@@ -237,6 +238,7 @@ Names follow the three projects the card is built on. A `—` means the original
 | heatmap | `mode`, `snakePath`, `snakeLength`, `snakeStyle`, `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | `grid` or `snake` (routes `smart` `busy` `nearest` `sweep` `rows` `spiral`, 3–12 cells long, `classic` `rainbow` `glow`); cells `square` `round` `triangle` `snowflake` `moon` `hexagon` `mixed`; grid size, Monday start, legend and month labels |
 | terminal | `lines`, `title` | — | lines starting with `$ ` are typed as commands, the others are their output |
 | rhythm | `show`, `title` | — | `weekdays` and / or `months` |
+| orgs | `select`, `sort`, `mode`, `direction`, `speed`, `title` | — | which organizations (empty = all), `contributions` `popularity` `custom` order, `static` or `scroll`, `left` / `right`, px/s |
 | root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
 
 Not ported: `card_width` / `card_height` (the card is fixed at 1000 px wide), `cache_seconds` and `type=png|json` (the output is a static file; use `export.png` / `export.gif`).

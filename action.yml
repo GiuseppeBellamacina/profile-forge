@@ -50,7 +50,7 @@ inputs:
     description: '"true" to include private repos in stars/languages/repo count (needs PAT)'
     default: ""
   hide_sections:
-    description: "Comma-separated sections to hide: rank, header, about, workingOn, stats, streak, languages, trophies, heatmap, techStack, terminal, rhythm"
+    description: "Comma-separated sections to hide: rank, header, about, workingOn, stats, streak, languages, trophies, heatmap, techStack, terminal, rhythm, orgs"
     default: ""
   hide_stats:
     description: "Comma-separated stat rows to hide: stars, commits, prs, issues, reviews, contributed, followers, repos"

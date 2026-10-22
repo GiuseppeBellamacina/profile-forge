@@ -3,11 +3,11 @@ import { LOCALES, normLocale } from "./i18n.js";
 import { ALL_LEVELS, OLD_RANKS } from "./levels.js";
 import { hasTheme, parseColors, registerThemes, THEME_NAMES } from "./themes.js";
 
-export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm"];
+export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm", "orgs"];
 export const STATS_ITEMS = ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"];
 export const STATS_EXTRA = ["prsmerged", "prsmergedpercentage", "discussionsstarted", "discussionsanswered"];
 // Narrowest width (in grid columns, out of 6) each section can be drawn at; the header always spans the card.
-export const MIN_SPAN = { header: 6, about: 2, workingOn: 2, stats: 3, streak: 3, languages: 3, trophies: 2, heatmap: 3, techStack: 2, terminal: 2, rhythm: 3 };
+export const MIN_SPAN = { header: 6, about: 2, workingOn: 2, stats: 3, streak: 3, languages: 3, trophies: 2, heatmap: 3, techStack: 2, terminal: 2, rhythm: 3, orgs: 2 };
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 export const DEFAULTS = {
@@ -27,6 +27,7 @@ export const DEFAULTS = {
   marquee: { speed: 28, rows: 2, order: "shuffle", byCategory: false },
   terminal: { title: null, lines: [] },
   rhythm: { title: null, show: ["weekdays", "months"] },
+  orgs: { title: null, select: [], sort: "contributions", mode: "static", direction: "left", speed: 30 },
   heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
@@ -37,13 +38,13 @@ const ENUMS = {
   "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "embers", "rainbow"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
-  "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"], "trophies.sort": ["default", "rank", "name"], "heatmap.snakeStyle": ["classic", "rainbow", "glow"],
+  "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"], "trophies.sort": ["default", "rank", "name"], "orgs.sort": ["contributions", "popularity", "custom"], "orgs.mode": ["static", "scroll"], "orgs.direction": ["left", "right"], "heatmap.snakeStyle": ["classic", "rainbow", "glow"],
   "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "hexagon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
-  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12],
+  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12], "orgs.speed": [5, 200],
 };
 // Keys whose value shape isn't described by the default's type.
 const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
@@ -202,6 +203,7 @@ export function normalize(raw = {}) {
       parts: must("trophies.parts", c.trophies.parts.map(nk), ["title", "label", "score", "bar"]),
       highlight: new Set(c.trophies.highlight.map(normKey)),
     },
+    orgs: { ...c.orgs, select: c.orgs.select.map((x) => String(x).toLowerCase()) },
     rhythm: { ...c.rhythm, show: must("rhythm.show", c.rhythm.show.map((x) => String(x).toLowerCase()), ["weekdays", "months"]) },
   };
 }

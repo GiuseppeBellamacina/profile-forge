@@ -221,8 +221,15 @@ export function summarize(p, k = normalize(), now = Date.now()) {
     birthday: k.trophies.birthday,
     today: new Intl.DateTimeFormat("en-CA", { timeZone: k.timezone, month: "2-digit", day: "2-digit" }).format(now).slice(-5).replace("/", "-"),
   });
+  // organizations: `select` keeps only those (and is the order for sort "custom"); otherwise by contributions or by stars
+  const sel = k.orgs.select;
+  const at = (o) => sel.indexOf(o.login.toLowerCase());
+  const orgs = (p.orgs ?? [])
+    .filter((o) => !sel.length || at(o) >= 0)
+    .sort((a, b) => (k.orgs.sort === "popularity" ? b.stars - a.stars : k.orgs.sort === "custom" && sel.length ? at(a) - at(b) : b.contributions - a.contributions));
   return {
     ...p,
+    orgs,
     stats: s,
     years,
     rank: calculateRank(s),

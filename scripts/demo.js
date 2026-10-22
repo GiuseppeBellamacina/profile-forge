@@ -44,6 +44,10 @@ const profile = {
   createdAt: "2016-03-01T00:00:00Z", earliest: "2016-03-01T00:00:00Z",
   followers: 128, organizations: 3, prs: 214, issues: 63, contributedTo: 41, repoCount: 37, stars: 486,
   commits: 5230, commitsByYear: { 2024: 640, 2025: 710, 2026: 520 }, reviews: 58,
+  orgs: [["open-llm", "#6b5bff", 64, 2400], ["datakit", "#ff7a59", 31, 380], ["rustacean-tools", "#dea584", 22, 1500], ["cloud-native-it", "#2ea4ff", 12, 90], ["pydata-community", "#3572A5", 7, 5200]].map(([login, col, contributions, stars]) => ({
+    login, contributions, stars,
+    avatar: `data:image/svg+xml;base64,${Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${col}"/><text x="32" y="43" font-size="30" font-weight="700" text-anchor="middle" fill="#fff" font-family="Arial">${login[0].toUpperCase()}</text></svg>`).toString("base64")}`,
+  })),
   mergedPrs: 171, discussionsStarted: 12, discussionsAnswered: 9,
   repos: [
     { name: "forge-api", stars: 210, isFork: false, languages: [L("Python", "#3572A5", 820_000), L("Shell", "#89e051", 12_000)] },

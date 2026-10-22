@@ -1049,6 +1049,67 @@ function rhythmSection(d, X, W = 940) {
   };
 }
 
+/**
+ * The organizations you contributed to, as chips (logo, name, contributions). `mode` static wraps them into rows; scroll
+ * moves one endless row left or right at `speed` px/s (plain CSS). Static frames show the row at its starting point.
+ */
+function orgsSection(d, X, W = 940) {
+  const { c, A, k, tr, num, defs } = X;
+  const o = k.orgs;
+  const list = d.orgs ?? [];
+  if (!list.length) return null;
+  const H = 34;
+  const gap = 10;
+  const label = (org) => fit(org.login, 12.5, 220);
+  const width = (org) => r3(36 + textWidth(label(org), 12.5) + 10 + textWidth(num(org.contributions), 11) + 14);
+  const chip = (org, x, y) => {
+    const logo = org.avatar
+      ? `<image href="${org.avatar}" x="6" y="6" width="22" height="22" clip-path="url(#orgdot)" preserveAspectRatio="xMidYMid slice"/>`
+      : `<circle cx="17" cy="17" r="11" fill="${c.accent}"/><text x="17" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="${c.bg1}">${esc(org.login[0].toUpperCase())}</text>`;
+    const w = width(org);
+    return `<g transform="translate(${r3(x)} ${r3(y)})"><rect width="${w}" height="${H}" rx="${H / 2}" fill="${c.bg1}" stroke="${c.border}"/>${logo}<text x="36" y="21.5" font-size="12.5" font-weight="600" fill="${c.text}">${esc(label(org))}</text><text x="${r3(w - 14)}" y="21.5" text-anchor="end" font-size="11" fill="${c.muted}">${esc(num(org.contributions))}</text><title>${esc(org.login)}: ${esc(num(org.contributions))} contributions, ${esc(num(org.stars))} stars</title></g>`;
+  };
+  defs.push(`<clipPath id="orgdot"><circle cx="17" cy="17" r="11"/></clipPath>`);
+  const inner = W - 40;
+  const scroll = o.mode === "scroll";
+  // static: rows that wrap; scroll: one row
+  const rows = [[]];
+  let used = 0;
+  for (const org of list) {
+    const w = width(org) + gap;
+    if (!scroll && used + w - gap > inner && rows.at(-1).length) (rows.push([]), (used = 0));
+    rows.at(-1).push(org);
+    used += w;
+  }
+  const h = 50 + rows.length * (H + gap) - gap + 18;
+  return {
+    w: W, top: 0, nx: 30, h,
+    draw: (Hh) => {
+      const head = `<g${A.a(0, 0.5, { o: 0 })}>${panel(30, 0, W, Hh, c)}${icon("org", 50, 18, 14, c.accent)}${heading(72, 30, o.title ?? tr("contributed").toUpperCase(), c, sub(c, num(d.stats.contributedTo)))}</g>`;
+      if (!scroll) {
+        const body = rows
+          .map((row, r) => {
+            let x = 50;
+            return row.map((org, i) => { const g = `<g${A.a(0.15 + (r * 6 + i) * 0.04, 0.4, { o: 0, ty: 6 })}>${chip(org, x, 50 + r * (H + gap))}</g>`; x += width(org) + gap; return g; }).join("");
+          })
+          .join("");
+        return head + body;
+      }
+      // one long strip, repeated until it covers the panel twice, then moved by its own length forever
+      let strip = [];
+      while (strip.reduce((s, org) => s + width(org) + gap, 0) < inner + 40) strip = strip.concat(list);
+      const len = r3(strip.reduce((s, org) => s + width(org) + gap, 0));
+      let x = 0;
+      const chips = strip.map((org) => { const g = chip(org, x, 0); x += width(org) + gap; return g; }).join("");
+      const [from, to] = o.direction === "right" ? [-len, 0] : [0, -len];
+      const move = A.t === undefined ? ` style="animation:orgrun ${r3(len / o.speed)}s linear infinite"` : "";
+      if (A.t === undefined) A.css.push(`@keyframes orgrun{from{transform:translateX(${from}px)}to{transform:translateX(${to}px)}}`);
+      return `${head}<clipPath id="orgclip"><rect x="40" y="44" width="${W - 20}" height="${H + 14}"/></clipPath>
+  <g clip-path="url(#orgclip)"><g transform="translate(50 50)"><g${A.a(0.2, 0.5, { o: 0 })}><g${move}${A.t === undefined ? "" : ` transform="translate(${from} 0)"`}>${chips}<g transform="translate(${len} 0)">${chips}</g></g></g></g></g>`;
+    },
+  };
+}
+
 /** Endless marquee rows of tech logos (`marquee`: rows, speed, order), moving in alternating directions. */
 function stackSection(d, X, W = 940) {
   const { c, A, k, tr, defs } = X;
@@ -1112,7 +1173,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   };
   // Rows appear one after the other, top to bottom. BASE is the delay each section's own panel already has inside its
   // draw(); the row offset replaces it. The step shrinks with many rows so the last section still ends before DURATION.
-  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0, terminal: 0, rhythm: 0 };
+  const BASE = { header: 0, about: 0, workingOn: 0, stats: 0.4, streak: 0.6, languages: 1.0, trophies: 1.3, heatmap: 1.7, techStack: 0, terminal: 0, rhythm: 0, orgs: 0 };
   const BUILD = {
     header: headerSection,
     about: (...a) => k.about.length && aboutSection(...a),
@@ -1125,6 +1186,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
     techStack: stackSection,
     terminal: (...a) => k.terminal.lines.length && terminalSection(...a),
     rhythm: rhythmSection,
+    orgs: orgsSection,
   };
   // Both layout engines produce the same thing: where every section goes (x, y, w, h) and when it appears.
   const items = [];
