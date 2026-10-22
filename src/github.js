@@ -21,7 +21,7 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
   user(login: $login) {
     name login avatarUrl createdAt
     followers { totalCount }
-    organizations { totalCount }
+    organizations(first: 50) { totalCount nodes { login avatarUrl } }
     gists { totalCount }
     following { totalCount }
     starredRepositories { totalCount }
@@ -120,6 +120,22 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
         o.repos.set(r.nameWithOwner, r.stargazerCount);
         byOrg.set(o.login, o);
       }
+  // GitHub often reports work in private org repos only as "restricted" contributions, without the repository. For the orgs
+  // you are a member of that the calendar did not reveal, count your commits and pull requests there with the search API.
+  if (endpoint === API)
+    for (const m of user.organizations.nodes ?? []) {
+      if (byOrg.has(m.login)) continue;
+      const count = async (kind, q) => {
+        try {
+          const res = await fetch(`https://api.github.com/search/${kind}?per_page=1&q=${encodeURIComponent(q)}`, { headers: { Authorization: `bearer ${token}`, "User-Agent": "profile-forge", Accept: "application/vnd.github+json" } });
+          return res.ok ? (await res.json()).total_count ?? 0 : 0;
+        } catch {
+          return 0;
+        }
+      };
+      const n = (await count("commits", `author:${user.login} org:${m.login}`)) + (await count("issues", `author:${user.login} org:${m.login} type:pr`));
+      if (n) byOrg.set(m.login, { login: m.login, avatarUrl: m.avatarUrl, contributions: n, repos: new Map() });
+    }
   // shortcut: avatars of the 30 most active orgs only (one request each), raise it if someone needs more chips
   const orgs = await Promise.all(
     [...byOrg.values()].sort((a, b) => b.contributions - a.contributions).slice(0, 30).map(async (o) => {
@@ -131,6 +147,14 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       return { login: o.login, avatar: logo, contributions: o.contributions, stars: [...o.repos.values()].reduce((s, n) => s + n, 0) };
     }),
   );
+  // popularity: the stars of each organization's 100 most starred repositories (one request for all of them)
+  if (orgs.length) {
+    try {
+      const q = `query { ${orgs.map((o, i) => `o${i}: organization(login: ${JSON.stringify(o.login)}) { repositories(first: 100, orderBy: { field: STARGAZERS, direction: DESC }) { nodes { stargazerCount } } }`).join(" ")} }`;
+      const res = await gql(token, q, {}, endpoint);
+      orgs.forEach((o, i) => { const nodes = res[`o${i}`]?.repositories.nodes; if (nodes) o.stars = nodes.reduce((s, r) => s + r.stargazerCount, 0); });
+    } catch {} // keep the stars of the repos you contributed to
+  }
 
   const avatar = await fetch(`${user.avatarUrl}${user.avatarUrl.includes("?") ? "&" : "?"}s=200`);
   const avatarData = `data:${avatar.headers.get("content-type") ?? "image/png"};base64,${toBase64(await avatar.arrayBuffer())}`;

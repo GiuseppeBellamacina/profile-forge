@@ -572,14 +572,14 @@ A terminal window. Lines that start with `$ ` are commands: they type themselves
 { "orgs": { "title": null, "hide": [], "order": [], "select": [], "sort": "contributions", "mode": "static", "direction": "left", "speed": 30 } }
 ```
 
-The organizations you contributed to, from every year of your calendar (commits, pull requests, issues and reviews in their repositories), as tags with the organization's logo and its @login, like GitHub's organization badges (your contributions and its stars show on hover). The heading shows how many repositories you contributed to.
+The organizations you contributed to, from every year of your calendar (commits, pull requests, issues and reviews in their repositories; for the organizations you are a member of, work in private repositories that GitHub reports only as "restricted" is counted with the search API), as tags with the organization's logo and its @login, like GitHub's organization badges (your contributions and its stars show on hover). The heading shows how many repositories you contributed to.
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
 | `hide` | logins | `[]` | Organizations not to show. Every other one is shown, also the ones you contribute to later |
 | `order` | logins | `[]` | The order for `sort: "custom"`: these first, the others after by contributions |
 | `select` | logins | `[]` | Only these organizations (new ones are then not added). Empty: all of them (the 30 most active) |
-| `sort` | `contributions` `popularity` `custom` | `contributions` | Most contributions first, most stars first (of the repositories you contributed to), or your `order` |
+| `sort` | `contributions` `popularity` `custom` | `contributions` | Most contributions first, most popular first (the stars of the organization's repositories), or your `order` |
 | `mode` | `static` `scroll` | `static` | Chips in rows, or one row that keeps moving |
 | `direction` | `left` `right` | `left` | Where the row moves in `scroll` mode |
 | `speed` | 5–200 | `30` | Pixels per second in `scroll` mode |
