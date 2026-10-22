@@ -12,7 +12,7 @@ export const isLevel = (l) => ALL_LEVELS.includes(l);
 export const isTop = (l) => l === "SSS" || l === "X";
 /** 0 (E) .. 18 (X). */
 export const levelIndex = (l) => ALL_LEVELS.indexOf(l);
-/** How much the rank shows off (`rankEffect: "auto"`): 0 below S, 1 for S-/S/S+ (halo), 2 for SSS (shine), 3 for X (flame). */
+/** How much the rank shows off (`rankEffect: "auto"`): 0 below S, 1 for S-/S/S+ (halo), 2 for SSS (shine), 3 for X (embers). */
 export const fxTier = (l) => ({ S: 1, SSS: 2, X: 3 })[familyOf(l)] ?? 0;
 
 /** Header rank: the first threshold (percent of users above you) that your percentile fits under. */

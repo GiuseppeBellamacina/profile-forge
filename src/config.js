@@ -34,7 +34,7 @@ export const DEFAULTS = {
 const FACTS = ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"];
 const ENUMS = {
   locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal"],
-  "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "flame", "rainbow"],
+  "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "embers", "rainbow"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
   "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"], "trophies.sort": ["default", "rank", "name"], "heatmap.snakeStyle": ["classic", "rainbow", "glow"],

@@ -340,7 +340,7 @@ test("levels: E, E+, D- … S-, S, S+, SSS and the secret X, one scale for the h
   assert.deepEqual([2000, 700, 200, 170, 134, 100, 50, 30, 10, 1, 0].map(level), ["SSS", "S+", "S", "S-", "A+", "A", "B", "C", "D", "E", "?"]);
 });
 
-test("rank effects grow with the level: S a halo, SSS a running light, sparkles and shimmering trophies, X a big flame; rainbow only by hand", () => {
+test("rank effects grow with the level: S a halo, SSS a running light, sparkles and shimmering trophies, X glowing embers; rainbow only by hand", () => {
   const view = (level, t, header) => {
     const [d, k] = make({ layout: ["header", "trophies"], ...(header && { header }) });
     d.rank = { level, percentile: 30 };
@@ -351,7 +351,7 @@ test("rank effects grow with the level: S a halo, SSS a running light, sparkles 
   const s = view("S-");
   assert.ok(/@keyframes lp\d+/.test(s) && !s.includes('stroke-dasharray="7 93"'), "S: only the halo");
   const x = view("X");
-  assert.ok(x.includes('fill="#ffd36e"') && !x.includes("#ff5f6d") && x.includes('fill="#ff2d2d">X<'), "X: red, inside a flame, no rainbow");
+  assert.ok(x.includes('filter="url(#rkglow)"') && x.includes('stroke-dasharray="16 84"') && !x.includes("#ff5f6d") && x.includes('fill="#ff2d2d">X<'), "X: red, glowing, arcs and sparks, no rainbow");
   const rb = view("B", undefined, { rankEffect: "rainbow" });
   assert.ok(rb.includes('stroke-dasharray="6 6"') && rb.includes("#ff5f6d") && rb.includes('fill="url(#rg)">B<'), "rainbow: any level, picked by hand");
   assert.ok(!/@keyframes lp\d+/.test(view("X", undefined, { rankEffect: "none" })), "none: no effect even at X");
@@ -401,8 +401,9 @@ test("avatar frames: every frame draws, auto follows the level, shapes and stati
   assert.ok(seen.size > 8, "the frames look different from each other");
   assert.deepEqual(Object.keys(AUTO_FRAME), ["E", "D", "C", "B", "A", "S", "SSS", "X"]);
   assert.equal(view({ frame: "auto" }, "E+"), view({ frame: "none" }, "E+"), "E and E+: no frame");
-  assert.ok(view({ frame: "auto" }, "SSS").includes("stroke-dasharray=\"30 22\""), "SSS: the aurora");
-  assert.equal(view({ frame: "auto" }, "X"), view({ frame: "flames" }, "X"), "X: flames");
+  assert.equal(view({ frame: "auto" }, "X"), view({ frame: "aurora" }, "X"), "X: aurora");
+  assert.equal(view({ frame: "auto" }, "S"), view({ frame: "stars" }, "S"), "S: stars");
+  assert.equal(view({ frame: "auto" }, "SSS"), view({ frame: "halo" }, "SSS"), "SSS: halo");
   assert.ok(view({ frame: "prism" }).includes('stroke-dasharray="12.5 87.5"'), "prism: rainbow arcs, chosen by hand");
   assert.equal(view({ frame: "auto" }, "A-"), view({ frame: "neon" }, "A-"), "a level uses the frame of its letter");
   assert.ok(view({ frame: "flames" }, "A", undefined, { frameColor: "00ff88" }).includes("#00ff88"), "frameColor overrides the level colour");

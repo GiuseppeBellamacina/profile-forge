@@ -103,9 +103,9 @@
       "type": "object", "additionalProperties": false,
       "properties": {
         "avatar": { "enum": ["circle", "rounded", "hide"], "default": "circle" },
-        "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S flames, SSS aurora, X flames). Colour: colors.frameColor, default the level colour." },
+        "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S stars, SSS halo, X aurora). Colour: colors.frameColor, default the level colour." },
         "flag": { "type": ["string", "null"], "default": null, "description": "Path of a flag image (svg/png, 4:3) drawn under the name, e.g. assets/img/flags/it.svg." },
-        "rankEffect": { "enum": ["auto", "none", "halo", "shine", "flame", "rainbow"], "default": "auto", "description": "The effect around the rank. auto: by level (S- to S+ a halo, SSS a running light and sparkles, X a big flame). none, halo, shine, flame or rainbow pick one by hand at any level." },
+        "rankEffect": { "enum": ["auto", "none", "halo", "shine", "embers", "rainbow"], "default": "auto", "description": "The effect around the rank. auto: by level (S- to S+ a halo, SSS a running light and sparkles, X glowing embers). none, halo, shine, embers or rainbow pick one by hand at any level." },
         "rankStyle": { "enum": ["ring", "hexagon", "shield"], "default": "ring", "description": "The shape of the rank indicator." },
         "rankThickness": { "type": "number", "minimum": 4, "maximum": 16, "default": 8 },
         "frameAnimation": { "enum": ["default", "none", "spin", "pulse", "twinkle"], "default": "default", "description": "default: the frame's own motion. none: still. spin / pulse / twinkle: override it where it makes sense." },

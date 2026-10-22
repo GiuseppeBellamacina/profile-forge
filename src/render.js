@@ -167,9 +167,9 @@ function headerSection(d, X) {
   };
   // the progress colour: the colour of the level, lighter at the start (the top 1% runs from pink to gold)
   const lvCol = levelColor(c, d.rank.level);
-  // the effect around the rank: "auto" grows with the level (S a halo, SSS a light and sparkles, X a big flame); any effect
+  // the effect around the rank: "auto" grows with the level (S a halo, SSS a light and sparkles, X glowing embers); any effect
   // can also be picked by hand, and "rainbow" is only ever picked by hand
-  const eff = hs.rankEffect === "auto" ? (["none", "halo", "shine", "flame"][fxTier(d.rank.level)]) : hs.rankEffect;
+  const eff = hs.rankEffect === "auto" ? (["none", "halo", "shine", "embers"][fxTier(d.rank.level)]) : hs.rankEffect;
   const rainbow = eff === "rainbow";
   X.defs.push(
     rainbow
@@ -212,24 +212,32 @@ function headerSection(d, X) {
     ${ringEl(0, `stroke="#fff" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="7 93" opacity="0.55"${A.loop({ "0%": "stroke-dashoffset:0", "100%": "stroke-dashoffset:-100" }, { dur: rainbow ? 2.2 : 3.2, ease: "linear", delay: 1.2, still: ' stroke-dashoffset="-12"' })}`)}
     ${Array.from({ length: many }, (_, k) => spark(k)).join("")}`;
   };
-  // flame: a big fire that holds the rank, three tongues of flame flickering at their own pace behind it
-  const flame = () => {
+  // embers: the ring glows like hot metal, two arcs of light circle it in opposite directions and sparks rise from it
+  const embers = () => {
     const col = levelColor(c, d.rank.level);
-    const body = (k, fill, op) => {
-      const s = 1 - k * 0.2;
-      const sx = (x) => r3(900 + (x - 900) * s);
-      const sy = (y) => r3(146 - (158 - y) * s * 0.93);
-      const d0 = `M${sx(900)} ${sy(158)}C${sx(838)} ${sy(158)} ${sx(826)} ${sy(104)} ${sx(846)} ${sy(66)}C${sx(852)} ${sy(84)} ${sx(862)} ${sy(92)} ${sx(870)} ${sy(88)}C${sx(860)} ${sy(58)} ${sx(874)} ${sy(26)} ${sx(902)} ${sy(-2)}C${sx(902)} ${sy(28)} ${sx(918)} ${sy(42)} ${sx(930)} ${sy(56)}C${sx(936)} ${sy(46)} ${sx(938)} ${sy(36)} ${sx(936)} ${sy(24)}C${sx(966)} ${sy(52)} ${sx(976)} ${sy(108)} ${sx(954)} ${sy(136)}C${sx(944)} ${sy(150)} ${sx(924)} ${sy(158)} ${sx(900)} ${sy(158)}Z`;
-      return `<g${A.loop({ "0%,100%": "transform:scale(1,1) skewX(0deg)", "30%": `transform:scale(1.04,${1.07 - k * 0.02}) skewX(${2 - k}deg)`, "65%": `transform:scale(.97,.95) skewX(${-2 + k}deg)` }, { dur: 1.1 + k * 0.35, delay: 0.9 + k * 0.15, origin: [900, 146] })}><path d="${d0}" fill="${fill}" opacity="${op}"/></g>`;
-    };
-    return `<g opacity="0.95">${body(0, col, 0.85)}${body(1, mix(col, "#ff9a3c", 0.55), 0.85)}${body(2, "#ffd36e", 0.75)}</g>
-    <circle cx="900" cy="90" r="${r3(50 - thick / 2)}" fill="${c.bg1}" opacity="0.88"/>`;
+    const hot = mix(col, "#ff9a3c", 0.6);
+    X.defs.push(`<filter id="rkglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4.5"/></filter>`);
+    const glow = `<g filter="url(#rkglow)"${A.loop({ "0%,100%": "opacity:.45", "50%": "opacity:1" }, { dur: 1.8, delay: 1.2, still: ' opacity="0.8"' })}>${ringEl(0, `stroke="${col}" stroke-width="${thick + 6}"`)}</g>`;
+    const arc = (grow, w, dash, fill, dur, dir) => `<g${A.loop({ "0%": "transform:rotate(0deg)", "100%": `transform:rotate(${360 * dir}deg)` }, { dur, ease: "linear", delay: 1.2, origin: [900, 90] })}>${ringEl(grow, `stroke="${fill}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${dash}"`)}</g>`;
+    // sparks start on the lower half and the sides of the ring and float up, fading out
+    const sparks = Array.from({ length: 12 }, (_, k) => {
+      const ang = ((200 + k * 13.6 + (k % 2) * 160) * Math.PI) / 180;
+      const x = r3(900 + 54 * Math.cos(ang));
+      const y = r3(90 + 54 * Math.sin(ang) * -1);
+      const rise = 38 + (k % 4) * 9;
+      const drift = (k % 3) - 1;
+      const fill = [col, hot, "#ffd36e"][k % 3];
+      return `<circle cx="${x}" cy="${y}" r="${r3(1.4 + (k % 3) * 0.5)}" fill="${fill}"${A.loop({ "0%": "opacity:0;transform:translate(0,0) scale(1)", "15%": "opacity:1", "100%": `opacity:0;transform:translate(${drift * 8}px,${-rise}px) scale(.4)` }, { dur: 1.9 + (k % 4) * 0.35, ease: "ease-out", delay: 1.2 + k * 0.23, origin: [x, y], still: ` opacity="${k % 2 ? 0.7 : 0.35}" transform="translate(0 ${-(k % 4) * 8})"` })}/>`;
+    }).join("");
+    return { under: glow, over: `${arc(11, 2.4, "16 84", col, 3.6, 1)}${arc(11, 1.6, "9 91", hot, 5.2, -1)}${sparks}` };
   };
+  const em = eff === "embers" ? embers() : null;
   const rank = () => `<g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
-    ${eff === "flame" ? flame() : ""}
+    ${em?.under ?? ""}
     ${ringEl(0, `stroke="${c.track}" stroke-width="${thick}"`)}
     ${ringEl(0, `stroke="url(#rg)" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="100"${ringStyle === "ring" ? ' transform="rotate(-90 900 90)"' : ""}${A.a(0.5, 1.4, { dash: 100 }, { dash: 100 - progress })}`)}
-    ${["shine", "flame", "rainbow"].includes(eff) ? topRing() : eff === "halo" ? haloRing() : ""}
+    ${["shine", "embers", "rainbow"].includes(eff) ? topRing() : eff === "halo" ? haloRing() : ""}
+    ${em?.over ?? ""}
     ${
       pct
         ? `<text x="900" y="97" text-anchor="middle" font-size="22" font-weight="700" font-family="${FD}" fill="${c.text}">${r3(d.rank.percentile).toFixed(1)}%</text>

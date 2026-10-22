@@ -184,7 +184,7 @@ export function resolveTheme(name, colors = {}) {
   c.lvA ??= lv("#ff9f43"); // orange
   c.lvS ??= lv("#ffd23f"); // gold
   c.lvTop ??= lv("#ff5fd2"); // pink (SSS)
-  c.lvX ??= lv("#ff2d2d"); // red (X, the top 0.1%, wrapped in fire)
+  c.lvX ??= lv("#ff2d2d"); // red (X, the top 0.1%)
   c.name = name;
   return c;
 }
