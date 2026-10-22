@@ -1,6 +1,7 @@
 // Avatar frames, like Discord's avatar decorations: a ring or ornaments around the picture. Pure functions: each frame gets
 // the geometry and returns svg. Motion is plain CSS (A.loop), so it plays inside a README <img>; static frames hold a pose.
-import { levelColor } from "./levels.js";
+import { familyOf, levelColor } from "./levels.js";
+import { mix } from "./themes.js";
 
 const CX = 92;
 const CY = 90;
@@ -8,11 +9,12 @@ const HALF = 58; // the ring sits at this distance from the centre (circle radiu
 const CORNER = 30; // corner radius of the rounded avatar
 const r3 = (n) => Math.round(n * 1000) / 1000;
 
-export const FRAMES = ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"];
+export const FRAMES = ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"];
 export const FRAME_ANIMATIONS = ["default", "none", "spin", "pulse", "twinkle"];
 
-/** The frame `auto` picks for each level: richer as the level rises, the top 1% gets the aurora. */
-export const AUTO_FRAME = { E: "none", D: "ring", C: "double", B: "dashed", A: "neon", S: "flames", "S+": "aurora" };
+/** The frame `auto` picks for each letter: richer as the level rises; SSS gets the aurora and X the prism. */
+export const AUTO_FRAME = { E: "none", D: "ring", C: "double", B: "dashed", A: "neon", S: "flames", SSS: "aurora", X: "prism" };
+const PRISM = ["#ff5f6d", "#ff9f43", "#ffd93d", "#6bdb7a", "#4fd1ff", "#7c8cff", "#c77dff", "#ff6fd8"];
 
 // ---- geometry: the outline of the avatar (circle or rounded square), pushed out by `grow`
 function outline(shape, grow, w, extra = "") {
@@ -149,10 +151,26 @@ export function drawFrame(kind, g) {
       return `${outline(shape, 0, `stroke="${col}" stroke-width="2.4" opacity="0.6"`)}${march(3, 3, [30, 22], 9, 3)}${march(8, 2, [14, 18], 13, 4, -1, second)}${sp}`;
     }
 
+    case "orbit": {
+      // two small moons going round the avatar at different speeds and distances
+      const moon = (grow, r, dur, dir, fill) => spin(`<circle cx="${CX}" cy="${CY - HALF - grow}" r="${r}" fill="${fill}"/><circle cx="${CX}" cy="${CY - HALF - grow}" r="${r + 3}" fill="${fill}" opacity="0.25"/>`, dur, dir);
+      const moving = motion !== "none";
+      const body = `${outline(shape, 0, `stroke="${col}" stroke-width="1.8" opacity="0.7"`)}${outline(shape, 8, `stroke="${col}" stroke-width="0.8" opacity="0.3" stroke-dasharray="2 4"`)}`;
+      return body + (moving ? `${moon(8, 3.2, 6, 1, col)}${moon(8, 2.2, 9, -1, mix(col, "#ffffff", 0.5))}` : `<circle cx="${CX + HALF + 8}" cy="${CY}" r="3.2" fill="${col}"/>`);
+    }
+
+    case "prism": {
+      // the outline split into rainbow arcs that turn, with rainbow sparkles around
+      const n = PRISM.length;
+      const arcs = PRISM.map((p, i) => outline(shape, 1, `stroke="${p}" stroke-width="3.4" pathLength="100" stroke-dasharray="${r3(100 / n)} ${r3(100 - 100 / n)}" stroke-dashoffset="${r3((-i * 100) / n)}"`)).join("");
+      const sp = around(shape, 10, 8, 0.25).map((p, i) => `<g transform="translate(${r3(p.x)} ${r3(p.y)})"><path d="${sparkle(3.6)}" fill="${PRISM[i % n]}"${twinkle(i, 8)}/></g>`).join("");
+      return `${outline(shape, 1, `stroke="#fff" stroke-width="7" opacity="0.08"`)}${motionWrap(arcs, "spin")}${outline(shape, -2.5, `stroke="#fff" stroke-width="0.8" opacity="0.5"`)}${sp}`;
+    }
+
     default:
       return "";
   }
 }
 
 /** The frame to draw for a header config: the chosen one, or the one that fits the level for "auto". */
-export const frameFor = (frame, level) => (frame === "auto" ? AUTO_FRAME[level] ?? "ring" : frame);
+export const frameFor = (frame, level) => (frame === "auto" ? AUTO_FRAME[familyOf(level)] ?? "ring" : frame);

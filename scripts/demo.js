@@ -2,13 +2,14 @@
 // Renders a card from a config.json using deterministic demo data (no GitHub token, no network).
 // Used to generate the images in docs/ and presets/. Needs `npm install` for PNG output.
 //   node scripts/demo.js <config.json> <out-prefix> [--slot dark] [--scale 1] [--svg]
-//   showcase options: --top (a top 1% profile), --rank <E|D|C|B|A|S|S+> (force the header level),
+//   showcase options: --top (a top 1% profile), --rank <E … S+|SSS|X> (force the header level),
 //                     --levels (one trophy per level), --secrets <all|first,count> (the secret trophies), --crop x,y,w,h (only that part of the card)
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { needsExtras, normalize } from "../src/config.js";
+import { PERCENTILE_OF } from "../src/levels.js";
 import { render } from "../src/render.js";
 import { SECRETS } from "../src/secrets.js";
 import { summarize } from "../src/stats.js";
@@ -63,13 +64,12 @@ function secretTrophy(d) {
 const raw = JSON.parse(await readFile(configPath, "utf8"));
 const k = normalize(raw);
 const data = summarize(profile, k);
-const PERCENT = { E: 92, D: 78, C: 60, B: 38, A: 18, S: 6.9, "S+": 0.4 };
-if (o.rank) data.rank = { level: o.rank, percentile: PERCENT[o.rank] ?? 50 };
+if (o.rank) data.rank = { level: o.rank, percentile: (PERCENTILE_OF[o.rank] ?? 50) * 0.9 };
 if (o.levels) {
-  // one trophy per level, from the lowest to the top 1%, then a secret one
-  const names = ["Stars", "Commits", "Followers", "PullRequest", "Repositories", "Experience", "Stars"];
-  const labels = ["First Star", "First Friend", "Middle Pull", "High Puller", "Hyper Repo Creator", "Master Dev", "Super Stargazer"];
-  data.trophies = ["E", "D", "C", "B", "A", "S", "S+"].map((rank, i) => ({ title: names[i], rank, label: labels[i], score: [3, 25, 60, 140, 340, 720, 2400][i], progress: [0.3, 0.45, 0.6, 0.5, 0.7, 0.8, 1][i] }));
+  // a trophy for each letter (with a "+" and a "-" among them), from the lowest to SSS, then a secret one
+  const names = ["Stars", "Commits", "Followers", "PullRequest", "Repositories", "Experience", "Commits", "Stars"];
+  const labels = ["First Star", "Middle Committer", "Many Friends", "High Puller", "Hyper Repo Creator", "Master Dev", "Deep Committer", "Super Stargazer"];
+  data.trophies = ["E", "D+", "C", "B-", "A", "S-", "S+", "SSS"].map((rank, i) => ({ title: names[i], rank, label: labels[i], score: [3, 25, 60, 140, 340, 720, 2100, 2400][i], progress: [0.3, 0.45, 0.6, 0.5, 0.7, 0.8, 0.9, 1][i] }));
   data.trophies.push(secretTrophy(SECRETS.find((d) => d.title === "OGUser")));
 }
 if (o.secrets) {

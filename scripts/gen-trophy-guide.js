@@ -28,7 +28,7 @@ Both live in the same panel and follow the same options (see [Trophies](GUIDE.md
 
 <img src="docs/guide/trophies-levels.png">
 
-One cup per level, from **E** (first steps) to **S+** (the top 1%): **A** adds the laurel, **S** a second cup, **S+** three cups with a pulsing frame and a light that sweeps across. The level colours are the same as the header rank (\`levelE\` … \`levelTop\` in \`colors\`).
+One cup per level, from **E** (first steps) up to **SSS**, with the steps in between (E, E+, D-, D, D+ … S-, S, S+): **A** adds the laurel, **S-** and **S** a second cup, **S+** a third, and **SSS** a pulsing frame and a light that sweeps across. The table lists the thresholds of the letters; the `+` / `-` steps sit evenly between them. The level colours are the same as the header rank (\`levelE\` … \`levelTop\` in \`colors\`).
 
 `;
 for (const t of trophyTable()) {

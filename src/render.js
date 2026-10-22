@@ -2,7 +2,7 @@ import { BRANDS, CUP, ICONS, LAUREL } from "./icons.js";
 import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
 import { drawFrame, frameFor } from "./frames.js";
-import { ALL_LEVELS, isTop, levelColor } from "./levels.js";
+import { ALL_LEVELS, familyOf, fxTier, isTop, levelColor } from "./levels.js";
 import { snakeRoute } from "./snake.js";
 import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
@@ -167,7 +167,12 @@ function headerSection(d, X) {
   };
   // the progress colour: the colour of the level, lighter at the start (the top 1% runs from pink to gold)
   const lvCol = levelColor(c, d.rank.level);
-  X.defs.push(`<linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${mix(lvCol, "#ffffff", 0.35)}"/><stop offset="1" stop-color="${isTop(d.rank.level) ? levelColor(c, "S") : lvCol}"/></linearGradient>`);
+  const tier = fxTier(d.rank.level);
+  X.defs.push(
+    tier === 3
+      ? `<linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">${RAINBOW.map((col, i) => `<stop offset="${r3(i / (RAINBOW.length - 1))}" stop-color="${col}"/>`).join("")}</linearGradient>`
+      : `<linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${mix(lvCol, "#ffffff", 0.35)}"/><stop offset="1" stop-color="${isTop(d.rank.level) ? levelColor(c, "S") : lvCol}"/></linearGradient>`,
+  );
   const progress = 100 - d.rank.percentile;
   const pct = hs.rankIcon === "percentile";
   const gh = hs.rankIcon === "github";
@@ -183,30 +188,36 @@ function headerSection(d, X) {
   };
   const avatar = () => `${frame()}
     ${rounded ? `<clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>` : `<clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`}`;
-  const top = isTop(d.rank.level);
-  // the top 1%: a pulsing halo, a light that runs around the ring and sparkles that twinkle (plain CSS loops)
+  // effects grow with the level (plain CSS loops): S-, S, S+ a pulsing halo; SSS also a light that runs around the ring and
+  // sparkles; X all of that in rainbow colours, plus a second ring turning the other way and more sparkles
+  const haloRing = () => ringEl(9, `stroke="${lvCol}" stroke-width="2.5" opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`);
   const topRing = () => {
     const col = levelColor(c, d.rank.level);
+    const many = tier === 3 ? 10 : 6;
     const spark = (k) => {
-      const a = ((60 * k + 15) * Math.PI) / 180;
+      const a = (((360 / many) * k + (many === 10 ? 0 : 15)) * Math.PI) / 180; // never straight below, over the RANK label
       const x = r3(900 + 66 * Math.cos(a));
       const y = r3(90 + 66 * Math.sin(a));
       const s = 4.2;
-      return `<path d="M${x} ${r3(y - s)}L${r3(x + s * 0.3)} ${r3(y - s * 0.3)}L${r3(x + s)} ${y}L${r3(x + s * 0.3)} ${r3(y + s * 0.3)}L${x} ${r3(y + s)}L${r3(x - s * 0.3)} ${r3(y + s * 0.3)}L${r3(x - s)} ${y}L${r3(x - s * 0.3)} ${r3(y - s * 0.3)}Z" fill="${col}" opacity="0.9"${A.loop({ "0%,100%": "opacity:0;transform:scale(.3)", "50%": "opacity:1;transform:scale(1)" }, { dur: 2, delay: 1.2 + k * 0.33, origin: [x, y] })}/>`;
+      return `<path d="M${x} ${r3(y - s)}L${r3(x + s * 0.3)} ${r3(y - s * 0.3)}L${r3(x + s)} ${y}L${r3(x + s * 0.3)} ${r3(y + s * 0.3)}L${x} ${r3(y + s)}L${r3(x - s * 0.3)} ${r3(y + s * 0.3)}L${r3(x - s)} ${y}L${r3(x - s * 0.3)} ${r3(y - s * 0.3)}Z" fill="${tier === 3 ? RAINBOW[k % RAINBOW.length] : col}" opacity="0.9"${A.loop({ "0%,100%": "opacity:0;transform:scale(.3)", "50%": "opacity:1;transform:scale(1)" }, { dur: 2, delay: 1.2 + k * (2 / many), origin: [x, y] })}/>`;
     };
-    return `${ringEl(9, `stroke="${col}" stroke-width="2.5" opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`)}
-    ${ringEl(0, `stroke="#fff" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="7 93" opacity="0.55"${A.loop({ "0%": "stroke-dashoffset:0", "100%": "stroke-dashoffset:-100" }, { dur: 3.2, ease: "linear", delay: 1.2, still: ' stroke-dashoffset="-12"' })}`)}
-    ${Array.from({ length: 6 }, (_, k) => spark(k)).join("")}`;
+    // X: a dashed rainbow ring just outside, turning the other way
+    const xRing = tier === 3
+      ? `<g${A.loop({ "0%": "transform:rotate(0deg)", "100%": "transform:rotate(-360deg)" }, { dur: 14, ease: "linear", delay: 1.2, origin: [900, 90] })}>${ringEl(14, `stroke="url(#rg)" stroke-width="2" stroke-dasharray="6 6" opacity="0.8"`)}</g>`
+      : "";
+    return `${haloRing()}${xRing}
+    ${ringEl(0, `stroke="#fff" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="7 93" opacity="0.55"${A.loop({ "0%": "stroke-dashoffset:0", "100%": "stroke-dashoffset:-100" }, { dur: tier === 3 ? 2.2 : 3.2, ease: "linear", delay: 1.2, still: ' stroke-dashoffset="-12"' })}`)}
+    ${Array.from({ length: many }, (_, k) => spark(k)).join("")}`;
   };
   const rank = () => `<g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
     ${ringEl(0, `stroke="${c.track}" stroke-width="${thick}"`)}
     ${ringEl(0, `stroke="url(#rg)" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="100"${ringStyle === "ring" ? ' transform="rotate(-90 900 90)"' : ""}${A.a(0.5, 1.4, { dash: 100 }, { dash: 100 - progress })}`)}
-    ${top ? topRing() : ""}
+    ${tier >= 2 ? topRing() : tier === 1 ? haloRing() : ""}
     ${
       pct
         ? `<text x="900" y="97" text-anchor="middle" font-size="22" font-weight="700" font-family="${FD}" fill="${c.text}">${r3(d.rank.percentile).toFixed(1)}%</text>
     <text x="900" y="115" text-anchor="middle" font-size="10" fill="${c.muted}">${esc(tr("rankLabel", { l: d.rank.level }))}</text>`
-        : `${gh ? icon("github", 882, 70, 36, c.text) : `<text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="${FD}" fill="${levelColor(c, d.rank.level)}">${d.rank.level}</text>`}
+        : `${gh ? icon("github", 882, 70, 36, c.text) : `<text x="900" y="99" text-anchor="middle" font-size="${d.rank.level.length > 2 ? 24 : 30}" font-weight="700" font-family="${FD}" fill="${tier === 3 ? "url(#rg)" : levelColor(c, d.rank.level)}">${esc(d.rank.level)}</text>`}
     <text x="900" y="${gh ? 122 : 117}" text-anchor="middle" font-size="10" fill="${c.muted}">${esc(tr("top", { p: r3(d.rank.percentile).toFixed(1) }))}</text>`
     }
   </g>
@@ -493,15 +504,16 @@ function trophy(tr, X, o) {
   const base = secret ? c.accent2 : unknown ? c.muted : levelColor(c, tr.rank);
   const light = mix(base, "#ffffff", 0.28);
   const dark = mix(base, "#000000", 0.4);
-  const id = `tg-${secret ? "SECRET" : unknown ? "UNKNOWN" : tr.rank.replace("+", "P")}`;
+  const id = `tg-${secret ? "SECRET" : unknown ? "UNKNOWN" : tr.rank.replace("+", "P").replace("-", "M")}`;
+  const fam = secret || unknown ? "" : familyOf(tr.rank);
   const has = (p) => o.parts.has(p);
   const letter = secret ? "S" : unknown ? "?" : tr.rank;
   const cup = (fill) =>
-    `${CUP}<circle cx="8" cy="6" r="4" fill="#fff"/><text x="8" y="8.4" text-anchor="middle" font-family="Courier, monospace" font-size="${letter.length > 1 ? 5.4 : 7}" font-weight="700" fill="${mix(base, "#000000", 0.55)}">${esc(letter)}</text>`;
-  // cups: the top 1% has three (a big one between two small ones), S two, the rest one
-  const extra = secret || unknown ? 0 : { "S+": 2, S: 1 }[tr.rank] ?? 0;
+    `${CUP}<circle cx="8" cy="6" r="4" fill="#fff"/><text x="8" y="8.4" text-anchor="middle" font-family="Courier, monospace" font-size="${letter.length > 2 ? 3.8 : letter.length > 1 ? 5.4 : 7}" font-weight="700" fill="${mix(base, "#000000", 0.55)}">${esc(letter)}</text>`;
+  // cups: SSS and S+ have three (a big one between two small ones), S- and S two, the rest one
+  const extra = fam === "SSS" || tr.rank === "S+" ? 2 : fam === "S" ? 1 : 0;
   const small = (x) => `<svg x="${x}" y="35" width="65" height="65" viewBox="0 0 30 30" fill="${base}">${cup(base)}</svg>`;
-  const laurel = !secret && !unknown && ["S+", "S", "A"].includes(tr.rank)
+  const laurel = ["SSS", "S", "A"].includes(fam)
     ? `<svg width="120" height="120" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${LAUREL(c.base === "light" ? "#009366" : "#178600")}</svg>`
     : "";
   const score = tr.title === "Experience" ? `${tr.score} yrs` : secret ? "SECRET" : abridge(tr.score);
@@ -516,17 +528,20 @@ function trophy(tr, X, o) {
     has("bar") ? `<rect x="15" y="101" rx="1" width="80" height="3.2" opacity="0.3" fill="${base}"/>` : "",
   ].join("\n      ");
 
-  // the top 1%: the card border pulses and a light sweeps across it now and then
-  const topfx = tr.rank === "S+"
+  // SSS: the card border pulses and a light sweeps across it now and then
+  const topfx = fam === "SSS"
     ? `<rect x="0.5" y="0.5" width="109" height="109" rx="4.5" fill="none" stroke="${base}" stroke-width="1.6" opacity="0.6"${A.loop({ "0%,100%": "opacity:.25", "50%": "opacity:1" }, { dur: 2.4, delay: 1.8 })}/>
       <g opacity="0.5"${A.loop({ "0%": "transform:translateX(-40px)", "55%,100%": "transform:translateX(150px)" }, { dur: 3.6, delay: 2, still: ' transform="translate(30 0)"' })}><rect x="0" y="-10" width="22" height="140" fill="url(#${id}-shine)" transform="rotate(18 11 55)"/></g>`
     : "";
   return {
-    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)"><stop offset="0%" stop-color="${light}"/><stop offset="70%" stop-color="${base}"/><stop offset="100%" stop-color="${dark}"/></linearGradient>${tr.rank === "S+" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
+    defs: `<linearGradient id="${id}" gradientTransform="rotate(45)"><stop offset="0%" stop-color="${light}"/><stop offset="70%" stop-color="${base}"/><stop offset="100%" stop-color="${dark}"/></linearGradient>${fam === "SSS" ? `<linearGradient id="${id}-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : ""}`,
     body: parts + topfx,
     bar: has("bar") ? { x: 15, y: 101, w: 80, h: 3.2, color: base } : null,
   };
 }
+
+/** `ranks` / `hideRanks` hold levels; a bare letter stands for its whole family (B = B-, B, B+). */
+const rankIn = (set, r) => set.has(r) || (r !== "SECRET" && r !== "?" && set.has(familyOf(r)));
 
 function trophiesSection(d, X, W = 940) {
   const { c, A, k, tr } = X;
@@ -535,8 +550,8 @@ function trophiesSection(d, X, W = 940) {
     (t) =>
       (!o.titles.size || trophyMatches(t.title, o.titles)) &&
       !trophyMatches(t.title, o.hideTitles) &&
-      (!o.ranks.size || o.ranks.has(t.rank)) &&
-      !o.hideRanks.has(t.rank),
+      (!o.ranks.size || rankIn(o.ranks, t.rank)) &&
+      !rankIn(o.hideRanks, t.rank),
   );
   if (!list.length) return null;
   // `titles` is also the order: the trophies appear in the order they are listed there

@@ -1,5 +1,5 @@
 import { normalize } from "./config.js";
-import { ALL_LEVELS, TOP, levelOfPercentile } from "./levels.js";
+import { ALL_LEVELS, familyOf, levelOfPercentile } from "./levels.js";
 import { SECRETS, funFacts } from "./secrets.js";
 
 // Pure scoring functions. Algorithms ported from MIT-licensed projects:
@@ -123,9 +123,19 @@ export function calendarFacts(days) {
   return { bestDay: best, busiestWeekday: names[busiestWeekdayIndex], busiestWeekdayIndex, thisYear };
 }
 
-// Every title has 8 thresholds (highest first); they become the 7 levels S+, S, A, B, C, D, E (the second old "A" folds into B).
-const LEVEL_TIER = [0, 1, 2, 3, 5, 6, 7];
-const TROPHY_LEVELS = [...ALL_LEVELS].reverse();
+// Every title has 8 thresholds (highest first). They anchor SSS, S+, S, A, B, C, D, E; between two anchors the score is split
+// evenly into the levels in between (A -> A, A+, S-), so a trophy climbs one step at a time. X is the header's alone.
+const ANCHORS = ["SSS", "S+", "S", "A", "B", "C", "D", "E"].map((l) => ALL_LEVELS.indexOf(l));
+/** [level, min score] for each trophy level, lowest first; the minimum of a level between two anchors is interpolated. */
+const steps = (reqs) => {
+  const out = [];
+  for (let a = 7; a > 0; a--) {
+    const [lo, hi] = [ANCHORS[a], ANCHORS[a - 1]];
+    for (let i = lo; i < hi; i++) out.push([ALL_LEVELS[i], reqs[a] + ((reqs[a - 1] - reqs[a]) * (i - lo)) / (hi - lo)]);
+  }
+  out.push(["SSS", reqs[0]]);
+  return out;
+};
 const TROPHIES = [
   ["Stars", "stars", [2000, 700, 200, 100, 50, 30, 10, 1],
     ["Super Stargazer", "High Stargazer", "Stargazer", "Super Star", "High Star", "You are a Star", "Middle Star", "First Star"]],
@@ -161,20 +171,21 @@ export const trophyMatches = (title, tokens) => {
 export const trophyTable = () =>
   TROPHIES.map(([title, key, reqs, labels, optional]) => ({
     title, key, optional: !!optional,
-    levels: LEVEL_TIER.map((t, i) => ({ level: TROPHY_LEVELS[i], min: reqs[t], label: labels[t] })),
+    levels: ANCHORS.map((li, t) => ({ level: ALL_LEVELS[li], min: reqs[t], label: labels[t] })),
   }));
 
 /** s: { fun (see funFacts, optional), stars, commits, followers, issues, prs, repos, reviews, experience(days/100), years, organizations, languageCount, firstYear }; extra: Set of "issues"/"reviews" */
 export function trophies(s, extra = new Set()) {
   const list = TROPHIES.filter((t) => !t[4] || extra.has(t[0].toLowerCase())).map(([title, key, reqs, labels]) => {
     const score = s[key];
-    const lreqs = LEVEL_TIER.map((t) => reqs[t]);
-    const i = lreqs.findIndex((r) => score >= r);
-    const rank = i === -1 ? "?" : TROPHY_LEVELS[i];
-    const progress = i === -1 ? Math.min(score / lreqs.at(-1), 1) : i === 0 ? 1 : (score - lreqs[i]) / (lreqs[i - 1] - lreqs[i]);
-    return { title, rank, label: i === -1 ? "Unknown" : labels[LEVEL_TIER[i]], score: key === "experience" ? s.years : score, progress };
+    const st = steps(reqs);
+    const i = st.findLastIndex(([, min]) => score >= min);
+    const rank = i === -1 ? "?" : st[i][0];
+    const progress = i === -1 ? Math.min(score / st[0][1], 1) : i === st.length - 1 ? 1 : (score - st[i][1]) / (st[i + 1][1] - st[i][1]);
+    const tier = reqs.findIndex((r) => score >= r); // the label is the one of the highest anchor reached
+    return { title, rank, label: tier < 0 ? "Unknown" : labels[tier], score: key === "experience" ? s.years : score, progress };
   });
-  const allSuper = list.filter((t) => BASE.includes(t.title)).every((t) => t.rank === "S" || t.rank === TOP);
+  const allSuper = list.filter((t) => BASE.includes(t.title)).every((t) => ["S", "SSS"].includes(familyOf(t.rank)));
   const ctx = { ...s, allSuper };
   const f = s.fun ?? funFacts({});
   for (const d of SECRETS) {

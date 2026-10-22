@@ -19,7 +19,7 @@
         "track_color": { "$ref": "#/definitions/hex" }, "stroke_color": { "$ref": "#/definitions/hex" },
         "currStreakNum": { "$ref": "#/definitions/hex" }, "sideNums": { "$ref": "#/definitions/hex" }, "currStreakLabel": { "$ref": "#/definitions/hex" },
         "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" }, "frameColor": { "$ref": "#/definitions/hex" },
-        "levelE": { "$ref": "#/definitions/hex" }, "levelD": { "$ref": "#/definitions/hex" }, "levelC": { "$ref": "#/definitions/hex" }, "levelB": { "$ref": "#/definitions/hex" }, "levelA": { "$ref": "#/definitions/hex" }, "levelS": { "$ref": "#/definitions/hex" }, "levelTop": { "$ref": "#/definitions/hex" },
+        "levelE": { "$ref": "#/definitions/hex" }, "levelD": { "$ref": "#/definitions/hex" }, "levelC": { "$ref": "#/definitions/hex" }, "levelB": { "$ref": "#/definitions/hex" }, "levelA": { "$ref": "#/definitions/hex" }, "levelS": { "$ref": "#/definitions/hex" }, "levelTop": { "$ref": "#/definitions/hex" }, "levelX": { "$ref": "#/definitions/hex" },
         "bg_gradient": { "type": "string" }
       }
     },
@@ -103,7 +103,7 @@
       "type": "object", "additionalProperties": false,
       "properties": {
         "avatar": { "enum": ["circle", "rounded", "hide"], "default": "circle" },
-        "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S flames, S+ aurora). Colour: colors.frameColor, default the level colour." },
+        "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S flames, SSS aurora, X prism). Colour: colors.frameColor, default the level colour." },
         "flag": { "type": ["string", "null"], "default": null, "description": "Path of a flag image (svg/png, 4:3) drawn under the name, e.g. assets/img/flags/it.svg." },
         "rankStyle": { "enum": ["ring", "hexagon", "shield"], "default": "ring", "description": "The shape of the rank indicator." },
         "rankThickness": { "type": "number", "minimum": 4, "maximum": 16, "default": 8 },
@@ -160,7 +160,7 @@
         "title": { "type": ["string", "null"] },
         "titles": { "$ref": "#/definitions/strs", "description": "Only these trophies (aliases: Star, Commit, Follower, Issue, PR, Repo, Review, Duration, Orgs...)." },
         "hideTitles": { "$ref": "#/definitions/strs" },
-        "ranks": { "$ref": "#/definitions/strs", "description": "Only these ranks (E D C B A S S+ SECRET). A \"-\" prefix drops one, e.g. -E." },
+        "ranks": { "$ref": "#/definitions/strs", "description": "Only these ranks (E, E+, D-, D … S+, SSS, SECRET; a bare letter means its whole family). A \"-\" prefix drops one, e.g. -E." },
         "hideRanks": { "$ref": "#/definitions/strs" },
         "columns": { "type": "integer", "minimum": -1, "maximum": 12, "default": 0, "description": "0 or -1 = all in one row." },
         "rows": { "type": "integer", "minimum": 0, "maximum": 10, "default": 0, "description": "0 = no limit." },

@@ -62,11 +62,11 @@ profile-forge works differently:
 | Section | Details |
 |---|---|
 | Header | Avatar, name, account age, contributions this year, best day, most active weekday |
-| Rank | One scale, E, D, C, B, A, S and the animated top 1% level S+, from your github-readme-stats percentile, as a ring, hexagon or shield with a colour per level |
+| Rank | One scale with steps, E, E+, D- … S-, S, S+, then SSS and the secret X (top 0.1%), from your github-readme-stats percentile, animated more and more from S up, as a ring, hexagon or shield with a colour per level |
 | Stats | Stars, all-time commits, PRs, issues, code reviews, repos contributed to, followers, repositories |
 | Streak | Total contributions, current streak and longest streak with date ranges (a day with zero contributions *today* does not break the streak) |
 | Top languages | Animated stacked bar and legend, with configurable `size_weight` / `count_weight` ranking |
-| Trophies | The classic cup in the colour of its level (laurel from A, two cups at S, three and a shimmer at S+), plus 66 secret trophies (gems with their own glyph) earned from your calendar, repos, languages and profile |
+| Trophies | The classic cup in the colour of its level (laurel from A, two cups at S, three at S+, a shimmer at SSS), plus 66 secret trophies (gems with their own glyph) earned from your calendar, repos, languages and profile |
 | Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes, moons or a honeycomb of hexagons, or as an animated snake that eats them (any length, classic, rainbow or glowing) |
 | Terminal | A terminal window whose commands type themselves, with your own lines |
 | Rhythm | When you code: average contributions per weekday and total per month, as animated bars |
@@ -74,13 +74,13 @@ profile-forge works differently:
 
 ### Levels, trophies and frames
 
-One ranking for the whole card: **E, D, C, B, A, S** and the animated **S+** for the top 1%. The header rank and the trophies use it, with a colour per level (`levelE` … `levelTop`).
+One ranking for the whole card: **E, E+, D-, D, D+ … S-, S, S+**, then **SSS** and the secret **X** for the top 0.1%. The header rank and the trophies use it, with a colour per letter (`levelE` … `levelTop`, `levelX`).
 
 <p align="center"><img src="docs/guide/trophies-levels.png" width="92%"></p>
 
 <table>
 <tr>
-<td align="center"><b>Top 1% (S+)</b><br><img src="docs/guide/header-top-animated.svg" width="420"></td>
+<td align="center"><b>The secret X (top 0.1%)</b><br><img src="docs/guide/header-top-animated.svg" width="420"></td>
 <td align="center"><b>Avatar frames</b> (<code>aurora</code>, <code>flames</code>, <code>neon</code>)<br><img src="docs/guide/frame-aurora-animated.svg" width="130"> <img src="docs/guide/frame-flames-animated.svg" width="130"> <img src="docs/guide/frame-neon-animated.svg" width="130"></td>
 </tr>
 </table>
@@ -210,7 +210,7 @@ Built in: `dark`, `light`, `github-dark`, `github-dark-dimmed`, `dracula`, `nord
 | `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
 | `icon_color`, `ring_color` | icons / accent, second accent (rank ring, gradients) |
 | `frameColor` | the avatar frame |
-| `levelE` … `levelS`, `levelTop` | the colour of each level (`levelTop` = top 1%) |
+| `levelE` … `levelS`, `levelTop`, `levelX` | the colour of each letter (`levelTop` = SSS, `levelX` = X) |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | per-element streak colors |
 | `snakeColor` | the heatmap snake |
@@ -229,7 +229,7 @@ Names follow the three projects the card is built on. A `—` means the original
 | Section | Option | Original | Meaning |
 |---|---|---|---|
 | card | `radius`, `hideBorder`, `animations`, `background.*` | `border_radius`, `hide_border`, `disable_animations`, `bg_color` gradients | corners, border, CSS animation, gradient / `dots` `grid` `diagonal` pattern / glow |
-| header | `avatar`, `frame`, `frameAnimation`, `facts`, `rankIcon`, `rankStyle`, `rankThickness` | `rank_icon`, `hide_rank` | `circle` `rounded` `hide`; frame: `ring` `none` `auto` `double` `dashed` `neon` `pixel` `glitch` `laurel` `flames` `sakura` `stars` `halo` `aurora`; up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers`; the rank shows `level`, `percentile` or the `github` mark, as a `ring`, `hexagon` or `shield` |
+| header | `avatar`, `frame`, `frameAnimation`, `facts`, `rankIcon`, `rankStyle`, `rankThickness` | `rank_icon`, `hide_rank` | `circle` `rounded` `hide`; frame: `ring` `none` `auto` `double` `dashed` `neon` `pixel` `glitch` `laurel` `flames` `sakura` `stars` `halo` `aurora` `orbit` `prism`; up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers`; the rank shows `level`, `percentile` or the `github` mark, as a `ring`, `hexagon` or `shield` |
 | stats | `hide`, `show`, `icons`, `numberFormat`, `numberPrecision`, `textBold`, `lineHeight`, `title`, `commitsYear`, `excludeRepos` | `hide`, `show`, `show_icons`, `number_format`, `number_precision`, `text_bold`, `line_height`, `custom_title`, `commits_year`, `exclude_repo` | `show` adds `prsMerged`, `prsMergedPercentage`, `discussionsStarted`, `discussionsAnswered` (extra GraphQL calls, only when requested) |
 | streak | `hide`, `mode`, `excludeDays`, `startingYear`, `dateFormat`, `shortNumbers`, `excludeDaysLabel`, `title` | `hide_*_streak`, `mode`, `exclude_days`, `starting_year`, `date_format`, `short_numbers` | `weekly` counts Sunday–Saturday weeks; excluded days neither extend nor break a streak; `[...]` in `dateFormat` is hidden for the current year |
 | languages | `layout`, `count`, `hide`, `excludeRepos`, `hideProgress`, `statsFormat`, `sizeWeight`, `countWeight`, `title` | `layout`, `langs_count`, `hide`, `exclude_repo`, `hide_progress`, `stats_format`, `size_weight`, `count_weight` | `bar` `compact` `donut` `donut-vertical` `pie`; `bytes` shows sizes instead of percentages; score = `bytes^sizeWeight × repos^countWeight` |
@@ -320,7 +320,7 @@ Flags override `config.json`. Any config key can be set with `--set path=value` 
 ## How the numbers are computed
 
 - **Rank:** `1 − Σwᵢ·cdf(xᵢ/medianᵢ) / Σwᵢ`, using exponential CDFs for commits (median 1000, w=2), PRs (50, w=3), issues (25, w=1) and reviews (2, w=1), and log-normal CDFs for stars (50, w=4) and followers (10, w=1). The percentile is mapped to S+ / S / A / B / C / D / E at 1 / 10 / 25 / 50 / 70 / 85 / 100.
-- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each with seven levels (S+ → E), drawn as the classic cup with its laurel in the colour of the level: A has the laurel, S two cups, the top 1% (S+) three cups. Secret trophies appear only once earned, drawn as cut gems instead of cups: 66 of them, from calendar curiosities (100 Days, Full Orbit, Perfect Week, Santa's Helper, Friday 13th, Pi Day...) to repository, language and community ones (Hit Single, Dotfile Devotee, Rustacean, Esolang Explorer, Backed, Hubber...). See the [trophy guide](TROPHIES.md) for every trophy and the exact rules.
+- **Trophies:** Stars, Commits, Followers, PullRequest, Repositories and Experience, each on the same stepped scale (SSS → E), drawn as the classic cup with its laurel in the colour of the level: A has the laurel, S two cups, the top 1% (S+) three cups. Secret trophies appear only once earned, drawn as cut gems instead of cups: 66 of them, from calendar curiosities (100 Days, Full Orbit, Perfect Week, Santa's Helper, Friday 13th, Pi Day...) to repository, language and community ones (Hit Single, Dotfile Devotee, Rustacean, Esolang Explorer, Backed, Hubber...). See the [trophy guide](TROPHIES.md) for every trophy and the exact rules.
 - **Streak:** computed from your daily contribution calendar across every year since you joined, in the configured time zone.
 
 ## Development

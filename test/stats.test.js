@@ -5,11 +5,11 @@ import { normalize, setPath } from "../src/config.js";
 import { parseColors, THEME_NAMES } from "../src/themes.js";
 import { calculateRank, computeStreak, summarize, topLanguages, trophies } from "../src/stats.js";
 
-test("rank: zero activity is E, heavy activity is the top 1% level", () => {
+test("rank: zero activity is E, heavy activity is the secret X level (top 0.1%)", () => {
   assert.equal(calculateRank({ commits: 0, prs: 0, issues: 0, reviews: 0, stars: 0, followers: 0 }).level, "E");
   const top = calculateRank({ commits: 20000, prs: 2000, issues: 1000, reviews: 500, stars: 100000, followers: 10000 });
-  assert.equal(top.level, "S+");
-  assert.ok(top.percentile < 1);
+  assert.equal(top.level, "X");
+  assert.ok(top.percentile < 0.1);
 });
 
 test("streak: today with 0 keeps the streak, a past gap breaks it", () => {
@@ -39,12 +39,12 @@ test("languages: forks and hidden ignored, count weight ranks by repo count", ()
 test("trophies: tiers and secret trophies", () => {
   const t = trophies({ stars: 227, commits: 5000, followers: 0, issues: 1, prs: 27, repos: 59, reviews: 0, experience: 16, years: 4, organizations: 3, languageCount: 12, firstYear: 2022 });
   const rank = Object.fromEntries(t.map((x) => [x.title, x.rank]));
-  assert.equal(rank.Stars, "A");
-  assert.equal(rank.Commits, "S+");
+  assert.equal(rank.Stars, "S");
+  assert.equal(rank.Commits, "SSS");
   assert.equal(rank.Followers, "?");
   assert.equal(rank.Issues, undefined);
   assert.equal(rank.PullRequest, "C");
-  assert.equal(rank.Experience, "C");
+  assert.equal(rank.Experience, "B-");
   assert.ok(rank.MultiLanguage && rank.Organizations);
   assert.ok(!rank.LongTimeUser);
 });
@@ -177,7 +177,12 @@ test("trophies: filters, grid, extras, secrets", () => {
   assert.ok(only.includes('fill="none" stroke="none"'));
   assert.ok(!render(d, { k: normalize({ trophies: { hideTitles: ["PR"], ranks: ["-C"] } }) }).includes(">PullRequest<"));
   assert.throws(() => normalize({ trophies: { ranks: ["nope"] } }), /unknown rank "nope"/);
-  assert.throws(() => normalize({ trophies: { ranks: ["SSS"] } }), /no longer exists.*use "S\+"/);
+  assert.throws(() => normalize({ trophies: { ranks: ["SS"] } }), /no longer exists.*use "S\+"/);
+  assert.ok(normalize({ trophies: { ranks: ["SSS", "A-", "-E+"] } }));
+  // a bare letter stands for its whole family: hiding B hides B-, B and B+
+  const fam = (hideRanks) => { const [d2] = make(); d2.trophies = ["B-", "B", "B+", "A"].map((rank, i) => ({ title: `T${i}`, rank, label: "x", score: 1, progress: 0 })); return render(d2, { k: normalize({ layout: ["trophies"], trophies: { hideRanks } }), t: 1 }); };
+  assert.deepEqual(["T0", "T1", "T2", "T3"].map((t) => fam(["B"]).includes(`>${t}<`)), [false, false, false, true]);
+  assert.deepEqual(["T0", "T1", "T2", "T3"].map((t) => fam(["B+"]).includes(`>${t}<`)), [true, true, false, true]);
   assert.throws(() => normalize({ trophies: { hideRanks: ["AAA"] } }), /no longer exists/);
   assert.ok(!render(d, { k: normalize({ trophies: { ranks: ["Z"].filter(() => false) } }) }).includes("undefined"));
   assert.ok(render(d, { k: normalize({ trophies: { columns: 2, rows: 2 } }) }).includes("TROPHIES"));
@@ -319,30 +324,39 @@ test("margins: room under the last card, and the first card never sits on the bo
   assert.equal(grid([{ section: "header" }, { section: "stats", cols: 3 }])[0].y, 0);
 });
 
-test("levels: E D C B A S and the top 1% level, one scale for the header and the trophies", async () => {
-  const { levelOfPercentile, ALL_LEVELS } = await import("../src/levels.js");
-  assert.deepEqual(ALL_LEVELS, ["E", "D", "C", "B", "A", "S", "S+"]);
-  const at = [0.5, 1, 1.01, 10, 10.01, 25, 25.5, 50, 60, 70, 80, 85, 99.9].map(levelOfPercentile);
-  assert.deepEqual(at, ["S+", "S+", "S", "S", "A", "A", "B", "B", "C", "C", "D", "D", "E"]);
-  // trophies: the 8 old thresholds fold into the 7 levels (the old second "A" threshold is dropped)
+test("levels: E, E+, D- … S-, S, S+, SSS and the secret X, one scale for the header and the trophies", async () => {
+  const { levelOfPercentile, ALL_LEVELS, levelColor, familyOf } = await import("../src/levels.js");
+  assert.deepEqual(ALL_LEVELS, ["E", "E+", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S-", "S", "S+", "SSS", "X"]);
+  const at = [0.05, 0.1, 0.3, 1, 2, 5, 9, 12, 18, 20, 25, 35, 40, 50, 55, 65, 70, 80, 90, 99.9].map(levelOfPercentile);
+  assert.deepEqual(at, ["X", "X", "SSS", "S+", "S", "S-", "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E+", "E"]);
+  assert.deepEqual(["A-", "SSS", "X"].map(familyOf), ["A", "SSS", "X"]);
+  // "+" and "-" shade the colour of their letter, so they are related but not the same
+  const { resolveTheme } = await import("../src/themes.js");
+  const c = resolveTheme("dark");
+  assert.ok(new Set(["B-", "B", "B+"].map((l) => levelColor(c, l))).size === 3 && levelColor(c, "B") === c.lvB);
+  // trophies: the 8 old thresholds anchor SSS, S+, S, A, B, C, D, E and the levels in between are interpolated
   const { trophies } = await import("../src/stats.js");
   const level = (stars) => trophies({ stars, commits: 0, followers: 0, issues: 0, prs: 0, repos: 0, reviews: 0, experience: 0, years: 0, organizations: 0, languageCount: 0, firstYear: 2023 }).find((t) => t.title === "Stars").rank;
-  assert.deepEqual([2000, 700, 200, 100, 50, 30, 10, 1, 0].map(level), ["S+", "S", "A", "B", "C", "C", "D", "E", "?"]);
+  assert.deepEqual([2000, 700, 200, 170, 134, 100, 50, 30, 10, 1, 0].map(level), ["SSS", "S+", "S", "S-", "A+", "A", "B", "C", "D", "E", "?"]);
 });
 
-test("top 1% (S+) has looping effects on the ring and the trophies; other levels do not; static frames stay still", () => {
+test("rank effects grow with the level: S a halo, SSS also a running light, sparkles and shimmering trophies, X in rainbow", () => {
   const view = (level, t) => {
     const [d, k] = make({ layout: ["header", "trophies"] });
-    d.rank = { level, percentile: level === "S+" ? 0.4 : 30 };
+    d.rank = { level, percentile: 30 };
     d.trophies = d.trophies.filter((t) => t.rank !== "SECRET"); // secret trophies twinkle at every level
-    if (level === "S+") for (const tr of d.trophies) if (tr.rank === "S") tr.rank = "S+";
+    if (level === "SSS") for (const tr of d.trophies) tr.rank = "SSS";
     return render(d, { k, t });
   };
-  const top = view("S+");
+  const s = view("S-");
+  assert.ok(/@keyframes lp\d+/.test(s) && !s.includes('stroke-dasharray="7 93"'), "S: only the halo");
+  const x = view("X");
+  assert.ok(x.includes('stroke-dasharray="6 6"') && x.includes("#ff5f6d") && x.includes('fill="url(#rg)">X<'), "X: a second ring and the rainbow");
+  assert.ok(!/@keyframes lp\d+/.test(view("A+")), "below S there are no loops");
+  const top = view("SSS");
   assert.ok(/@keyframes lp\d+/.test(top) && top.includes('stroke-dasharray="7 93"'), "halo, running light and sparkles");
   assert.ok(top.includes("-shine"), "the trophies shimmer");
-  assert.ok(!/@keyframes lp\d+/.test(view("A")), "a normal level has no loops");
-  const still = view("S+", 1);
+  const still = view("SSS", 1);
   assert.ok(!/@keyframes/.test(still) && still.includes('stroke-dashoffset="-12"'), "static frame: the same ring, held still");
 });
 
@@ -381,11 +395,13 @@ test("avatar frames: every frame draws, auto follows the level, shapes and stati
     seen.add(view({ frame }).length);
   }
   assert.ok(seen.size > 8, "the frames look different from each other");
-  assert.deepEqual(Object.keys(AUTO_FRAME), ["E", "D", "C", "B", "A", "S", "S+"]);
-  assert.equal(view({ frame: "auto" }, "E").length, plain.length, "E: no frame");
-  assert.ok(view({ frame: "auto" }, "S+").includes("stroke-dasharray=\"30 22\""), "S+: the aurora");
+  assert.deepEqual(Object.keys(AUTO_FRAME), ["E", "D", "C", "B", "A", "S", "SSS", "X"]);
+  assert.equal(view({ frame: "auto" }, "E+"), view({ frame: "none" }, "E+"), "E and E+: no frame");
+  assert.ok(view({ frame: "auto" }, "SSS").includes("stroke-dasharray=\"30 22\""), "SSS: the aurora");
+  assert.ok(view({ frame: "auto" }, "X").includes('stroke-dasharray="12.5 87.5"'), "X: the prism");
+  assert.equal(view({ frame: "auto" }, "A-"), view({ frame: "neon" }, "A-"), "a level uses the frame of its letter");
   assert.ok(view({ frame: "flames" }, "A", undefined, { frameColor: "00ff88" }).includes("#00ff88"), "frameColor overrides the level colour");
-  assert.ok(!/@keyframes lp/.test(view({ frame: "aurora" }, "S", 1)) && !/@keyframes lp/.test(view({ frame: "neon", frameAnimation: "none" }, "S")), "static frames and 'none' do not move");
+  assert.ok(!/@keyframes lp/.test(view({ frame: "aurora" }, "S", 1)) && !/@keyframes lp/.test(view({ frame: "neon", frameAnimation: "none" }, "A")), "static frames and 'none' do not move");
   assert.throws(() => normalize({ header: { frame: "gold" } }), /header\.frame/);
   assert.throws(() => normalize({ header: { frameAnimation: "wobble" } }), /header\.frameAnimation/);
 });

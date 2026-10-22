@@ -112,7 +112,7 @@ export const COLOR_KEYS = {
   title_color: ["title"], stroke_color: ["streakStroke"],
   currStreakNum: ["streakCurrNum"], sideNums: ["streakSideNums"], currStreakLabel: ["streakCurrLabel"],
   sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"], frameColor: ["frame"],
-  levelE: ["lvE"], levelD: ["lvD"], levelC: ["lvC"], levelB: ["lvB"], levelA: ["lvA"], levelS: ["lvS"], levelTop: ["lvTop"],
+  levelE: ["lvE"], levelD: ["lvD"], levelC: ["lvC"], levelB: ["lvB"], levelA: ["lvA"], levelS: ["lvS"], levelTop: ["lvTop"], levelX: ["lvX"],
   bg_gradient: ["bgGradient"],
 };
 export const COLOR_NAMES = Object.keys(COLOR_KEYS);
@@ -174,7 +174,7 @@ export function resolveTheme(name, colors = {}) {
   c.streakStroke ??= c.border;
   c.streakExcl ??= c.muted;
   c.snake ??= c.accent2;
-  // one colour per level (E .. S, and the top 1%). The defaults are the same in every theme, so the levels always look different
+  // one colour per letter (E .. S, SSS and X; "+" / "-" only shade it, see levels.js). The defaults are the same in every theme, so the levels always look different
   // from each other (a green theme would otherwise make them all green); light themes get them a little darker.
   const lv = (hex) => (c.base === "light" ? mix(hex, "#000000", 0.16) : hex);
   c.lvE ??= lv("#8b93a1"); // grey
@@ -183,7 +183,8 @@ export function resolveTheme(name, colors = {}) {
   c.lvB ??= lv("#b98cff"); // purple
   c.lvA ??= lv("#ff9f43"); // orange
   c.lvS ??= lv("#ffd23f"); // gold
-  c.lvTop ??= lv("#ff5fd2"); // pink
+  c.lvTop ??= lv("#ff5fd2"); // pink (SSS)
+  c.lvX ??= lv("#5ef6ff"); // electric cyan (X, the top 0.1%)
   c.name = name;
   return c;
 }

@@ -23,8 +23,13 @@ const AVATAR = ["--crop", "0,0,400,185"]; // the avatar and its frame only
 const CASES = {
   // levels, rank shapes and the top 1% (rank-top and the *-top cases are also written as animated svg)
   ...Object.fromEntries(["E", "D", "C", "B", "A", "S"].map((l) => [`rank-${l}`, { ...only("header"), args: ["--rank", l, ...RING] }])),
-  "rank-top": { ...only("header"), args: ["--rank", "S+", ...RING] },
-  "rank-top-animated": { ...only("header"), args: ["--rank", "S+", ...RING], svg: true },
+  "rank-plus": { ...only("header"), args: ["--rank", "B+", ...RING] },
+  "rank-minus": { ...only("header"), args: ["--rank", "B-", ...RING] },
+  "rank-top": { ...only("header"), args: ["--rank", "SSS", ...RING] },
+  "rank-top-animated": { ...only("header"), args: ["--rank", "SSS", ...RING], svg: true },
+  "rank-s-animated": { ...only("header"), args: ["--rank", "S", ...RING], svg: true },
+  "rank-x": { ...only("header"), args: ["--rank", "X", ...RING] },
+  "rank-x-animated": { ...only("header"), args: ["--rank", "X", ...RING], svg: true },
   "rank-hexagon": { ...only("header"), header: { rankStyle: "hexagon" }, args: ["--rank", "A", ...RING] },
   "rank-shield": { ...only("header"), header: { rankStyle: "shield" }, args: ["--rank", "A", ...RING] },
   "rank-thick": { ...only("header"), header: { rankThickness: 14 }, args: ["--rank", "B", ...RING] },
@@ -40,8 +45,8 @@ const CASES = {
   // avatar frames (all of them as images, a few also as animated svg)
   ...Object.fromEntries(FRAMES.filter((f) => f !== "none").map((f) => [`frame-${f}`, { ...only("header"), header: { frame: f }, args: ["--rank", f === "auto" ? "S" : "A", ...AVATAR] }])),
   "frame-rounded": { ...only("header"), header: { frame: "neon", avatar: "rounded" }, args: ["--rank", "A", ...AVATAR] },
-  "frame-auto-top": { ...only("header"), header: { frame: "auto" }, args: ["--rank", "S+"] },
-  ...Object.fromEntries(["neon", "flames", "stars", "aurora", "glitch"].map((f) => [`frame-${f}-animated`, { ...only("header"), header: { frame: f }, args: ["--rank", f === "aurora" ? "S+" : "A", ...AVATAR], svg: true }])),
+  "frame-auto-top": { ...only("header"), header: { frame: "auto" }, args: ["--rank", "X"] },
+  ...Object.fromEntries(["neon", "flames", "stars", "aurora", "glitch", "orbit", "prism"].map((f) => [`frame-${f}-animated`, { ...only("header"), header: { frame: f }, args: ["--rank", { aurora: "SSS", prism: "X" }[f] ?? "A", ...AVATAR], svg: true }])),
   "frame-color": { ...only("header"), header: { frame: "double" }, colors: { frameColor: "00e5a0" }, args: ["--rank", "A", ...AVATAR] },
   // heatmap shapes and the snake
   ...Object.fromEntries(["triangle", "snowflake", "moon", "mixed"].map((s) => [`heatmap-${s}`, { ...only("heatmap"), heatmap: { cell: s } }])),

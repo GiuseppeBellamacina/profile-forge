@@ -203,19 +203,35 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 
 ### Rank levels
 
-One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the special level **S+**. The header rank and the trophies use it. The header level comes from your percentile (the github-readme-stats formula): S+ is the top 1%, S up to 10%, A up to 25%, B up to 50%, C up to 70%, D up to 85%, E below. Trophies place each of their eight old thresholds on the same scale, and S+ is their highest threshold. Every level has its own colour, the same in every theme so the levels are always easy to tell apart (grey, blue, green, purple, orange, gold, pink); change them with the colour overrides `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS` and `levelTop`.
+One scale for the whole card, from low to high: **E, E+, D-, D, D+, C-, C, C+, B-, B, B+, A-, A, A+, S-, S, S+, SSS** and the secret **X**. The header rank and the trophies use it. The header level comes from your percentile (the github-readme-stats formula, the share of users above you):
 
-| `E` | `D` | `C` | `B` |
+| Level | Percentile | | Level | Percentile | | Level | Percentile |
+|---|---|---|---|---|---|---|---|
+| **X** | top 0.1% | | **A** | ≤ 14% | | **C-** | ≤ 60% |
+| **SSS** | ≤ 0.5% | | **A-** | ≤ 19% | | **D+** | ≤ 68% |
+| **S+** | ≤ 1.5% | | **B+** | ≤ 23% | | **D** | ≤ 76% |
+| **S** | ≤ 3% | | **B** | ≤ 30% | | **D-** | ≤ 84% |
+| **S-** | ≤ 7% | | **B-** | ≤ 37% | | **E+** | ≤ 92% |
+| **A+** | ≤ 10% | | **C+** | ≤ 45% | | **E** | the rest |
+| | | | **C** | ≤ 52% | | | |
+
+Trophies place their eight thresholds on the same scale (SSS, S+, S, A, B, C, D, E) and split the room between two thresholds into the levels in between, so a trophy climbs one step at a time; X is the header's alone. Every letter has its own colour, the same in every theme so the levels are easy to tell apart (grey, blue, green, purple, orange, gold, pink for SSS, electric cyan for X); `+` is a little brighter and `-` a little duller. Change them with `levelE`, `levelD`, `levelC`, `levelB`, `levelA`, `levelS`, `levelTop` (SSS) and `levelX`.
+
+| `E` | `D` | `C` | `B-` | `B` | `B+` |
+|---|---|---|---|---|---|
+| <img src="docs/guide/rank-E.png" width="150"> | <img src="docs/guide/rank-D.png" width="150"> | <img src="docs/guide/rank-C.png" width="150"> | <img src="docs/guide/rank-minus.png" width="150"> | <img src="docs/guide/rank-B.png" width="150"> | <img src="docs/guide/rank-plus.png" width="150"> |
+
+| `A` | `S` | `SSS` | `X` |
 |---|---|---|---|
-| <img src="docs/guide/rank-E.png" width="200"> | <img src="docs/guide/rank-D.png" width="200"> | <img src="docs/guide/rank-C.png" width="200"> | <img src="docs/guide/rank-B.png" width="200"> |
+| <img src="docs/guide/rank-A.png" width="200"> | <img src="docs/guide/rank-S.png" width="200"> | <img src="docs/guide/rank-top.png" width="200"> | <img src="docs/guide/rank-x.png" width="200"> |
 
-| `A` | `S` | `S+` |  |
-|---|---|---|---|
-| <img src="docs/guide/rank-A.png" width="200"> | <img src="docs/guide/rank-S.png" width="200"> | <img src="docs/guide/rank-top.png" width="200"> |  |
+**The top levels are animated**, more and more as you climb: S-, S and S+ get a pulsing halo; SSS also a light that runs around the ring, twinkling sparkles and shimmering trophies; X all of that in rainbow colours, with a second ring turning the other way and more sparkles. It is plain CSS, so it plays inside a README image; PNG and GIF exports show the same drawing held still.
 
-**The top 1% is animated.** The ring of an S+ profile gets a pulsing halo, a light that runs around it and twinkling sparkles, and its trophies shimmer. It is plain CSS, so it plays inside a README image; PNG and GIF exports show the same drawing held still.
+| `S` | `SSS` | `X` |
+|---|---|---|
+| <img src="docs/guide/rank-s-animated.svg" width="200"> | <img src="docs/guide/rank-top-animated.svg" width="200"> | <img src="docs/guide/rank-x-animated.svg" width="200"> |
 
-| Header of a top 1% profile |
+| Header of a top profile |
 |---|
 | <img src="docs/guide/header-top-animated.svg"> |
 
@@ -235,7 +251,7 @@ One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the spec
 
 ### Avatar frames
 
-`frame` puts a decoration around the avatar, like Discord avatar decorations. `ring` is the classic gradient ring (the default), `none` removes it, the rest are decorations, and `auto` follows your level: E none, D ring, C double, B dashed, A neon, S flames, and the top 1% gets the animated aurora. They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
+`frame` puts a decoration around the avatar, like Discord avatar decorations. `ring` is the classic gradient ring (the default), `none` removes it, the rest are decorations, and `auto` follows the letter of your level: E none, D ring, C double, B dashed, A neon, S flames, SSS the animated aurora and X the prism. They fit the round and the rounded avatar. The colour is `colors.frameColor`, by default the colour of your level. Most frames move (plain CSS, so they play inside a README); `frameAnimation` turns that off (`none`) or changes it (`spin`, `pulse`, `twinkle`). PNG and GIF show them still.
 
 | `ring` | `double` | `dashed` |
 |---|---|---|
@@ -253,7 +269,11 @@ One scale for the whole card: **E, D, C, B, A, S** and, for the top 1%, the spec
 |---|---|---|
 | <img src="docs/guide/frame-stars.png" width="260"> | <img src="docs/guide/frame-halo.png" width="260"> | <img src="docs/guide/frame-aurora.png" width="260"> |
 
-| `frame: "auto"` at level S+ | `frame: "neon"`, rounded avatar | `frameColor: "00e5a0"` |
+| `orbit` (two moons going round) | `prism` (rainbow arcs that turn) |
+|---|---|
+| <img src="docs/guide/frame-orbit-animated.svg" width="260"> | <img src="docs/guide/frame-prism-animated.svg" width="260"> |
+
+| `frame: "auto"` at level X | `frame: "neon"`, rounded avatar | `frameColor: "00e5a0"` |
 |---|---|---|
 | <img src="docs/guide/frame-auto-top.png" width="300"> | <img src="docs/guide/frame-rounded.png" width="260"> | <img src="docs/guide/frame-color.png" width="260"> |
 
@@ -425,7 +445,7 @@ A day with zero contributions *today* does not break the current streak.
 |---|---|---|---|
 | `titles` | trophy names | `[]` | Show only these, in the order listed. Aliases from the original project work: `Star`, `Commit`, `Follower`, `PR`, `Repo`, `Review`, `Duration`, `Orgs`… |
 | `hideTitles` | trophy names | `[]` | Hide these |
-| `ranks` | `E D C B A S S+ SECRET` | `[]` | Only these ranks. A `-` prefix drops one: `["-E"]`. `SECRET` selects the secret trophies. The old names SSS, SS, AAA and AA are gone: use `S+`, `S` and `B` |
+| `ranks` | `E` `E+` `D-` … `S+` `SSS` `SECRET` | `[]` | Only these ranks. A bare letter stands for its whole family (`B` = `B-` `B` `B+`). A `-` prefix drops one: `["-E"]`. `SECRET` selects the secret trophies. The old names SS, AAA and AA are gone: use `S+`, `A+` and `A` |
 | `hideRanks` | same | `[]` | Drop ranks |
 | `columns` | −1–12 | `0` | `0` / `-1`: everything on one row |
 | `rows` | 0–10 | `0` | `0`: no limit |
@@ -457,11 +477,11 @@ The full list, with what earns each one, is in the **[trophy guide](TROPHIES.md)
 
 ### Levels
 
-Each trophy (except the secret ones) is the classic cup in the colour of its level, and the higher the level the richer it gets: **A** adds the laurel, **S** a second cup, and the top 1% (**S+**) three cups with a pulsing border and a light that sweeps across the card (animated, like the rank). The level letter is on the cup. The levels are the same as the header rank (see [Rank levels](#rank-levels)), and `levelE` … `levelTop` change their colours.
+Each trophy (except the secret ones) is the classic cup in the colour of its level, and the higher the level the richer it gets: **A** adds the laurel, **S-** and **S** a second cup, **S+** a third, and **SSS** three cups with a pulsing border and a light that sweeps across the card (animated, like the rank). The level letter is on the cup. The levels are the same as the header rank (see [Rank levels](#rank-levels)), and `levelE` … `levelTop` change their colours.
 
 <img src="docs/guide/trophies-levels.png">
 
-The top 1%:
+SSS:
 
 <img src="docs/guide/trophies-top-animated.svg">
 
@@ -591,7 +611,7 @@ Hex values with or without `#` (`rgb`, `rgba`, `rrggbb`, `rrggbbaa`). They apply
 | `bg_color`, `panel_color`, `border_color` | card background, panels, borders |
 | `text_color`, `muted_color`, `title_color` | main text, secondary text, panel titles |
 | `icon_color`, `ring_color` | accent (icons, links, heatmap ramp) and second accent (rank ring, gradients) |
-| `levelE` `levelD` `levelC` `levelB` `levelA` `levelS` `levelTop` | the colour of each level (`levelTop` is the top 1%); by default grey, blue, green, purple, orange, gold and pink in every theme, so the levels are always easy to tell apart |
+| `levelE` `levelD` `levelC` `levelB` `levelA` `levelS` `levelTop` `levelX` | the colour of each letter (`levelTop` is SSS, `levelX` the secret X; `+` / `-` shade it); by default grey, blue, green, purple, orange, gold and pink in every theme, so the levels are always easy to tell apart |
 | `fire_color`, `track_color`, `stroke_color` | flame and current streak, ring tracks and heatmap level 0, streak dividers |
 | `currStreakNum`, `currStreakLabel`, `sideNums`, `sideLabels`, `dates`, `excludeDaysLabel` | each streak element |
 | `snakeColor` | the snake of the heatmap (`heatmap.mode: "snake"`) |
