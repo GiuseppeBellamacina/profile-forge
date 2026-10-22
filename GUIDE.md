@@ -569,15 +569,17 @@ A terminal window. Lines that start with `$ ` are commands: they type themselves
 ## Contributed to (orgs)
 
 ```json
-{ "orgs": { "title": null, "select": [], "sort": "contributions", "mode": "static", "direction": "left", "speed": 30 } }
+{ "orgs": { "title": null, "hide": [], "order": [], "select": [], "sort": "contributions", "mode": "static", "direction": "left", "speed": 30 } }
 ```
 
 The organizations you contributed to, from every year of your calendar (commits, pull requests, issues and reviews in their repositories), as tags with the organization's logo and its @login, like GitHub's organization badges (your contributions and its stars show on hover). The heading shows how many repositories you contributed to.
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
-| `select` | logins | `[]` | Only these organizations. Empty: all of them (the 30 most active) |
-| `sort` | `contributions` `popularity` `custom` | `contributions` | Most contributions first, most stars first (of the repositories you contributed to), or the order of `select` |
+| `hide` | logins | `[]` | Organizations not to show. Every other one is shown, also the ones you contribute to later |
+| `order` | logins | `[]` | The order for `sort: "custom"`: these first, the others after by contributions |
+| `select` | logins | `[]` | Only these organizations (new ones are then not added). Empty: all of them (the 30 most active) |
+| `sort` | `contributions` `popularity` `custom` | `contributions` | Most contributions first, most stars first (of the repositories you contributed to), or your `order` |
 | `mode` | `static` `scroll` | `static` | Chips in rows, or one row that keeps moving |
 | `direction` | `left` `right` | `left` | Where the row moves in `scroll` mode |
 | `speed` | 5–200 | `30` | Pixels per second in `scroll` mode |

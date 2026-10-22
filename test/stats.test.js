@@ -562,6 +562,8 @@ test("orgs: chips of the organizations you contributed to, static or scrolling, 
   assert.ok(s < m && m < f, "by contributions");
   const [s2, f2, m2] = order(view({ sort: "popularity" }));
   assert.ok(f2 < m2 && m2 < s2, "by popularity (stars)");
+  const hid = view({ hide: ["Famous"], order: ["mid"], sort: "custom" });
+  assert.ok(!hid.includes(">@famous<") && hid.indexOf(">@mid<") < hid.indexOf(">@small<"), "hide drops one, order goes first");
   const only = view({ select: ["Mid", "small"], sort: "custom" });
   assert.ok(!only.includes(">@famous<") && only.indexOf(">@mid<") < only.indexOf(">@small<"), "select keeps and orders");
   const scroll = view({ mode: "scroll", direction: "right", speed: 40 }, false);

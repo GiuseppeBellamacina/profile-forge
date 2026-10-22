@@ -238,7 +238,7 @@ Names follow the three projects the card is built on. A `—` means the original
 | heatmap | `mode`, `snakePath`, `snakeLength`, `snakeStyle`, `weeks`, `cell`, `weekStart`, `legend`, `monthLabels` | — | `grid` or `snake` (routes `smart` `busy` `nearest` `sweep` `rows` `spiral`, 3–12 cells long, `classic` `rainbow` `glow`); cells `square` `round` `triangle` `snowflake` `moon` `hexagon` `mixed`; grid size, Monday start, legend and month labels |
 | terminal | `lines`, `title` | — | lines starting with `$ ` are typed as commands, the others are their output |
 | rhythm | `show`, `title` | — | `weekdays` and / or `months` |
-| orgs | `select`, `sort`, `mode`, `direction`, `speed`, `title` | — | which organizations (empty = all), `contributions` `popularity` `custom` order, `static` or `scroll`, `left` / `right`, px/s |
+| orgs | `hide`, `order`, `select`, `sort`, `mode`, `direction`, `speed`, `title` | — | which to hide (all the others are shown, new ones too), `custom` order, `contributions` `popularity` `custom` order, `static` or `scroll`, `left` / `right`, px/s |
 | root | `locale`, `timezone`, `customThemes`, `layout`, `colorsByTheme` | `locale`, `timezone`, `theme` | `locale` translates labels, months and weekdays |
 
 Not ported: `card_width` / `card_height` (the card is fixed at 1000 px wide), `cache_seconds` and `type=png|json` (the output is a static file; use `export.png` / `export.gif`).

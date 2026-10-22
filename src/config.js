@@ -27,7 +27,7 @@ export const DEFAULTS = {
   marquee: { speed: 28, rows: 2, order: "shuffle", byCategory: false },
   terminal: { title: null, lines: [] },
   rhythm: { title: null, show: ["weekdays", "months"] },
-  orgs: { title: null, select: [], sort: "contributions", mode: "static", direction: "left", speed: 30 },
+  orgs: { title: null, select: [], hide: [], order: [], sort: "contributions", mode: "static", direction: "left", speed: 30 },
   heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
@@ -203,7 +203,7 @@ export function normalize(raw = {}) {
       parts: must("trophies.parts", c.trophies.parts.map(nk), ["title", "label", "score", "bar"]),
       highlight: new Set(c.trophies.highlight.map(normKey)),
     },
-    orgs: { ...c.orgs, select: c.orgs.select.map((x) => String(x).toLowerCase()) },
+    orgs: { ...c.orgs, ...Object.fromEntries(["select", "hide", "order"].map((key) => [key, c.orgs[key].map((x) => String(x).toLowerCase())])) },
     rhythm: { ...c.rhythm, show: must("rhythm.show", c.rhythm.show.map((x) => String(x).toLowerCase()), ["weekdays", "months"]) },
   };
 }
