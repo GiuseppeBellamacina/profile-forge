@@ -172,7 +172,8 @@
         "parts": { "type": "array", "items": { "enum": ["title", "label", "score", "bar"] }, "default": ["title", "label", "score", "bar"], "description": "Which texts and the progress bar to show on each trophy." },
         "noBg": { "type": "boolean", "default": false },
         "noFrame": { "type": "boolean", "default": false },
-        "extra": { "type": "array", "items": { "enum": ["Issues", "Reviews"] }, "description": "Opt-in trophies." },
+        "order": { "$ref": "#/definitions/strs", "description": "These trophies come first, in this order; the others follow. Unlike `titles` it hides nothing." },
+        "extra": { "type": "array", "description": "No longer used: Issues and Reviews are shown like the other trophies. Ignored." },
         "birthday": { "type": ["string", "null"], "pattern": "^(\\d{4}-)?\\d{2}-\\d{2}$", "default": null, "description": "Your birthday as MM-DD (or YYYY-MM-DD): the Happy Birthday secret trophy shows on that day, in the card's time zone." },
         "sort": { "enum": ["default", "rank", "name"], "default": "default", "description": "default: the order of `titles` (or the built-in order). rank: highest level first, secret trophies after. name: A-Z." },
         "highlight": { "$ref": "#/definitions/strs", "description": "Trophy titles drawn with a pulsing glow." }

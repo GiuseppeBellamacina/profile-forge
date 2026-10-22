@@ -436,7 +436,7 @@ A day with zero contributions *today* does not break the current streak.
     "parts": ["title", "label", "score", "bar"],
     "noBg": false,
     "noFrame": false,
-    "extra": ["Issues", "Reviews"],
+    "order": [],
     "title": null
   }
 }
@@ -455,13 +455,13 @@ A day with zero contributions *today* does not break the current streak.
 | `align` | `center` `left` | `center` | Where an incomplete last row sits |
 | `parts` | `title` `label` `score` `bar` | all | What each trophy shows besides the cup |
 | `noBg`, `noFrame` | boolean | `false` | Remove the trophy background / frame |
-| `extra` | `Issues` `Reviews` | `[]` | Opt-in trophies |
+| `order` | trophy names | `[]` | These come first, in this order; the others follow (nothing is hidden, so a newly earned trophy shows up by itself) |
 | `birthday` | `MM-DD` or `YYYY-MM-DD` | none | Your birthday: the Happy Birthday secret trophy shows that day |
 | `sort` | `default` `rank` `name` | `default` | `default`: the order of `titles` (or the built-in one). `rank`: highest level first, secret trophies after. `name`: A–Z |
 | `highlight` | trophy names | `[]` | These get a pulsing outline in the accent colour |
 | `title` | string | translated | Custom panel title |
 
-Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Experience.
+Base trophies: Stars, Commits, Followers, PullRequest, Repositories, Issues, Reviews, Experience. Every earned trophy is shown by default; `hideTitles` removes the ones you do not want, `order` sorts them, and `titles` (a whitelist) shows only those you list.
 
 ### Secret trophies
 
@@ -496,7 +496,7 @@ SSS:
 |---|---|
 | <img src="docs/guide/trophies-default.png"> | <img src="docs/guide/trophies-grid.png"> |
 
-| `extra` + `ranks: ["-E"]` + `columns: 4` | `titles: ["Star","Commit","PR","Followers"]` |
+| `ranks: ["-E"]` + `columns: 4` | `titles: ["Star","Commit","PR","Followers"]` |
 |---|---|
 | <img src="docs/guide/trophies-extra.png"> | <img src="docs/guide/trophies-filter.png"> |
 

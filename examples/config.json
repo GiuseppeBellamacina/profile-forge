@@ -20,6 +20,6 @@
   "stats": { "numberFormat": "short", "show": ["prsMerged", "discussionsStarted"], "hide": ["issues"] },
   "streak": { "mode": "daily", "dateFormat": "M j[, Y]", "excludeDays": [] },
   "languages": { "layout": "bar", "count": 8, "hide": ["html", "css"] },
-  "trophies": { "ranks": ["-E"], "extra": ["Reviews"], "marginW": 12 },
+  "trophies": { "ranks": ["-E"], "marginW": 12 },
   "heatmap": { "weeks": 53, "cell": "square", "weekStart": "sun" }
 }

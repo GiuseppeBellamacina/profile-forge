@@ -23,7 +23,7 @@ export const DEFAULTS = {
   stats: { title: null, hide: [], show: [], icons: true, numberFormat: "long", numberPrecision: null, textBold: true, lineHeight: 30, commitsYear: null, excludeRepos: [] },
   streak: { title: null, hide: [], mode: "daily", excludeDays: [], startingYear: null, dateFormat: null, shortNumbers: false, excludeDaysLabel: true },
   languages: { title: null, layout: "bar", count: 8, hide: [], excludeRepos: [], hideProgress: false, statsFormat: "percentages", sizeWeight: 1, countWeight: 0 },
-  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, extra: [], birthday: null, sort: "default", highlight: [] },
+  trophies: { title: null, titles: [], hideTitles: [], ranks: [], hideRanks: [], columns: 0, rows: 0, marginW: 14, marginH: 14, padding: 20, align: "center", parts: ["title", "label", "score", "bar"], noBg: false, noFrame: false, order: [], birthday: null, sort: "default", highlight: [] },
   marquee: { speed: 28, rows: 2, order: "shuffle", byCategory: false },
   terminal: { title: null, lines: [] },
   rhythm: { title: null, show: ["weekdays", "months"] },
@@ -75,7 +75,8 @@ function check(p, d, v) {
 }
 
 // Options that no longer exist. Configs written for an older version keep working: these are ignored instead of rejected.
-export const REMOVED_KEYS = new Set(["trophies.style"]);
+// trophies.extra: Issues and Reviews are now regular trophies, shown like the others.
+export const REMOVED_KEYS = new Set(["trophies.style", "trophies.extra"]);
 
 function merge(def, user, path = "") {
   const out = { ...def };
@@ -170,7 +171,6 @@ export function normalize(raw = {}) {
     const m = /^(?:\d{4}-)?(\d{2})-(\d{2})$/.exec(String(birthday));
     if (!m || +m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > new Date(Date.UTC(2024, +m[1], 0)).getUTCDate()) throw new Error(`Config "trophies.birthday": expected "MM-DD" or "YYYY-MM-DD" (got "${birthday}")`);
   }
-  for (const r of c.trophies.extra) if (!["issues", "reviews"].includes(r.toLowerCase())) throw new Error(`Config "trophies.extra": unknown trophy "${r}". Valid: Issues, Reviews`);
   for (const [n, l] of c.terminal.lines.entries()) if (typeof l !== "string") throw new Error(`Config "terminal.lines[${n}]" must be a string`);
   if (!Number.isInteger(c.heatmap.snakeLength)) throw new Error(`Config "heatmap.snakeLength" must be a whole number`);
   const excludeDays = c.streak.excludeDays.map((x) => {
@@ -198,7 +198,7 @@ export function normalize(raw = {}) {
       hideTitles: new Set(c.trophies.hideTitles.map(normKey)),
       ranks: new Set(ranks.filter((r) => !r.startsWith("-"))),
       hideRanks: new Set([...c.trophies.hideRanks.map((r) => r.toUpperCase()), ...ranks.filter((r) => r.startsWith("-")).map((r) => r.slice(1))]),
-      extra: new Set(c.trophies.extra.map((x) => x.toLowerCase())),
+      order: c.trophies.order.map(normKey),
       parts: must("trophies.parts", c.trophies.parts.map(nk), ["title", "label", "score", "bar"]),
       highlight: new Set(c.trophies.highlight.map(normKey)),
     },

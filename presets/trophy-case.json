@@ -5,7 +5,6 @@
   "layout": ["header", "trophies", "heatmap"],
   "header": { "facts": ["stars", "followers", "longestStreak"], "rankIcon": "percentile", "frame": "laurel", "rankStyle": "shield" },
   "trophies": {
-    "extra": ["Issues", "Reviews"],
     "columns": 5,
     "marginW": 16,
     "marginH": 16,

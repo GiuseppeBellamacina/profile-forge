@@ -36,8 +36,10 @@
     <text x="582" y="130" font-size="13" fill="#cdd6f4">Most active on Fridays</text>
   </g>
   <g opacity="1" transform="translate(900 90) scale(1 1) translate(-900 -90)" class="a7">
+    
     <circle cx="900" cy="90" r="50" fill="none" pathLength="100" stroke="#45475a" stroke-width="8"/>
     <circle cx="900" cy="90" r="50" fill="none" pathLength="100" stroke="url(#rg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="100" transform="rotate(-90 900 90)" stroke-dashoffset="12.6" class="a8"/>
+    
     
     <text x="900" y="99" text-anchor="middle" font-size="30" font-weight="700" font-family="'Space Grotesk', Inter, 'Segoe UI', Ubuntu, sans-serif" fill="#ff9f43">A</text>
     <text x="900" y="117" text-anchor="middle" font-size="10" fill="#a6adc8">top 12.6%</text>

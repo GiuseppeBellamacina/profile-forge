@@ -102,7 +102,7 @@ const CASES = {
   // trophies
   "trophies-default": only("trophies"),
   "trophies-grid": { ...only("trophies"), trophies: { columns: 4, rows: 2, marginW: 16, marginH: 16 } },
-  "trophies-extra": { ...only("trophies"), trophies: { extra: ["Issues", "Reviews"], ranks: ["-E"], columns: 4 } },
+  "trophies-extra": { ...only("trophies"), trophies: { ranks: ["-E"], columns: 4 } },
   "trophies-filter": { ...only("trophies"), trophies: { titles: ["Star", "Commit", "PR", "Followers"], title: "Highlights" } },
   "trophies-secret": { ...only("trophies"), trophies: { ranks: ["SECRET"], columns: 6 }, args: ["--secrets", "7,12"] },
   "trophies-secret-all": { ...only("trophies"), trophies: { ranks: ["SECRET"], columns: 10, marginW: 10, marginH: 10, padding: 16 }, args: ["--secrets", "all"] },

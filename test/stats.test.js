@@ -42,7 +42,7 @@ test("trophies: tiers and secret trophies", () => {
   assert.equal(rank.Stars, "S");
   assert.equal(rank.Commits, "SSS");
   assert.equal(rank.Followers, "?");
-  assert.equal(rank.Issues, undefined);
+  assert.equal(rank.Issues, "E");
   assert.equal(rank.PullRequest, "C");
   assert.equal(rank.Experience, "B-");
   assert.ok(rank.MultiLanguage && rank.Organizations);
@@ -128,6 +128,7 @@ test("layout: reorder, hide, and two half-width panels share a row", () => {
 
 test("stats options: extras, hide, short numbers, commitsYear, excludeRepos", () => {
   const [d, k] = make({
+    layout: ["stats"],
     stats: { show: ["prsMerged", "discussions_started", "prs_merged_percentage"], hide: ["issues"], numberFormat: "short", numberPrecision: 2, title: "MINE", commitsYear: 2025, excludeRepos: ["a"] },
   });
   assert.equal(d.stats.commits, 120);
@@ -167,10 +168,16 @@ test("streak options: weekly mode, hide, date format, exclude days, short number
 });
 
 test("trophies: filters, grid, extras, secrets", () => {
-  const list = trophies({ stars: 300, commits: 5000, followers: 0, issues: 60, prs: 0, repos: 1, reviews: 9, experience: 3, years: 15, organizations: 0, languageCount: 0, firstYear: 2008 }, new Set(["issues", "reviews"]));
+  const list = trophies({ stars: 300, commits: 5000, followers: 0, issues: 60, prs: 0, repos: 1, reviews: 9, experience: 3, years: 15, organizations: 0, languageCount: 0, firstYear: 2008 });
   const titles = list.map((t) => t.title);
   assert.ok(titles.includes("Issues") && titles.includes("Reviews") && titles.includes("AncientUser") && titles.includes("OGUser"));
-  assert.ok(!trophies({ stars: 1, commits: 1, followers: 1, issues: 1, prs: 1, repos: 1, reviews: 1, experience: 3, years: 1, organizations: 0, languageCount: 0, firstYear: 2020 }).some((t) => t.title === "Issues"));
+  assert.ok(trophies({ stars: 1, commits: 1, followers: 1, issues: 1, prs: 1, repos: 1, reviews: 1, experience: 3, years: 1, organizations: 0, languageCount: 0, firstYear: 2020 }).some((t) => t.title === "Issues"), "Issues and Reviews are regular trophies");
+  assert.ok(normalize({ trophies: { extra: ["Issues"] } }), "the old extra key is ignored");
+  // order: listed ones first, nothing hidden
+  const [d3] = make();
+  const ordered = render(d3, { k: normalize({ layout: ["trophies"], trophies: { order: ["Followers", "Stars"] } }), t: 1 });
+  const pos = ["Followers", "Stars", "Commits"].map((n) => ordered.indexOf(`>${n}<`));
+  assert.ok(pos.every((p) => p > 0) && pos[0] < pos[1] && pos[1] < pos[2], pos.join());
   const [d] = make();
   const only = render(d, { k: normalize({ trophies: { titles: ["star", "commit"], marginW: 4, noBg: true, noFrame: true } }) });
   assert.equal((only.match(/rx="4.5"/g) ?? []).length, 2);

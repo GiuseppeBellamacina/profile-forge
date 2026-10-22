@@ -6,6 +6,6 @@
   "header": { "facts": ["contributionsThisYear", "topLanguage", "currentStreak"], "rankIcon": "percentile", "frame": "double" },
   "languages": { "layout": "donut", "count": 8, "hide": ["HTML", "CSS"] },
   "stats": { "numberFormat": "short", "show": ["prsMerged"] },
-  "trophies": { "ranks": ["-E"], "columns": 5, "extra": ["Reviews"] },
+  "trophies": { "ranks": ["-E"], "columns": 5 },
   "heatmap": { "cell": "round", "mode": "snake", "snakePath": "busy", "snakeLength": 6 }
 }

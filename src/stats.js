@@ -148,9 +148,9 @@ const TROPHIES = [
   ["Repositories", "repos", [50, 45, 40, 35, 30, 20, 10, 1],
     ["God Repo Creator", "Deep Repo Creator", "Super Repo Creator", "Ultra Repo Creator", "Hyper Repo Creator", "High Repo Creator", "Middle Repo Creator", "First Repository"]],
   ["Issues", "issues", [1000, 500, 200, 100, 50, 20, 10, 1],
-    ["God Issuer", "Deep Issuer", "Super Issuer", "Ultra Issuer", "Hyper Issuer", "High Issuer", "Middle Issuer", "First Issue"], true],
+    ["God Issuer", "Deep Issuer", "Super Issuer", "Ultra Issuer", "Hyper Issuer", "High Issuer", "Middle Issuer", "First Issue"]],
   ["Reviews", "reviews", [70, 57, 45, 30, 20, 8, 3, 1],
-    ["God Reviewer", "Deep Reviewer", "Super Reviewer", "Ultra Reviewer", "Hyper Reviewer", "High Reviewer", "Middle Reviewer", "First Review"], true],
+    ["God Reviewer", "Deep Reviewer", "Super Reviewer", "Ultra Reviewer", "Hyper Reviewer", "High Reviewer", "Middle Reviewer", "First Review"]],
   ["Experience", "experience", [70, 55, 40, 28, 18, 11, 6, 2],
     ["Seasoned Veteran", "Grandmaster", "Master Dev", "Expert Dev", "Experienced Dev", "Intermediate Dev", "Junior Dev", "Newbie"]],
 ];
@@ -175,8 +175,8 @@ export const trophyTable = () =>
   }));
 
 /** s: { fun (see funFacts, optional), stars, commits, followers, issues, prs, repos, reviews, experience(days/100), years, organizations, languageCount, firstYear }; extra: Set of "issues"/"reviews" */
-export function trophies(s, extra = new Set()) {
-  const list = TROPHIES.filter((t) => !t[4] || extra.has(t[0].toLowerCase())).map(([title, key, reqs, labels]) => {
+export function trophies(s) {
+  const list = TROPHIES.map(([title, key, reqs, labels]) => {
     const score = s[key];
     const st = steps(reqs);
     const i = st.findLastIndex(([, min]) => score >= min);
@@ -239,7 +239,6 @@ export function summarize(p, k = normalize(), now = Date.now()) {
         firstYear: new Date(p.earliest).getUTCFullYear(),
         fun,
       },
-      k.trophies.extra,
     ),
   };
 }

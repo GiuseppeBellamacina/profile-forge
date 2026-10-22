@@ -11,7 +11,6 @@
   "languages": { "layout": "donut-vertical", "sizeWeight": 0.5, "countWeight": 1, "hide": ["HTML", "CSS", "Shell"] },
   "trophies": {
     "titles": ["Stars", "Followers", "PullRequest", "Reviews", "Repositories"],
-    "extra": ["Reviews"],
     "columns": 5,
     "sort": "rank"
   },

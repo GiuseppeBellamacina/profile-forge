@@ -193,7 +193,7 @@ function headerSection(d, X) {
     ${rounded ? `<clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>` : `<clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`}`;
   // effects grow with the level (plain CSS loops): S-, S, S+ a pulsing halo; SSS also a light that runs around the ring and
   // sparkles; X all of that in rainbow colours, plus a second ring turning the other way and more sparkles
-  const haloRing = () => ringEl(9, `stroke="${lvCol}" stroke-width="2.5" opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`);
+  const haloRing = () => ringEl(9, `stroke="${lvCol}" stroke-width="2.5" stroke-opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`);
   const topRing = () => {
     const col = levelColor(c, d.rank.level);
     const many = rainbow ? 10 : 6;
@@ -580,9 +580,10 @@ function trophiesSection(d, X, W = 940) {
       !rankIn(o.hideRanks, t.rank),
   );
   if (!list.length) return null;
-  // `titles` is also the order: the trophies appear in the order they are listed there
-  if (o.titles.size) {
-    const at = (t) => [...o.titles].findIndex((x) => trophyMatches(t.title, new Set([x])));
+  // `order` (or else the order of `titles`) puts those trophies first, in that order; the others follow in the default order
+  const ord = o.order.length ? o.order : [...o.titles];
+  if (ord.length) {
+    const at = (t) => { const i = ord.findIndex((x) => trophyMatches(t.title, new Set([x]))); return i < 0 ? Infinity : i; };
     list = list.map((t) => [at(t), t]).sort((a, b) => a[0] - b[0]).map(([, t]) => t);
   }
   // `sort` wins over the order of `titles`: rank = highest level first (secret ones after), name = A-Z
