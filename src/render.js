@@ -533,8 +533,9 @@ function trophy(tr, X, o) {
   const fam = secret || unknown ? "" : familyOf(tr.rank);
   const has = (p) => o.parts.has(p);
   const letter = secret ? "S" : unknown ? "?" : tr.rank;
+  const fs = letter.length > 2 ? 3.8 : letter.length > 1 ? 5.4 : 7; // the baseline follows the size, so every letter sits in the middle of the disc
   const cup = (fill) =>
-    `${CUP}<circle cx="8" cy="6" r="4" fill="#fff"/><text x="8" y="8.4" text-anchor="middle" font-family="Courier, monospace" font-size="${letter.length > 2 ? 3.8 : letter.length > 1 ? 5.4 : 7}" font-weight="700" fill="${mix(base, "#000000", 0.55)}">${esc(letter)}</text>`;
+    `${CUP}<circle cx="8" cy="6" r="4" fill="#fff"/><text x="8" y="${r3(6 + fs * 0.35)}" text-anchor="middle" font-family="Courier, monospace" font-size="${fs}" font-weight="700" fill="${mix(base, "#000000", 0.55)}">${esc(letter)}</text>`;
   // cups: SSS and S+ have three (a big one between two small ones), S- and S two, the rest one
   const extra = fam === "SSS" || tr.rank === "S+" ? 2 : fam === "S" ? 1 : 0;
   const small = (x) => `<svg x="${x}" y="35" width="65" height="65" viewBox="0 0 30 30" fill="${base}">${cup(base)}</svg>`;
