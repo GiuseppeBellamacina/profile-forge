@@ -70,7 +70,7 @@ profile-forge works differently:
 | Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes, moons or a honeycomb of hexagons, or as an animated snake that eats them (any length, classic, rainbow or glowing) |
 | Terminal | A terminal window whose commands type themselves, with your own lines |
 | Rhythm | When you code: average contributions per weekday and total per month, as animated bars |
-| Contributed to | The organizations you contributed to, with their logo and your contributions, in rows or scrolling left or right |
+| Contributed to | The organizations you contributed to, as tags with their logo and @login, in rows or scrolling left or right |
 | Avatar | A frame around it, like Discord avatar decorations (13 styles, most of them animated, or one that follows your level) |
 
 ### Levels, trophies and frames

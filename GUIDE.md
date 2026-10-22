@@ -572,7 +572,7 @@ A terminal window. Lines that start with `$ ` are commands: they type themselves
 { "orgs": { "title": null, "select": [], "sort": "contributions", "mode": "static", "direction": "left", "speed": 30 } }
 ```
 
-The organizations you contributed to, from every year of your calendar (commits, pull requests, issues and reviews in their repositories), as chips with the organization's logo, its name and your contributions. The heading shows how many repositories you contributed to.
+The organizations you contributed to, from every year of your calendar (commits, pull requests, issues and reviews in their repositories), as tags with the organization's logo and its @login, like GitHub's organization badges (your contributions and its stars show on hover). The heading shows how many repositories you contributed to.
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|

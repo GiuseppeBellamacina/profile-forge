@@ -557,13 +557,13 @@ test("orgs: chips of the organizations you contributed to, static or scrolling, 
     { login: "mid", avatar: null, contributions: 5, stars: 40 },
   ];
   const view = (o, still = true) => { const k = normalize({ layout: ["orgs"], orgs: o }); return render(summarize({ ...RAW, orgs }, k), still ? { k, t: 1 } : { k }); };
-  const order = (svg) => ["small", "famous", "mid"].map((n) => svg.indexOf(`>${n}<`));
+  const order = (svg) => ["small", "famous", "mid"].map((n) => svg.indexOf(`>@${n}<`));
   const [s, f, m] = order(view({}));
   assert.ok(s < m && m < f, "by contributions");
   const [s2, f2, m2] = order(view({ sort: "popularity" }));
   assert.ok(f2 < m2 && m2 < s2, "by popularity (stars)");
   const only = view({ select: ["Mid", "small"], sort: "custom" });
-  assert.ok(!only.includes(">famous<") && only.indexOf(">mid<") < only.indexOf(">small<"), "select keeps and orders");
+  assert.ok(!only.includes(">@famous<") && only.indexOf(">@mid<") < only.indexOf(">@small<"), "select keeps and orders");
   const scroll = view({ mode: "scroll", direction: "right", speed: 40 }, false);
   assert.ok(/@keyframes orgrun\{from\{transform:translateX\(-[\d.]+px\)\}to\{transform:translateX\(0px\)\}\}/.test(scroll), "moves right");
   assert.ok(!view({ mode: "scroll" }).includes("@keyframes"), "static frames hold still");

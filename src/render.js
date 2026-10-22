@@ -1050,7 +1050,7 @@ function rhythmSection(d, X, W = 940) {
 }
 
 /**
- * The organizations you contributed to, as chips (logo, name, contributions). `mode` static wraps them into rows; scroll
+ * The organizations you contributed to, as tags (logo and @login; contributions and stars on hover). `mode` static wraps them into rows; scroll
  * moves one endless row left or right at `speed` px/s (plain CSS). Static frames show the row at its starting point.
  */
 function orgsSection(d, X, W = 940) {
@@ -1060,16 +1060,16 @@ function orgsSection(d, X, W = 940) {
   if (!list.length) return null;
   const H = 34;
   const gap = 10;
-  const label = (org) => fit(org.login, 12.5, 220);
-  const width = (org) => r3(36 + textWidth(label(org), 12.5) + 10 + textWidth(num(org.contributions), 11) + 14);
+  // like GitHub's organization badges: a rounded tag with the square logo and @login (long names are cut)
+  const label = (org) => fit(`@${org.login}`, 13, 210);
+  const width = (org) => r3(38 + textWidth(label(org), 13) + 12);
   const chip = (org, x, y) => {
     const logo = org.avatar
-      ? `<image href="${org.avatar}" x="6" y="6" width="22" height="22" clip-path="url(#orgdot)" preserveAspectRatio="xMidYMid slice"/>`
-      : `<circle cx="17" cy="17" r="11" fill="${c.accent}"/><text x="17" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="${c.bg1}">${esc(org.login[0].toUpperCase())}</text>`;
-    const w = width(org);
-    return `<g transform="translate(${r3(x)} ${r3(y)})"><rect width="${w}" height="${H}" rx="${H / 2}" fill="${c.bg1}" stroke="${c.border}"/>${logo}<text x="36" y="21.5" font-size="12.5" font-weight="600" fill="${c.text}">${esc(label(org))}</text><text x="${r3(w - 14)}" y="21.5" text-anchor="end" font-size="11" fill="${c.muted}">${esc(num(org.contributions))}</text><title>${esc(org.login)}: ${esc(num(org.contributions))} contributions, ${esc(num(org.stars))} stars</title></g>`;
+      ? `<image href="${org.avatar}" x="7" y="6" width="22" height="22" clip-path="url(#orgdot)" preserveAspectRatio="xMidYMid slice"/>`
+      : `<rect x="7" y="6" width="22" height="22" rx="5" fill="${c.accent}"/><text x="18" y="21.5" text-anchor="middle" font-size="11" font-weight="700" fill="${c.bg1}">${esc(org.login[0].toUpperCase())}</text>`;
+    return `<g transform="translate(${r3(x)} ${r3(y)})"><rect width="${width(org)}" height="${H}" rx="7" fill="${c.bg1}" stroke="${c.border}"/><rect x="6.5" y="5.5" width="23" height="23" rx="5.5" fill="none" stroke="${c.border}"/>${logo}<text x="38" y="21.8" font-size="13" font-weight="600" fill="${c.text}">${esc(label(org))}</text><title>${esc(org.login)}: ${esc(num(org.contributions))} contributions, ${esc(num(org.stars))} stars</title></g>`;
   };
-  defs.push(`<clipPath id="orgdot"><circle cx="17" cy="17" r="11"/></clipPath>`);
+  defs.push(`<clipPath id="orgdot"><rect x="7" y="6" width="22" height="22" rx="5"/></clipPath>`);
   const inner = W - 40;
   const scroll = o.mode === "scroll";
   // static: rows that wrap; scroll: one row
