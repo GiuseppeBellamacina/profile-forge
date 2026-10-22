@@ -21,7 +21,7 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
   user(login: $login) {
     name login avatarUrl createdAt
     followers { totalCount }
-    organizations(first: 50) { totalCount nodes { login avatarUrl } }
+    organizations { totalCount }
     gists { totalCount }
     following { totalCount }
     starredRepositories { totalCount }
@@ -122,8 +122,13 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       }
   // GitHub often reports work in private org repos only as "restricted" contributions, without the repository. For the orgs
   // you are a member of that the calendar did not reveal, count your commits and pull requests there with the search API.
+  // the memberships need read:org; a token without it (the configurator's sign-in) simply skips this step
+  let members = [];
+  try {
+    members = (await gql(token, `query($login: String!) { user(login: $login) { organizations(first: 50) { nodes { login avatarUrl } } } }`, { login }, endpoint)).user.organizations.nodes;
+  } catch {}
   if (endpoint === API)
-    for (const m of user.organizations.nodes ?? []) {
+    for (const m of members) {
       if (byOrg.has(m.login)) continue;
       const count = async (kind, q) => {
         try {
