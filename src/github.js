@@ -53,7 +53,7 @@ const USER_QUERY = `query($login: String!, $after: String, $privacy: RepositoryP
     discussionsAnswered: repositoryDiscussionComments(onlyAnswers: true) @include(if: $extras) { totalCount }
     openIssues: issues(states: OPEN) { totalCount }
     closedIssues: issues(states: CLOSED) { totalCount }
-    repositoriesContributedTo(first: 100, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, PULL_REQUEST_REVIEW, REPOSITORY]) { totalCount nodes { nameWithOwner } }
+    repositoriesContributedTo(first: 100, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, PULL_REQUEST_REVIEW, REPOSITORY]) { totalCount nodes { nameWithOwner stargazerCount owner { __typename login avatarUrl } } }
     repositories(first: 100, after: $after, ownerAffiliations: OWNER, privacy: $privacy) {
       totalCount
       pageInfo { hasNextPage endCursor }
@@ -165,6 +165,11 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
         o.repos.set(r.nameWithOwner, r.stargazerCount);
         byOrg.set(o.login, o);
       }
+  // GitHub's own list of the repositories you contributed to names organizations the yearly lists can miss (private ones)
+  for (const r of user.repositoriesContributedTo.nodes ?? []) {
+    if (r.owner.__typename !== "Organization" || byOrg.has(r.owner.login)) continue;
+    byOrg.set(r.owner.login, { login: r.owner.login, avatarUrl: r.owner.avatarUrl, contributions: 0, repos: new Map([[r.nameWithOwner, r.stargazerCount]]) });
+  }
   // GitHub often reports work in private org repos only as "restricted" contributions, without the repository. For the orgs
   // you are a member of that the calendar did not reveal, count your commits and pull requests there with the search API.
   // the memberships need read:org; a token without it (the configurator's sign-in) simply skips this step
@@ -173,20 +178,28 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     members = (await gql(token, `query($login: String!) { user(login: $login) { organizations(first: 50) { nodes { login avatarUrl } } } }`, { login }, endpoint)).user.organizations.nodes;
   } catch {}
   step(0.82, "Counting work in private organizations…");
+  // commits and PRs of yours in an organization, with the search API (30 requests a minute: wait and retry when it says stop)
+  const count = async (kind, q) => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`https://api.github.com/search/${kind}?per_page=1&q=${encodeURIComponent(q)}`, { headers: { Authorization: `bearer ${token}`, "User-Agent": "profile-forge", Accept: "application/vnd.github+json" }, signal: AbortSignal.timeout(20_000) });
+        if (res.ok) return (await res.json()).total_count ?? 0;
+        if (res.status !== 403 && res.status !== 429) return 0;
+        await sleep(Math.min(20_000, (Number(res.headers.get("retry-after")) || 5) * 1000));
+      } catch {
+        return 0;
+      }
+    }
+    return 0;
+  };
+  const searched = async (org) => (await count("commits", `author:${user.login} org:${org}`)) + (await count("issues", `author:${user.login} org:${org} type:pr`));
   if (endpoint === API)
     for (const m of members) {
       if (byOrg.has(m.login)) continue;
-      const count = async (kind, q) => {
-        try {
-          const res = await fetch(`https://api.github.com/search/${kind}?per_page=1&q=${encodeURIComponent(q)}`, { headers: { Authorization: `bearer ${token}`, "User-Agent": "profile-forge", Accept: "application/vnd.github+json" } });
-          return res.ok ? (await res.json()).total_count ?? 0 : 0;
-        } catch {
-          return 0;
-        }
-      };
-      const n = (await count("commits", `author:${user.login} org:${m.login}`)) + (await count("issues", `author:${user.login} org:${m.login} type:pr`));
+      const n = await searched(m.login);
       if (n) byOrg.set(m.login, { login: m.login, avatarUrl: m.avatarUrl, contributions: n, repos: new Map() });
     }
+  for (const o of byOrg.values()) if (!o.contributions && endpoint === API) o.contributions = await searched(o.login);
   step(0.9, "Loading the organization logos…");
   // shortcut: avatars of the 30 most active orgs only (one request each), raise it if someone needs more chips
   const orgs = await Promise.all(
