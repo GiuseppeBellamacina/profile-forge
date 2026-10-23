@@ -872,7 +872,10 @@ function heatmapSection(d, X, W = 940) {
         A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
         dots.push(`<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${dotSvg}</g>`);
       }
-    return `${walls}<g${A.a(2.0, 0.5, { o: 0 })}>${dots.join("")}</g>`;
+    // the ghosts' den: a small house with a pink door, where they start, come out of and come back to
+    const dx = r3(x0 + maze.den.w * step), dy = r3(yOf(maze.den.w, maze.den.i));
+    const house = `<g${A.a(1.9, 0.5, { o: 0 })}><rect x="${r3(dx + 0.8)}" y="${r3(dy + 0.8)}" width="${CELL - 1.6}" height="${CELL - 1.6}" rx="3.6" fill="${body}" stroke="${edge}" stroke-width="1.1" stroke-dasharray="2.6 2" opacity="0.9"/><rect x="${r3(dx + 3)}" y="${r3(dy - 0.2)}" width="${CELL - 6}" height="1.8" rx="0.9" fill="#ffa6d9"/></g>`;
+    return `${walls}${house}<g${A.a(2.0, 0.5, { o: 0 })}>${dots.join("")}</g>`;
   };
   // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
   // and the rest is thinned out with Ramer-Douglas-Peucker so a straight corridor is one segment
@@ -997,7 +1000,11 @@ function heatmapSection(d, X, W = 940) {
     o.legend
       ? `<g${A.a(2.4, 0.5, { o: 0 })}>
     <text x="${840 + W - 940}" y="698" text-anchor="end" font-size="10" fill="${c.muted}">${esc(tr("less"))}</text>
-    ${c.heat.map((h, i) => cellShape(o.cell === "mixed" ? "square" : o.cell, 846 + W - 940 + i * 16 - 0.75, 687.25, h, { lvl: i, dim: c.heat[0] })).join("")}
+    ${
+      pac
+        ? [1, 2, 3, 4].map((lv, i) => `<circle cx="${r3(846 + W - 940 + 13 + i * 18)}" cy="693.9" r="${r3(1.4 + lv * 0.45)}" fill="${mix(c.heat[lv], "#ffffff", 0.45)}"/>`).join("") // the pellets: a bigger dot for a busier day
+        : c.heat.map((h, i) => cellShape(o.cell === "mixed" ? "square" : o.cell, 846 + W - 940 + i * 16 - 0.75, 687.25, h, { lvl: i, dim: c.heat[0] })).join("")
+    }
     <text x="${930 + W - 940}" y="698" font-size="10" fill="${c.muted}">${esc(tr("more"))}</text>
   </g>`
       : ""

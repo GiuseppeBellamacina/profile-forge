@@ -607,3 +607,12 @@ test("heatmap pacman: a game with Pac-Man and four ghosts, as keyframes; static 
   assert.throws(() => normalize({ heatmap: { pacmanLives: 9 } }), /between 1 and 5/);
   assert.ok(view({}).includes("#ffd23f") && make({ layout: ["heatmap"], heatmap: { mode: "pacman" }, colors: { pacmanColor: "ff0000" } }) && true);
 });
+
+test("heatmap pacman: the legend is made of pellets, not of day shapes, and the ghosts have a den", () => {
+  const [d, k] = make({ layout: ["heatmap"], heatmap: { mode: "pacman", cell: "triangle" } });
+  const svg = render(d, { k, t: 1 });
+  assert.ok(!svg.includes("<polygon"), "no day shapes, whatever `cell` says");
+  const legend = svg.slice(svg.indexOf(">Less<"), svg.indexOf(">More<"));
+  assert.equal((legend.match(/<circle/g) ?? []).length, 4, "four pellet sizes");
+  assert.ok(svg.includes('fill="#ffa6d9"') && svg.includes('stroke-dasharray="2.6 2"'), "the den and its pink door");
+});
