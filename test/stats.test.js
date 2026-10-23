@@ -614,5 +614,5 @@ test("heatmap pacman: the legend is made of pellets, not of day shapes, and the 
   assert.ok(!svg.includes("<polygon"), "no day shapes, whatever `cell` says");
   const legend = svg.slice(svg.indexOf(">Less<"), svg.indexOf(">More<"));
   assert.equal((legend.match(/<circle/g) ?? []).length, 4, "four pellet sizes");
-  assert.ok(svg.includes('fill="#ffa6d9"') && svg.includes('stroke-dasharray="2.6 2"'), "the den and its pink door");
+  assert.ok(svg.includes('rx="1" fill="#ffa6d9"'), "the ghost house and its pink door");
 });

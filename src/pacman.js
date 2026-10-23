@@ -25,15 +25,16 @@ export const hashSeed = (s) => {
   return h >>> 0;
 };
 
-// the "classic" maze: 8 columns wide, repeated along the weeks. Corridors on rows 0, 2, 4, 6 and gaps in the blocks between them.
+// the "classic" maze, in the spirit of the arcade one squeezed into 7 rows: corridors on rows 0, 3 and 6, vertical bars, 2 x 2 blocks and
+// longer blocks between them (two bands of different shapes), mirrored left to right like the real board. 10 columns, repeated.
 const CLASSIC = [
-  "........",
-  ".###.##.",
-  "........",
-  "#.#..#.#",
-  "........",
-  ".##.###.",
-  "........",
+  "..........",
+  ".###.#.##.",
+  ".###.#.##.",
+  "..........",
+  ".#.###.#..",
+  ".#.###.#..",
+  "..........",
 ];
 
 /** weeks: [[date, count, row]] per week. level(count) -> 0..4. Returns the maze (see the fields below). */
@@ -59,9 +60,13 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
   const denK = near(mid, 3);
   const [dw, di] = at(denK);
   const startK = near(mid, ROWS - 1, denK);
-  // the den and the cells around it, and the start, are never walls
-  const keep = new Set([denK, startK]);
-  for (const [a, b] of DIRS) if (inGrid(dw + a, di + b) && exists[idx(dw + a, di + b)]) keep.add(idx(dw + a, di + b));
+  // the ghost house: three cells in a row with a door above the middle one (the den). Ghosts start in it and come back to it; Pac-Man
+  // never goes in. Everything around it is kept open so the door always leads somewhere.
+  const doorK = di > 0 && exists[idx(dw, di - 1)] ? idx(dw, di - 1) : DIRS.map(([a, b]) => [dw + a, di + b]).filter(([w, i]) => inGrid(w, i) && exists[idx(w, i)]).map(([w, i]) => idx(w, i))[0];
+  const house = new Set([idx(dw - 1, di), denK, idx(dw + 1, di)].filter((k) => k === denK || (k >= 0 && k < N && exists[k] && Math.abs(at(k)[1] - di) === 0)));
+  const keep = new Set([denK, startK, doorK, ...house]);
+  const [door_w, door_i] = at(doorK);
+  for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 0]]) if (inGrid(door_w + a, door_i + b) && exists[idx(door_w + a, door_i + b)]) keep.add(idx(door_w + a, door_i + b));
   // tunnels: on up to two rows whose first and last day both exist, the left and the right edge are joined (out on one side,
   // in on the other, as in the arcade). The mouth of a tunnel is never walled up.
   const eligible = [...Array(ROWS).keys()].filter((i) => W >= 10 && exists[idx(0, i)] && exists[idx(W - 1, i)]).sort((a, b) => Math.abs(a - 3) - Math.abs(b - 3) || a - b);
@@ -71,22 +76,22 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
 
   const reach = () => {
     const seen = new Uint8Array(N);
-    const q = [denK];
-    seen[denK] = 1;
+    const q = [doorK];
+    seen[doorK] = 1;
     let n = 1;
     for (let h = 0; h < q.length; h++) {
       const [w, i] = at(q[h]);
       const around = DIRS.filter(([a, b]) => inGrid(w + a, i + b)).map(([a, b]) => idx(w + a, i + b));
       if (link(w, i) >= 0) around.push(link(w, i));
-      for (const k of around) if (!wall[k] && !seen[k]) (seen[k] = 1, n++, q.push(k));
+      for (const k of around) if (!wall[k] && !seen[k] && !house.has(k)) (seen[k] = 1, n++, q.push(k));
     }
     return { n, seen };
   };
-  let freeCount = cells.length;
+  let freeCount = cells.length - house.size; // cells Pac-Man can walk on
   const fill = (k) => { if (!wall[k]) (wall[k] = 1, freeCount--); };
 
   if (kind === "classic") {
-    for (const k of cells) { const [w, i] = at(k); if (CLASSIC[i][w % 8] === "#" && !keep.has(k)) fill(k); }
+    for (const k of cells) { const [w, i] = at(k); if (CLASSIC[i][Math.min(w, W - 1 - w) % 10] === "#" && !keep.has(k)) fill(k); }
   } else if (kind === "data") {
     // quiet days become walls, in a random order, as long as every free cell can still be reached (and not too many)
     const quiet = cells.filter((k) => !count[k] && !keep.has(k));
@@ -107,11 +112,11 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
   }
   // whatever cannot be reached from the den (a piece of the last week, a corner the template cut off) becomes wall
   const { seen } = reach();
-  for (const k of cells) if (!wall[k] && !seen[k]) fill(k);
+  for (const k of cells) if (!wall[k] && !seen[k] && !house.has(k)) fill(k);
 
   // pellets: the days with contributions; four power pills, the busiest day of each quarter of the grid
   const pellet = new Uint8Array(N);
-  const open = cells.filter((k) => !wall[k]);
+  const open = cells.filter((k) => !wall[k] && !house.has(k));
   for (const k of open) if (count[k] && k !== startK) pellet[k] = Math.max(1, level(count[k]));
   const power = new Set();
   for (let q = 0; q < 4; q++) {
@@ -121,14 +126,14 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
   return {
     W, N, kind, wall, exists, count, pellet, power, tunnels,
     pellets: open.filter((k) => pellet[k]).length,
-    den: { w: dw, i: di }, start: { w: at(startK)[0], i: at(startK)[1] },
+    den: { w: dw, i: di }, door: { w: door_w, i: door_i }, house, start: { w: at(startK)[0], i: at(startK)[1] },
   };
 }
 
 /** One game. frames[t] = { p: [w, i, dir], a: 1 if Pac-Man is alive, g: [[w, i, state, dir] x 4] (c chasing, s scared, e out of sight: eaten, or Pac-Man was caught), l: lives, e: pellet cells eaten this frame }. */
 export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 30 } = {}) {
   const rand = mulberry32(seed);
-  const { W, N, wall, den, start, tunnels } = maze;
+  const { W, N, wall, den, start, tunnels, house, door } = maze;
   const idx = (w, i) => w * ROWS + i;
   const free = (w, i) => w >= 0 && w < W && i >= 0 && i < ROWS && !wall[idx(w, i)];
   const nb = Array.from({ length: N }, (_, k) => {
@@ -139,13 +144,24 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     if (tunnels.includes(i) && w === 0 && free(W - 1, i)) list.push([W - 1, i, 2]);
     return list;
   });
-  const bfs = (sources) => {
+  const denK = idx(den.w, den.i);
+  const doorK = idx(door.w, door.i);
+  // the ghosts may use the house, only through the door; Pac-Man never enters it
+  const nbG = nb.map((list, k) => list.filter(([a, b]) => {
+    const n = idx(a, b);
+    const hk = house.has(k), hn = house.has(n);
+    return (!hk && !hn) || (hk && hn) || (k === doorK && n === denK) || (k === denK && n === doorK);
+  }));
+  const nbP = nb.map((list, k) => (house.has(k) ? [] : list.filter(([a, b]) => !house.has(idx(a, b)))));
+  const bfs = (sources, table = nbG) => {
     const dist = new Int16Array(N).fill(-1);
     const q = [];
     for (const k of sources) (dist[k] = 0, q.push(k));
-    for (let h = 0; h < q.length; h++) for (const [a, b] of nb[q[h]]) if (dist[idx(a, b)] < 0) (dist[idx(a, b)] = dist[q[h]] + 1, q.push(idx(a, b)));
+    for (let h = 0; h < q.length; h++) for (const [a, b] of table[q[h]]) if (dist[idx(a, b)] < 0) (dist[idx(a, b)] = dist[q[h]] + 1, q.push(idx(a, b)));
     return dist;
   };
+  const toDoor = bfs([doorK]);
+  const houseCells = [...house].sort((a, b) => a - b); // left, middle, right
   const corners = [[W - 1, 0], [0, 0], [W - 1, ROWS - 1], [0, ROWS - 1]];
 
   const left = Uint8Array.from(maze.pellet);
@@ -158,7 +174,10 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     pac = { w: start.w, i: start.i, d: 0 };
     goal = -1;
     before0 = -1;
-    ghosts = GHOSTS.map((_, k) => ({ k, w: den.w, i: den.i, d: 3, st: "c", until: 0, rel: t + 2 + k * 9 }));
+    ghosts = GHOSTS.map((_, k) => {
+      const c = [houseCells[0], denK, houseCells.at(-1), denK][k]; // spread over the house
+      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: t + 2 + k * 9 };
+    });
     modeStart = t;
   };
   reset();
@@ -197,10 +216,10 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     const q = [pk];
     dist[pk] = 0;
     for (let h = 0; h < q.length; h++) {
-      for (const [a, b] of nb[q[h]]) {
+      for (const [a, b] of nbP[q[h]]) {
         const n = idx(a, b);
         if (dist[n] >= 0) continue;
-        if (q[h] === pk && n === before0 && arrive[pk] > 10 && nb[pk].length > 1) continue; // no turning back on the spot when nobody is near
+        if (q[h] === pk && n === before0 && arrive[pk] > 10 && nbP[pk].length > 1) continue; // no turning back on the spot when nobody is near
         const s = dist[q[h]] + 1;
         if (margin !== -Infinity && s + margin >= arrive[n]) continue;
         dist[n] = s;
@@ -230,7 +249,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       // nothing safe: run to the neighbour with the most room to keep running (cells still reachable before the ghosts), not into a dead end
       let best = null;
       let bestScore = -Infinity;
-      for (const [a, b] of nb[pk]) {
+      for (const [a, b] of nbP[pk]) {
         const n = idx(a, b);
         const seen = new Set([pk, n]);
         const qq = [[n, 1]];
@@ -239,12 +258,12 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
           const [c, s2] = qq[h];
           if (s2 + 1 >= arrive[c]) continue;
           room++;
-          for (const [x, y] of nb[c]) {
+          for (const [x, y] of nbP[c]) {
             const m = idx(x, y);
             if (!seen.has(m)) (seen.add(m), qq.push([m, s2 + 1]));
           }
         }
-        const score = room * 10 + Math.min(arrive[n], 30) + nb[n].length * 0.1;
+        const score = room * 10 + Math.min(arrive[n], 30) + nbP[n].length * 0.1;
         if (score > bestScore) (bestScore = score, best = [a, b]);
       }
       return best;
@@ -257,7 +276,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   const ghostMove = (g) => {
     if (g.st === "e") {
       // eaten, or Pac-Man was caught: out of sight until its time is up, then back in the den
-      if (t >= g.rel) [g.w, g.i, g.d, g.st, g.rel] = [den.w, den.i, 3, "c", t];
+      if (t >= g.rel) [g.w, g.i, g.d, g.st, g.rel] = [den.w, den.i, 3, "c", t]; // back in the house, then out of the door
       return;
     }
     if (t < g.rel) return;
@@ -265,11 +284,14 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     if (g.st === "c" && t % 3 === 2) return; // a little slower than Pac-Man
     if (g.st === "s" && t % 2 === 1) return;
     const k = idx(g.w, g.i);
-    let opts = nb[k];
+    let opts = nbG[k];
     const back = (g.d + 2) % 4;
     if (opts.length > 1) opts = opts.filter(([, , d]) => d !== back);
     let pick;
-    if (g.st === "s") {
+    if (house.has(k)) {
+      // in the house: to the middle, then out of the door
+      pick = nbG[k].reduce((b, o) => (toDoor[idx(o[0], o[1])] < toDoor[idx(b[0], b[1])] ? o : b), nbG[k][0]);
+    } else if (g.st === "s") {
       pick = opts[Math.floor(rand() * opts.length)];
     } else {
       const scatter = (t - modeStart) % 56 < 20;

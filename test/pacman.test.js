@@ -93,7 +93,7 @@ test("game: a power pill scares the ghosts, an eaten ghost is out of sight where
           if (t && frames[t - 1].g[k][2] === "e") assert.deepEqual([g[0], g[1]], [frames[t - 1].g[k][0], frames[t - 1].g[k][1]], "a hidden ghost does not travel");
         } else if (t && frames[t - 1].g[k][2] === "e") {
           back++;
-          assert.deepEqual([g[0], g[1]], [maze.den.w, maze.den.i], "it comes back in the den");
+          assert.ok(maze.house.has(g[0] * ROWS + g[1]), "it comes back in the ghost house");
         }
       });
       if (t && Math.abs(f.p[0] - frames[t - 1].p[0]) === maze.W - 1) tunnel++;
@@ -116,4 +116,36 @@ test("game: lives option and an empty grid", () => {
   const empty = grid(20, 1, 0).map((wk) => wk.map(([d, , i]) => [d, 0, i]));
   assert.equal(buildMaze(empty, level, "data", mulberry32(1)).pellets, 0);
   assert.ok(hashSeed("a") !== hashSeed("b"));
+});
+
+test("classic maze: vertical walls as well as horizontal ones, mirrored like the arcade board", () => {
+  const weeks = Array.from({ length: 53 }, (_, w) => Array.from({ length: w === 52 ? 4 : 7 }, (_, i) => ["d", 1, i]));
+  const m = buildMaze(weeks, level, "classic", mulberry32(1));
+  const wall = (w, i) => w >= 0 && w < m.W && i >= 0 && i < ROWS && m.exists[w * ROWS + i] && m.wall[w * ROWS + i];
+  let vertical = 0, horizontal = 0, same = 0, total = 0;
+  for (let w = 0; w < m.W; w++)
+    for (let i = 0; i < ROWS; i++) {
+      if (wall(w, i) && wall(w, i + 1)) vertical++;
+      if (wall(w, i) && wall(w + 1, i)) horizontal++;
+      if (m.exists[w * ROWS + i] && m.exists[(m.W - 1 - w) * ROWS + i]) { total++; if (wall(w, i) === wall(m.W - 1 - w, i)) same++; }
+    }
+  assert.ok(vertical > 20 && horizontal > 20, `vertical ${vertical}, horizontal ${horizontal}`);
+  assert.ok(same / total > 0.85, `mirrored: ${same}/${total}`);
+});
+
+test("ghost house: three cells with a door above the middle one; Pac-Man never goes in, the ghosts start in it", () => {
+  for (const kind of KINDS) {
+    const { maze, frames } = playGame(grid(53, 11, 0.5), level, { kind, seedText: "h" });
+    assert.equal(maze.house.size, 3);
+    assert.ok(maze.house.has(maze.den.w * ROWS + maze.den.i));
+    assert.ok(!maze.wall[maze.door.w * ROWS + maze.door.i] && maze.door.i === maze.den.i - 1 && maze.door.w === maze.den.w, "a free door above the middle");
+    for (const k of maze.house) assert.ok(!maze.pellet[k] && !maze.wall[k]);
+    for (const f of frames) assert.ok(!maze.house.has(f.p[0] * ROWS + f.p[1]), "Pac-Man stays out");
+    assert.ok(frames[0].g.every((g) => maze.house.has(g[0] * ROWS + g[1])), "the ghosts start in the house");
+    // they leave by the door: the first cell outside the house is the door
+    for (let k = 0; k < 4; k++) {
+      const out = frames.find((f) => !maze.house.has(f.g[k][0] * ROWS + f.g[k][1]));
+      assert.deepEqual([out.g[k][0], out.g[k][1]], [maze.door.w, maze.door.i]);
+    }
+  }
 });

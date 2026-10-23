@@ -872,9 +872,12 @@ function heatmapSection(d, X, W = 940) {
         A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
         dots.push(`<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${dotSvg}</g>`);
       }
-    // the ghosts' den: a small house with a pink door, where they start, come out of and come back to
-    const dx = r3(x0 + maze.den.w * step), dy = r3(yOf(maze.den.w, maze.den.i));
-    const house = `<g${A.a(1.9, 0.5, { o: 0 })}><rect x="${r3(dx + 0.8)}" y="${r3(dy + 0.8)}" width="${CELL - 1.6}" height="${CELL - 1.6}" rx="3.6" fill="${body}" stroke="${edge}" stroke-width="1.1" stroke-dasharray="2.6 2" opacity="0.9"/><rect x="${r3(dx + 3)}" y="${r3(dy - 0.2)}" width="${CELL - 6}" height="1.8" rx="0.9" fill="#ffa6d9"/></g>`;
+    // the ghost house, as in the arcade: a box three days wide with a pink door in the top edge, over the middle one
+    const hs = [...maze.house].map((k) => Math.floor(k / 7));
+    const hx = r3(x0 + Math.min(...hs) * step), hw = r3((Math.max(...hs) - Math.min(...hs)) * step + CELL);
+    const hy = r3(yOf(maze.den.w, maze.den.i));
+    const dxm = r3(x0 + maze.den.w * step);
+    const house = `<g${A.a(1.9, 0.5, { o: 0 })}><rect x="${hx}" y="${hy}" width="${hw}" height="${CELL}" rx="4" fill="${edge}"/><rect x="${r3(hx + 1.5)}" y="${r3(hy + 1.5)}" width="${r3(hw - 3)}" height="${CELL - 3}" rx="2.8" fill="${c.bg1}"/><rect x="${r3(dxm + 1.5)}" y="${r3(hy - 0.4)}" width="${CELL - 3}" height="2.2" rx="1" fill="#ffa6d9"/></g>`;
     return `${walls}${house}<g${A.a(2.0, 0.5, { o: 0 })}>${dots.join("")}</g>`;
   };
   // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
