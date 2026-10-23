@@ -817,8 +817,6 @@ function heatmapSection(d, X, W = 940) {
   // Pac-Man mode: the whole game is simulated here (src/pacman.js) and written as keyframes, like the snake. Pellets are the days
   // with contributions (they fade when eaten), the walls are the quiet days that became walls, and a loop restarts the game.
   const PAC_HOLD = 10; // frames at the end of a game: the board stays while WIN / GAME OVER shows
-  const WALL = mix(c.bg1, "#000000", 0.45); // dark blocks with a bright blue edge, like the walls of the arcade, not like a day
-  const WALL_EDGE = "#4a63ff";
   const GHOST_COLORS = ["#ff4d4d", "#ffa6d9", "#4de8ff", "#ffb347"]; // Blinky, Pinky, Inky, Clyde
   const half = CELL / 2;
   const pac = game && game.maze.pellets > 0 ? game : null;
@@ -833,37 +831,48 @@ function heatmapSection(d, X, W = 940) {
   let pg = null;
   const geom = () => (pg ??= pacGeom());
   const centre = (w, i) => [x0 + w * step + half, yOf(w, i) + half];
-  const dot = (k, big) => {
-    const [cx, cy] = centre(Math.floor(k / 7), k % 7);
-    return big
-      ? `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="3.4" fill="#fff"${A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.25" }, { dur: 0.7, ease: "steps(1)" })}/>`
-      : `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="1.7" fill="#fff" opacity="0.9"/>`;
-  };
-  // the board: walls, empty days, and the pellets (the colored day with a dot)
+  // the board, skinned by the heatmap: the walls are joined into one outline in the theme's activity colour, the pellets are the days
+  // (a dot in the colour of its level, bigger for a busier day) and the four power pills are the busiest days. No day shapes.
   const pacBoard = () => {
-    const { maze, frames } = pac;
+    const { maze } = pac;
     const { eatT, T, pct, delay } = geom();
     const still = A.t !== undefined;
-    const now = still ? Math.min(frames.length - 1, Math.round((0.15 + 0.6 * A.t) * (frames.length - 1))) : 0;
-    return weeks
-      .map(
-        (wk, w) =>
-          `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
-            .map(([key, n, i]) => {
-              const k = w * 7 + i;
-              if (maze.wall[k]) return `<rect x="${r3(x0 + w * step)}" y="${r3(yOf(w, i))}" width="${CELL}" height="${CELL}" rx="3.5" fill="${WALL}" stroke="${WALL_EDGE}" stroke-width="1.6"/>`;
-              const empty = cell(w, i, 0);
-              if (!maze.pellet[k]) return empty;
-              const pellet = `${cell(w, i, level(n), `<title>${n} · ${key}</title>`)}${dot(k, maze.power.has(k))}`;
-              if (still) return eatT.has(k) && eatT.get(k) <= now ? empty : empty + pellet;
-              const e = eatT.get(k);
-              if (e === undefined) return empty + pellet;
-              A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
-              return `${empty}<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${pellet}</g>`;
-            })
-            .join("")}</g>`,
-      )
-      .join("");
+    const now = still ? Math.min(pac.frames.length - 1, Math.round((0.15 + 0.6 * A.t) * (pac.frames.length - 1))) : 0;
+    const edge = c.heat[3];
+    const body = mix(c.bg1, c.heat[2], 0.18);
+    const isWall = (w, i) => w >= 0 && w < weeks.length && i >= 0 && i < 7 && maze.exists[w * 7 + i] === 1 && maze.wall[w * 7 + i] === 1;
+    const gap = step - CELL;
+    const outer = [];
+    const inner = [];
+    for (const [w, wk] of weeks.entries())
+      for (const [, , i] of wk) {
+        if (!isWall(w, i)) continue;
+        const x = r3(x0 + w * step), y = r3(yOf(w, i));
+        outer.push(`<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="4.6"/>`);
+        inner.push(`<rect x="${r3(x + 1.5)}" y="${r3(y + 1.5)}" width="${CELL - 3}" height="${CELL - 3}" rx="3.2"/>`);
+        // a bridge reaches into both cells as far as their rounded corners, so a joined row has a straight edge, not a scallop
+        if (isWall(w + 1, i)) { outer.push(`<rect x="${r3(x + CELL - 4.6)}" y="${y}" width="${r3(gap + 9.2)}" height="${CELL}"/>`); inner.push(`<rect x="${r3(x + CELL - 4.8)}" y="${r3(y + 1.5)}" width="${r3(gap + 9.6)}" height="${CELL - 3}"/>`); }
+        if (isWall(w, i + 1)) { outer.push(`<rect x="${x}" y="${r3(y + CELL - 4.6)}" width="${CELL}" height="${r3(gap + 9.2)}"/>`); inner.push(`<rect x="${r3(x + 1.5)}" y="${r3(y + CELL - 4.8)}" width="${CELL - 3}" height="${r3(gap + 9.6)}"/>`); }
+        if (isWall(w + 1, i) && isWall(w, i + 1) && isWall(w + 1, i + 1)) { outer.push(`<rect x="${r3(x + CELL - 4.6)}" y="${r3(y + CELL - 4.6)}" width="${r3(gap + 9.2)}" height="${r3(gap + 9.2)}"/>`); inner.push(`<rect x="${r3(x + CELL - 4.8)}" y="${r3(y + CELL - 4.8)}" width="${r3(gap + 9.6)}" height="${r3(gap + 9.6)}"/>`); }
+      }
+    const walls = `<g${A.a(1.7, 0.6, { o: 0 })}><g fill="${edge}">${outer.join("")}</g><g fill="${body}">${inner.join("")}</g></g>`;
+    const dots = [];
+    for (const [w, wk] of weeks.entries())
+      for (const [key, n, i] of wk) {
+        const k = w * 7 + i;
+        if (!maze.pellet[k] || (still && eatT.has(k) && eatT.get(k) <= now)) continue;
+        const [cx, cy] = centre(w, i);
+        const lv = maze.pellet[k];
+        const power = maze.power.has(k);
+        const col = mix(c.heat[lv], "#ffffff", power ? 0.7 : 0.45);
+        const pulse = power ? A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.3" }, { dur: 0.7, ease: "steps(1)" }) : "";
+        const dotSvg = `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="${power ? 4.8 : r3(1.4 + lv * 0.45)}" fill="${col}"${pulse}><title>${n} · ${key}</title></circle>`;
+        const e = eatT.get(k);
+        if (still || e === undefined) { dots.push(dotSvg); continue; }
+        A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
+        dots.push(`<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${dotSvg}</g>`);
+      }
+    return `${walls}<g${A.a(2.0, 0.5, { o: 0 })}>${dots.join("")}</g>`;
   };
   // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
   // and the rest is thinned out with Ramer-Douglas-Peucker so a straight corridor is one segment
@@ -875,6 +884,16 @@ function heatmapSection(d, X, W = 940) {
       const nextSame = t < px.length - 1 && px[t + 1][0] === p[0] && px[t + 1][1] === p[1];
       if (t === 0 || t === px.length - 1 || !same || nextSame) keep.push([t, p[0], p[1]]);
     });
+    // through the tunnel: out of the edge (half a tick), then in from the other edge (the clip hides what is outside the board)
+    const wide = (weeks.length - 3) * step;
+    for (let n = keep.length - 1; n > 0; n--) {
+      const [t0, x0p, y0p] = keep[n - 1], [t1, x1p, y1p] = keep[n];
+      if (Math.abs(x1p - x0p) > wide && y0p === y1p) {
+        const dir = x1p < x0p ? 1 : -1;
+        const mid = (t0 + t1) / 2;
+        keep.splice(n, 0, [mid, x0p + dir * step, y0p], [mid + 0.01, x1p - dir * step, y1p]);
+      }
+    }
     const runs = [[keep[0]]];
     for (let n = 1; n < keep.length; n++) {
       const d = Math.abs(keep[n][1] - keep[n - 1][1]) + Math.abs(keep[n][2] - keep[n - 1][2]);
@@ -912,8 +931,8 @@ function heatmapSection(d, X, W = 940) {
     const eyes = `<circle cx="-2.4" cy="-1.2" r="2" fill="#fff"/><circle cx="2.4" cy="-1.2" r="2" fill="#fff"/><circle cx="${r3(-2.4 + look[0])}" cy="${r3(-1.2 + look[1])}" r="1" fill="#1a2cff"/><circle cx="${r3(2.4 + look[0])}" cy="${r3(-1.2 + look[1])}" r="1" fill="#1a2cff"/>`;
     const face = `<circle cx="-2.2" cy="-1.5" r="1" fill="#ffe3e3"/><circle cx="2.2" cy="-1.5" r="1" fill="#ffe3e3"/><path d="M-3.6 2.4L-2.4 1.5L-1.2 2.4L0 1.5L1.2 2.4L2.4 1.5L3.6 2.4" fill="none" stroke="#ffe3e3" stroke-width="0.8"/>`;
     const layer = (body, anim) => (animated ? `<g style="animation:${anim} ${geom().T}s step-end ${geom().delay}s infinite backwards">${body}</g>` : body);
-    if (!animated) return st === "s" ? `<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}` : st === "e" ? eyes : `<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`;
-    return `${layer(`<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>`, `gc${k}`)}${layer(`<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}`, `gs${k}`)}${layer(eyes, `gn${k}`)}`;
+    if (!animated) return st === "e" ? "" : st === "s" ? `<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}` : `<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`;
+    return `${layer(`<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`, `gc${k}`)}${layer(`<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}`, `gs${k}`)}`;
   };
   const pacSprites = () => {
     const { frames, result } = pac;
@@ -943,7 +962,6 @@ function heatmapSection(d, X, W = 940) {
       moveKeyframes(`gv${k}`, frames.map((f) => [f.g[k][0], f.g[k][1]]));
       stepKeyframes(`gc${k}`, frames.map((f) => `opacity:${f.g[k][2] === "c" ? 1 : 0}`));
       stepKeyframes(`gs${k}`, frames.map((f) => `opacity:${f.g[k][2] === "s" ? 1 : 0}`));
-      stepKeyframes(`gn${k}`, frames.map((f) => `opacity:${f.g[k][2] === "s" ? 0 : 1}`));
       ghosts += `<g ${anim(`gv${k}`)}>${ghostShape(k, "c", 0, true)}</g>`;
     }
     const lives = Array.from({ length: o.pacmanLives }, (_, n) => {
@@ -953,7 +971,7 @@ function heatmapSection(d, X, W = 940) {
     const end = pct(F - PAC_HOLD);
     A.css.push(`@keyframes pend{0%,${end}%{opacity:0}${r3(end + 0.05)}%,100%{opacity:1}}`);
     const label = `<text x="${r3(690 + (W - 940))}" y="698" text-anchor="end" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.pac}" style="animation:pend ${T}s step-end ${delay}s infinite">${result === "win" ? "YOU WIN" : "GAME OVER"}</text>`;
-    return `<g ${anim("pmv")}><g style="animation:pmr ${T}s step-end ${delay}s infinite backwards">${pacBodyMoving()}</g></g>${ghosts}${lives}${label}`;
+    return `<clipPath id="pacclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath><g clip-path="url(#pacclip)"><g ${anim("pmv")}><g style="animation:pmr ${T}s step-end ${delay}s infinite backwards">${pacBodyMoving()}</g></g>${ghosts}</g>${lives}${label}`;
   };
   return {
     w: W, top: 674, nx: 30, h: 180,

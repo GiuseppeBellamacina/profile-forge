@@ -62,6 +62,12 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
   // the den and the cells around it, and the start, are never walls
   const keep = new Set([denK, startK]);
   for (const [a, b] of DIRS) if (inGrid(dw + a, di + b) && exists[idx(dw + a, di + b)]) keep.add(idx(dw + a, di + b));
+  // tunnels: on up to two rows whose first and last day both exist, the left and the right edge are joined (out on one side,
+  // in on the other, as in the arcade). The mouth of a tunnel is never walled up.
+  const eligible = [...Array(ROWS).keys()].filter((i) => W >= 10 && exists[idx(0, i)] && exists[idx(W - 1, i)]).sort((a, b) => Math.abs(a - 3) - Math.abs(b - 3) || a - b);
+  const tunnels = eligible.length ? [eligible[0], ...eligible.filter((i) => Math.abs(i - eligible[0]) >= 3).slice(0, 1)] : [];
+  for (const i of tunnels) for (const w of [0, 1, W - 2, W - 1]) keep.add(idx(w, i));
+  const link = (w, i) => (tunnels.includes(i) ? (w === 0 ? idx(W - 1, i) : w === W - 1 ? idx(0, i) : -1) : -1);
 
   const reach = () => {
     const seen = new Uint8Array(N);
@@ -70,11 +76,9 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
     let n = 1;
     for (let h = 0; h < q.length; h++) {
       const [w, i] = at(q[h]);
-      for (const [a, b] of DIRS) {
-        if (!inGrid(w + a, i + b)) continue;
-        const k = idx(w + a, i + b);
-        if (!wall[k] && !seen[k]) (seen[k] = 1, n++, q.push(k));
-      }
+      const around = DIRS.filter(([a, b]) => inGrid(w + a, i + b)).map(([a, b]) => idx(w + a, i + b));
+      if (link(w, i) >= 0) around.push(link(w, i));
+      for (const k of around) if (!wall[k] && !seen[k]) (seen[k] = 1, n++, q.push(k));
     }
     return { n, seen };
   };
@@ -96,7 +100,7 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
       const [kw, ki] = at(k);
       const deadEnd = DIRS.some(([a, b]) => {
         const w = kw + a, i = ki + b;
-        return inGrid(w, i) && !wall[idx(w, i)] && DIRS.filter(([c, d]) => inGrid(w + c, i + d) && !wall[idx(w + c, i + d)]).length < 2;
+        return inGrid(w, i) && !wall[idx(w, i)] && DIRS.filter(([c, d]) => inGrid(w + c, i + d) && !wall[idx(w + c, i + d)]).length + (link(w, i) >= 0 ? 1 : 0) < 2;
       });
       if (deadEnd || reach().n !== freeCount) (wall[k] = 0, freeCount++);
     }
@@ -115,22 +119,25 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
     if (inQ.length) power.add(inQ.sort((a, b) => count[b] - count[a] || a - b)[0]);
   }
   return {
-    W, N, kind, wall, exists, count, pellet, power,
+    W, N, kind, wall, exists, count, pellet, power, tunnels,
     pellets: open.filter((k) => pellet[k]).length,
     den: { w: dw, i: di }, start: { w: at(startK)[0], i: at(startK)[1] },
   };
 }
 
-/** One game. frames[t] = { p: [w, i, dir], a: 1 if Pac-Man is alive, g: [[w, i, state, dir] x 4] (c chasing, s scared, e eyes), l: lives, e: pellet cells eaten this frame }. */
+/** One game. frames[t] = { p: [w, i, dir], a: 1 if Pac-Man is alive, g: [[w, i, state, dir] x 4] (c chasing, s scared, e out of sight: eaten, or Pac-Man was caught), l: lives, e: pellet cells eaten this frame }. */
 export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 30 } = {}) {
   const rand = mulberry32(seed);
-  const { W, N, wall, den, start } = maze;
+  const { W, N, wall, den, start, tunnels } = maze;
   const idx = (w, i) => w * ROWS + i;
   const free = (w, i) => w >= 0 && w < W && i >= 0 && i < ROWS && !wall[idx(w, i)];
   const nb = Array.from({ length: N }, (_, k) => {
     if (wall[k]) return [];
     const w = Math.floor(k / ROWS), i = k % ROWS;
-    return GHOST_ORDER.map((d) => [w + DIRS[d][0], i + DIRS[d][1], d]).filter(([a, b]) => free(a, b));
+    const list = GHOST_ORDER.map((d) => [w + DIRS[d][0], i + DIRS[d][1], d]).filter(([a, b]) => free(a, b));
+    if (tunnels.includes(i) && w === W - 1 && free(0, i)) list.push([0, i, 0]); // out on the right, in on the left
+    if (tunnels.includes(i) && w === 0 && free(W - 1, i)) list.push([W - 1, i, 2]);
+    return list;
   });
   const bfs = (sources) => {
     const dist = new Int16Array(N).fill(-1);
@@ -139,8 +146,6 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     for (let h = 0; h < q.length; h++) for (const [a, b] of nb[q[h]]) if (dist[idx(a, b)] < 0) (dist[idx(a, b)] = dist[q[h]] + 1, q.push(idx(a, b)));
     return dist;
   };
-  const denK = idx(den.w, den.i);
-  const toDen = bfs([denK]);
   const corners = [[W - 1, 0], [0, 0], [W - 1, ROWS - 1], [0, ROWS - 1]];
 
   const left = Uint8Array.from(maze.pellet);
@@ -148,9 +153,11 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   const frames = [];
   let t = 0;
   let livesLeft = lives;
-  let pac, ghosts, modeStart, stall;
+  let pac, ghosts, modeStart, stall, goal, before0;
   const reset = () => {
     pac = { w: start.w, i: start.i, d: 0 };
+    goal = -1;
+    before0 = -1;
     ghosts = GHOSTS.map((_, k) => ({ k, w: den.w, i: den.i, d: 3, st: "c", until: 0, rel: t + 2 + k * 9 }));
     modeStart = t;
   };
@@ -159,6 +166,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   const rec = (alive = 1, eaten = []) => frames.push({ p: [pac.w, pac.i, pac.d], a: alive, g: ghosts.map((g) => [g.w, g.i, g.st, g.d]), l: livesLeft, e: eaten });
   const eat = (eaten) => {
     const k = idx(pac.w, pac.i);
+    if (k === goal) goal = -1;
     if (!left[k]) return;
     left[k] = 0;
     remaining--;
@@ -192,6 +200,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       for (const [a, b] of nb[q[h]]) {
         const n = idx(a, b);
         if (dist[n] >= 0) continue;
+        if (q[h] === pk && n === before0 && arrive[pk] > 10 && nb[pk].length > 1) continue; // no turning back on the spot when nobody is near
         const s = dist[q[h]] + 1;
         if (margin !== -Infinity && s + margin >= arrive[n]) continue;
         dist[n] = s;
@@ -210,9 +219,12 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       let best = Infinity;
       for (const k of maze.power) if (left[k] && dist[k] > 0 && dist[k] < best) (best = dist[k], target = k);
     }
+    // keep going for the pellet he chose until it is eaten or out of reach (changing his mind at every step made him zigzag)
+    if (target < 0 && goal >= 0 && left[goal] && goal !== pk && dist[goal] > 0) target = goal;
     if (target < 0) {
       let best = Infinity;
       for (const k of q) if (left[k] && k !== pk && dist[k] - left[k] * 0.01 < best) (best = dist[k] - left[k] * 0.01, target = k);
+      goal = target;
     }
     if (target < 0) {
       // nothing safe: run to the neighbour with the most room to keep running (cells still reachable before the ghosts), not into a dead end
@@ -243,6 +255,11 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   };
 
   const ghostMove = (g) => {
+    if (g.st === "e") {
+      // eaten, or Pac-Man was caught: out of sight until its time is up, then back in the den
+      if (t >= g.rel) [g.w, g.i, g.d, g.st, g.rel] = [den.w, den.i, 3, "c", t];
+      return;
+    }
     if (t < g.rel) return;
     if (g.st === "s" && t >= g.until) g.st = "c";
     if (g.st === "c" && t % 3 === 2) return; // a little slower than Pac-Man
@@ -252,9 +269,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     const back = (g.d + 2) % 4;
     if (opts.length > 1) opts = opts.filter(([, , d]) => d !== back);
     let pick;
-    if (g.st === "e") {
-      pick = nb[k].reduce((b, o) => (toDen[idx(o[0], o[1])] < toDen[idx(b[0], b[1])] ? o : b), nb[k][0]);
-    } else if (g.st === "s") {
+    if (g.st === "s") {
       pick = opts[Math.floor(rand() * opts.length)];
     } else {
       const scatter = (t - modeStart) % 56 < 20;
@@ -270,7 +285,6 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     }
     if (!pick) return;
     [g.w, g.i, g.d] = pick;
-    if (g.st === "e" && idx(g.w, g.i) === denK) (g.st = "c", g.rel = t + 3);
   };
 
   let result = null;
@@ -282,14 +296,15 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       const same = g.w === pac.w && g.i === pac.i;
       const swapped = before.g[n][0] === pac.w && before.g[n][1] === pac.i && g.w === before.p[0] && g.i === before.p[1];
       if (!same && !swapped) return;
-      if (g.st === "s") (g.st = "e", g.d = (g.d + 2) % 4);
+      if (g.st === "s") (g.st = "e", g.rel = t + 14);
       else if (g.st === "c") dead = true;
     });
     return dead;
   };
-  const die = () => {
+  const die = (eaten = []) => {
     livesLeft--;
-    rec(0);
+    rec(0, eaten); // a pellet he ate in the same move still counts
+    for (const g of ghosts) (g.st = "e", g.rel = Infinity); // the ghosts disappear with him
     hold(5, 0);
     if (livesLeft <= 0) return (result = "over");
     t++;
@@ -307,14 +322,15 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     const eaten = [];
     if (step) {
       const d = DIRS.findIndex(([a, b]) => pac.w + a === step[0] && pac.i + b === step[1]);
-      [pac.w, pac.i, pac.d] = [step[0], step[1], d < 0 ? pac.d : d];
+      before0 = idx(pac.w, pac.i);
+      [pac.w, pac.i, pac.d] = [step[0], step[1], d < 0 ? (step[0] < pac.w ? 0 : 2) : d]; // d < 0: through the tunnel
     }
     if (contact(before)) { die(); continue; }
     eat(eaten);
     if (!remaining) { rec(1, eaten); hold(10); result = "win"; break; }
     const mid = { p: [pac.w, pac.i], g: ghosts.map((g) => [g.w, g.i]) };
     for (const g of ghosts) ghostMove(g);
-    if (contact({ p: before.p, g: mid.g })) { die(); continue; }
+    if (contact({ p: before.p, g: mid.g })) { die(eaten); continue; }
     rec(1, eaten);
   }
   if (!result) { hold(10); result = "over"; }

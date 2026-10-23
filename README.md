@@ -67,7 +67,7 @@ profile-forge works differently:
 | Streak | Total contributions, current streak and longest streak with date ranges (a day with zero contributions *today* does not break the streak) |
 | Top languages | Animated stacked bar and legend, with configurable `size_weight` / `count_weight` ranking |
 | Trophies | The classic cup in the colour of its level (laurel from A, two cups at S, three at S+, a shimmer at SSS), plus 66 secret trophies (gems with their own glyph) earned from your calendar, repos, languages and profile |
-| Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes, moons or a honeycomb of hexagons, as an animated snake that eats them (any length, classic, rainbow or glowing), or as a whole game of Pac-Man with the four ghosts |
+| Heatmap | The last 53 weeks of contributions, as squares, circles, triangles, snowflakes, moons or a honeycomb of hexagons, as an animated snake that eats them (any length, classic, rainbow or glowing), or as a whole game of Pac-Man with the four ghosts on a playfield skinned by your heatmap |
 | Terminal | A terminal window whose commands type themselves, with your own lines |
 | Rhythm | When you code: average contributions per weekday and total per month, as animated bars |
 | Contributed to | The organizations you contributed to, as tags with their logo and @login, in rows or scrolling left or right |

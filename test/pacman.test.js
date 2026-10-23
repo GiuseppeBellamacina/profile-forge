@@ -16,11 +16,11 @@ const reachable = (maze) => {
   const idx = (w, i) => w * ROWS + i;
   const seen = new Set([idx(maze.den.w, maze.den.i)]);
   const q = [[maze.den.w, maze.den.i]];
-  for (let h = 0; h < q.length; h++)
-    for (const [a, b] of DIRS) {
-      const w = q[h][0] + a, i = q[h][1] + b;
-      if (w >= 0 && w < maze.W && i >= 0 && i < ROWS && !maze.wall[idx(w, i)] && !seen.has(idx(w, i))) (seen.add(idx(w, i)), q.push([w, i]));
-    }
+  for (let h = 0; h < q.length; h++) {
+    const around = DIRS.map(([a, b]) => [q[h][0] + a, q[h][1] + b]);
+    if (maze.tunnels.includes(q[h][1])) around.push(q[h][0] === 0 ? [maze.W - 1, q[h][1]] : q[h][0] === maze.W - 1 ? [0, q[h][1]] : [-9, 0]); // the tunnel
+    for (const [w, i] of around) if (w >= 0 && w < maze.W && i >= 0 && i < ROWS && !maze.wall[idx(w, i)] && !seen.has(idx(w, i))) (seen.add(idx(w, i)), q.push([w, i]));
+  }
   return seen;
 };
 
@@ -71,8 +71,9 @@ test("game: it ends, is the same for the same data, and obeys the rules", () => 
         lives = f.l;
         for (const k of f.e) { assert.ok(!seen.has(k) && maze.pellet[k], "a pellet is eaten once"); seen.add(k); eaten++; }
         if (t && f.a && frames[t - 1].a) {
-          const d = Math.abs(f.p[0] - frames[t - 1].p[0]) + Math.abs(f.p[1] - frames[t - 1].p[1]);
-          assert.ok(d <= 1 || f.l < frames[t - 1].l, "a step of one cell");
+          const dw = Math.abs(f.p[0] - frames[t - 1].p[0]), di = Math.abs(f.p[1] - frames[t - 1].p[1]);
+          const tunnel = dw === maze.W - 1 && di === 0 && maze.tunnels.includes(f.p[1]);
+          assert.ok(dw + di <= 1 || tunnel || f.l < frames[t - 1].l, "a step of one cell, or through a tunnel");
         }
       });
       if (result === "win") assert.equal(eaten, maze.pellets, "a win means every pellet was eaten");
@@ -80,14 +81,33 @@ test("game: it ends, is the same for the same data, and obeys the rules", () => 
     }
 });
 
-test("game: ghosts get scared by a power pill and an eaten ghost goes back as eyes", () => {
-  // over a few games, some power pill is eaten and some ghost turns scared, then eyes
-  let scared = 0, eyes = 0;
+test("game: a power pill scares the ghosts, an eaten ghost is out of sight where it was caught and comes back out of the den", () => {
+  let scared = 0, hidden = 0, back = 0, tunnel = 0;
   for (let s = 1; s <= 12; s++) {
-    const { frames } = playGame(grid(53, s, 0.5), level, { kind: "open", seedText: "p" + s });
-    for (const f of frames) for (const g of f.g) (g[2] === "s" && scared++, g[2] === "e" && eyes++);
+    const { frames, maze } = playGame(grid(53, s, 0.5), level, { kind: "open", seedText: "p" + s });
+    frames.forEach((f, t) => {
+      f.g.forEach((g, k) => {
+        if (g[2] === "s") scared++;
+        if (g[2] === "e") {
+          hidden++;
+          if (t && frames[t - 1].g[k][2] === "e") assert.deepEqual([g[0], g[1]], [frames[t - 1].g[k][0], frames[t - 1].g[k][1]], "a hidden ghost does not travel");
+        } else if (t && frames[t - 1].g[k][2] === "e") {
+          back++;
+          assert.deepEqual([g[0], g[1]], [maze.den.w, maze.den.i], "it comes back in the den");
+        }
+      });
+      if (t && Math.abs(f.p[0] - frames[t - 1].p[0]) === maze.W - 1) tunnel++;
+    });
   }
-  assert.ok(scared > 0 && eyes > 0, `scared ${scared}, eyes ${eyes}`);
+  assert.ok(scared > 0 && hidden > 0 && back > 0, `scared ${scared}, hidden ${hidden}, back ${back}`);
+  assert.ok(tunnel > 0, "Pac-Man uses a tunnel in some game");
+});
+
+test("mazes: tunnels join the two edges on rows where both ends exist, and their mouths are open", () => {
+  const m = buildMaze(grid(53, 3, 0.4), level, "data", mulberry32(1));
+  assert.ok(m.tunnels.length >= 1 && m.tunnels.length <= 2);
+  for (const i of m.tunnels) for (const w of [0, 1, m.W - 2, m.W - 1]) assert.equal(m.wall[w * ROWS + i], 0, "an open mouth");
+  assert.deepEqual(buildMaze(grid(8, 1, 0.4), level, "open", mulberry32(1)).tunnels, [], "no tunnel on a narrow board");
 });
 
 test("game: lives option and an empty grid", () => {
