@@ -133,12 +133,12 @@ test("classic maze: vertical walls as well as horizontal ones, mirrored like the
   assert.ok(same / total > 0.85, `mirrored: ${same}/${total}`);
 });
 
-test("ghost house: three cells with a door above the middle one; Pac-Man never goes in, the ghosts start in it", () => {
+test("ghost house: 5 x 3 days with a door above the middle of the top edge; Pac-Man never goes in, the ghosts start in it", () => {
   for (const kind of KINDS) {
     const { maze, frames } = playGame(grid(53, 11, 0.5), level, { kind, seedText: "h" });
-    assert.equal(maze.house.size, 3);
+    assert.equal(maze.house.size, 15);
     assert.ok(maze.house.has(maze.den.w * ROWS + maze.den.i));
-    assert.ok(!maze.wall[maze.door.w * ROWS + maze.door.i] && maze.door.i === maze.den.i - 1 && maze.door.w === maze.den.w, "a free door above the middle");
+    assert.ok(!maze.wall[maze.door.w * ROWS + maze.door.i] && maze.door.i === maze.den.i - 2 && maze.door.w === maze.den.w, "a free door above the middle of the top edge");
     for (const k of maze.house) assert.ok(!maze.pellet[k] && !maze.wall[k]);
     for (const f of frames) assert.ok(!maze.house.has(f.p[0] * ROWS + f.p[1]), "Pac-Man stays out");
     assert.ok(frames[0].g.every((g) => maze.house.has(g[0] * ROWS + g[1])), "the ghosts start in the house");
@@ -148,4 +148,22 @@ test("ghost house: three cells with a door above the middle one; Pac-Man never g
       assert.deepEqual([out.g[k][0], out.g[k][1]], [maze.door.w, maze.door.i]);
     }
   }
+});
+
+test("game: Pac-Man does not pace back and forth, and the score follows the arcade rules", () => {
+  for (const kind of KINDS)
+    for (let s = 1; s <= 8; s++) {
+      const { frames, maze } = playGame(grid(53, s * 5, 0.5), level, { kind, seedText: "z" + s });
+      let run = 0, worst = 0, score = 0;
+      frames.forEach((f, t) => {
+        const a = t >= 2 ? frames[t - 2].p : null;
+        const pacing = a && f.a && !f.e.length && f.p[0] === a[0] && f.p[1] === a[1] && (f.p[0] !== frames[t - 1].p[0] || f.p[1] !== frames[t - 1].p[1]);
+        run = pacing ? run + 1 : 0;
+        worst = Math.max(worst, run);
+        assert.ok(f.s >= score && f.s % 10 === 0, "the score only goes up, in tens");
+        score = f.s;
+      });
+      assert.ok(worst < 6, `${kind} ${s}: paced ${worst} times in a row`);
+      assert.ok(frames.at(-1).s > 0 && maze.pellets > 0, "something was scored");
+    }
 });

@@ -872,12 +872,13 @@ function heatmapSection(d, X, W = 940) {
         A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
         dots.push(`<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${dotSvg}</g>`);
       }
-    // the ghost house, as in the arcade: a box three days wide with a pink door in the top edge, over the middle one
-    const hs = [...maze.house].map((k) => Math.floor(k / 7));
-    const hx = r3(x0 + Math.min(...hs) * step), hw = r3((Math.max(...hs) - Math.min(...hs)) * step + CELL);
-    const hy = r3(yOf(maze.den.w, maze.den.i));
+    // the ghost house, as in the arcade: a box of 5 x 3 days with a pink door in the middle of its top edge
+    const hw0 = [...maze.house].map((k) => Math.floor(k / 7)), hi0 = [...maze.house].map((k) => k % 7);
+    const [cMin, cMax, rMin, rMax] = [Math.min(...hw0), Math.max(...hw0), Math.min(...hi0), Math.max(...hi0)];
+    const hx = r3(x0 + cMin * step), hy = r3(yOf(cMin, rMin));
+    const hw = r3((cMax - cMin) * step + CELL), hh = r3((rMax - rMin) * step + CELL);
     const dxm = r3(x0 + maze.den.w * step);
-    const house = `<g${A.a(1.9, 0.5, { o: 0 })}><rect x="${hx}" y="${hy}" width="${hw}" height="${CELL}" rx="4" fill="${edge}"/><rect x="${r3(hx + 1.5)}" y="${r3(hy + 1.5)}" width="${r3(hw - 3)}" height="${CELL - 3}" rx="2.8" fill="${c.bg1}"/><rect x="${r3(dxm + 1.5)}" y="${r3(hy - 0.4)}" width="${CELL - 3}" height="2.2" rx="1" fill="#ffa6d9"/></g>`;
+    const house = `<g${A.a(1.9, 0.5, { o: 0 })}><rect x="${hx}" y="${hy}" width="${hw}" height="${hh}" rx="5" fill="${edge}"/><rect x="${r3(hx + 1.5)}" y="${r3(hy + 1.5)}" width="${r3(hw - 3)}" height="${r3(hh - 3)}" rx="3.6" fill="${c.bg1}"/><rect x="${r3(dxm + 1.5)}" y="${r3(hy - 0.4)}" width="${CELL - 3}" height="2.4" rx="1" fill="#ffa6d9"/></g>`;
     return `${walls}${house}<g${A.a(2.0, 0.5, { o: 0 })}>${dots.join("")}</g>`;
   };
   // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
@@ -940,6 +941,35 @@ function heatmapSection(d, X, W = 940) {
     if (!animated) return st === "e" ? "" : st === "s" ? `<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}` : `<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`;
     return `${layer(`<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`, `gc${k}`)}${layer(`<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}`, `gs${k}`)}`;
   };
+  // the score, as in the arcade ("1UP 270   HIGH SCORE 270"). Every score is a multiple of 10, so the last 0 is fixed; each of the other
+  // digits is a strip of 0-9 behind a window that slides by steps, so the number changes inside a README image too.
+  const pacScore = (frames, now) => {
+    const final = frames.at(-1).s;
+    const D = String(final / 10).length;
+    const DW = 7.4, LH = 14;
+    const showHigh = W >= 880;
+    const total = 30 + DW * (D + 1) + (showHigh ? 22 + 74 + DW * (D + 1) : 0);
+    const X = r3(596 + (W - 940) - total);
+    const label = (x, text) => `<text x="${r3(x)}" y="698" font-size="9" font-weight="700" font-family="${FD}" letter-spacing="1" fill="${c.pac}">${text}</text>`;
+    const glyph = (x, ch) => `<text x="${r3(x)}" y="698" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" fill="${c.text}">${ch}</text>`;
+    const digitAt = (n, p) => (n < 10 ** p && p > 0 ? 10 : Math.floor(n / 10 ** p) % 10); // 10 = blank (no leading zeros)
+    const fixed = (x, value) => [...String(value)].map((ch, j) => glyph(x + DW * j + DW / 2, ch)).join("");
+    const animated = now === undefined;
+    const x1 = X + 30;
+    let digits;
+    if (animated) {
+      digits = "";
+      for (let j = 0; j < D; j++) {
+        const p = D - 1 - j;
+        stepKeyframes(`sc${j}`, frames.map((f) => `transform:translateY(${-digitAt(f.s / 10, p) * LH}px)`));
+        const strip = Array.from({ length: 10 }, (_, d) => `<text x="0" y="${698 + d * LH}" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" fill="${c.text}">${d}</text>`).join("");
+        digits += `<g transform="translate(${r3(x1 + DW * j + DW / 2)} 0)"><g style="animation:sc${j} ${geom().T}s step-end ${geom().delay}s infinite backwards">${strip}</g></g>`;
+      }
+      digits = `<clipPath id="pacsc"><rect x="${r3(X - 10)}" y="687.5" width="${r3(total + 20)}" height="13"/></clipPath><g clip-path="url(#pacsc)">${digits}</g>${glyph(x1 + DW * D + DW / 2, "0")}`;
+    } else digits = fixed(x1, frames[now].s);
+    const xh = x1 + DW * (D + 1) + 22;
+    return `${label(X, "1UP")}${digits}${showHigh ? label(xh, "HIGH SCORE") + fixed(xh + 74, final) : ""}`;
+  };
   const pacSprites = () => {
     const { frames, result } = pac;
     const { F, DT, T, delay, pct } = geom();
@@ -957,7 +987,7 @@ function heatmapSection(d, X, W = 940) {
       const pacSvg = `<g transform="translate(${r3(px)} ${r3(py)}) rotate(${pd * 90})${f.a ? "" : " scale(0.4)"}">${pacBodyStill()}</g>`;
       const ghosts = f.g.map((g, k) => { const [gx, gy] = centre(g[0], g[1]); return `<g transform="translate(${r3(gx)} ${r3(gy)})">${ghostShape(k, g[2], g[3], false)}</g>`; }).join("");
       const lives = Array.from({ length: o.pacmanLives }, (_, n) => lifeIcon(n, f.l > n)).join("");
-      return `<g>${ghosts}${pacSvg}</g>${lives}`;
+      return `<g>${ghosts}${pacSvg}</g>${lives}${pacScore(frames, now)}`;
     }
     A.css.push("@keyframes pmt{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(0deg)}}@keyframes pmb{0%,100%{transform:rotate(30deg)}50%{transform:rotate(0deg)}}");
     const anim = (name) => `style="animation:${name} ${T}s linear ${delay}s infinite backwards"`;
@@ -977,7 +1007,7 @@ function heatmapSection(d, X, W = 940) {
     const end = pct(F - PAC_HOLD);
     A.css.push(`@keyframes pend{0%,${end}%{opacity:0}${r3(end + 0.05)}%,100%{opacity:1}}`);
     const label = `<text x="${r3(690 + (W - 940))}" y="698" text-anchor="end" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.pac}" style="animation:pend ${T}s step-end ${delay}s infinite">${result === "win" ? "YOU WIN" : "GAME OVER"}</text>`;
-    return `<clipPath id="pacclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath><g clip-path="url(#pacclip)"><g ${anim("pmv")}><g style="animation:pmr ${T}s step-end ${delay}s infinite backwards">${pacBodyMoving()}</g></g>${ghosts}</g>${lives}${label}`;
+    return `<clipPath id="pacclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath><g clip-path="url(#pacclip)"><g ${anim("pmv")}><g style="animation:pmr ${T}s step-end ${delay}s infinite backwards">${pacBodyMoving()}</g></g>${ghosts}</g>${lives}${label}${pacScore(frames)}`;
   };
   return {
     w: W, top: 674, nx: 30, h: 180,
