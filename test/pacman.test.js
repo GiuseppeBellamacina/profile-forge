@@ -81,25 +81,27 @@ test("game: it ends, is the same for the same data, and obeys the rules", () => 
     }
 });
 
-test("game: a power pill scares the ghosts, an eaten ghost is out of sight where it was caught and comes back out of the den", () => {
-  let scared = 0, hidden = 0, back = 0, tunnel = 0;
+test("game: a power pill scares the ghosts; an eaten ghost is a pair of eyes that goes back to the den, then comes out again", () => {
+  let scared = 0, eyes = 0, back = 0, hidden = 0, tunnel = 0; // hidden: caught Pac-Man, the ghosts vanish with him
   for (let s = 1; s <= 12; s++) {
     const { frames, maze } = playGame(grid(53, s, 0.5), level, { kind: "open", seedText: "p" + s });
     frames.forEach((f, t) => {
       f.g.forEach((g, k) => {
+        const was = t ? frames[t - 1].g[k] : null;
         if (g[2] === "s") scared++;
-        if (g[2] === "e") {
-          hidden++;
-          if (t && frames[t - 1].g[k][2] === "e") assert.deepEqual([g[0], g[1]], [frames[t - 1].g[k][0], frames[t - 1].g[k][1]], "a hidden ghost does not travel");
-        } else if (t && frames[t - 1].g[k][2] === "e") {
+        if (g[2] === "e") hidden++;
+        if (g[2] === "r") {
+          eyes++;
+          if (was[2] === "r") assert.ok(Math.abs(g[0] - was[0]) + Math.abs(g[1] - was[1]) <= 1 || Math.abs(g[0] - was[0]) === maze.W - 1, "the eyes go one cell at a time (or through a tunnel)");
+        } else if (was?.[2] === "r") {
           back++;
-          assert.ok(maze.house.has(g[0] * ROWS + g[1]), "it comes back in the ghost house");
+          assert.deepEqual([g[0], g[1]], [maze.den.w, maze.den.i], "they get to the den before the ghost is back");
         }
       });
       if (t && Math.abs(f.p[0] - frames[t - 1].p[0]) === maze.W - 1) tunnel++;
     });
   }
-  assert.ok(scared > 0 && hidden > 0 && back > 0, `scared ${scared}, hidden ${hidden}, back ${back}`);
+  assert.ok(scared > 0 && eyes > 0 && back > 0, `scared ${scared}, eyes ${eyes}, back ${back}`);
   assert.ok(tunnel > 0, "Pac-Man uses a tunnel in some game");
 });
 

@@ -946,8 +946,8 @@ function heatmapSection(d, X, W = 940) {
     const eyes = `<circle cx="-2.4" cy="-1.2" r="2" fill="#fff"/><circle cx="2.4" cy="-1.2" r="2" fill="#fff"/><circle cx="${r3(-2.4 + look[0])}" cy="${r3(-1.2 + look[1])}" r="1" fill="#1a2cff"/><circle cx="${r3(2.4 + look[0])}" cy="${r3(-1.2 + look[1])}" r="1" fill="#1a2cff"/>`;
     const face = `<circle cx="-2.2" cy="-1.5" r="1" fill="#ffe3e3"/><circle cx="2.2" cy="-1.5" r="1" fill="#ffe3e3"/><path d="M-3.6 2.4L-2.4 1.5L-1.2 2.4L0 1.5L1.2 2.4L2.4 1.5L3.6 2.4" fill="none" stroke="#ffe3e3" stroke-width="0.8"/>`;
     const layer = (body, anim) => (animated ? `<g style="animation:${anim} ${geom().T}s step-end ${geom().delay}s infinite backwards">${body}</g>` : body);
-    if (!animated) return st === "e" ? "" : st === "s" ? `<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}` : `<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`;
-    return `${layer(`<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`, `gc${k}`)}${layer(`<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}`, `gs${k}`)}`;
+    if (!animated) return st === "e" ? "" : st === "r" ? eyes : st === "s" ? `<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}` : `<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`;
+    return `${layer(`<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`, `gc${k}`)}${layer(`<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}`, `gs${k}`)}${layer(eyes, `gr${k}`)}`;
   };
   // the score, as in the arcade ("1UP 270   HIGH SCORE 270"). Every score is a multiple of 10, so the last 0 is fixed; each of the other
   // digits is a strip of 0-9 behind a window that slides by steps, so the number changes inside a README image too.
@@ -1010,6 +1010,7 @@ function heatmapSection(d, X, W = 940) {
     for (let k = 0; k < 4; k++) {
       moveKeyframes(`gv${k}`, frames.map((f) => [f.g[k][0], f.g[k][1]]));
       stepKeyframes(`gc${k}`, frames.map((f) => `opacity:${f.g[k][2] === "c" ? 1 : 0}`));
+      stepKeyframes(`gr${k}`, frames.map((f) => `opacity:${f.g[k][2] === "r" ? 1 : 0}`));
       stepKeyframes(`gs${k}`, frames.map((f) => `opacity:${f.g[k][2] === "s" ? 1 : 0}`));
       ghosts += `<g ${anim(`gv${k}`)}>${ghostShape(k, "c", 0, true)}</g>`;
     }

@@ -133,7 +133,7 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
   };
 }
 
-/** One game. frames[t] = { p: [w, i, dir], a: 1 if Pac-Man is alive, g: [[w, i, state, dir] x 4] (c chasing, s scared, e out of sight: eaten, or Pac-Man was caught), l: lives, e: pellet cells eaten this frame, s: score }. */
+/** One game. frames[t] = { p: [w, i, dir], a: 1 if Pac-Man is alive, g: [[w, i, state, dir] x 4] (c chasing, s scared, r eyes going back to the den after being eaten, e out of sight: Pac-Man was caught), l: lives, e: pellet cells eaten this frame, s: score }. */
 export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 30 } = {}) {
   const rand = mulberry32(seed);
   const { W, N, wall, den, start, tunnels, house, door, exit } = maze;
@@ -165,6 +165,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     return dist;
   };
   const toDoor = bfs([doorK]);
+  const toDen = bfs([denK]);
   const corners = [[W - 1, 0], [0, 0], [W - 1, ROWS - 1], [0, ROWS - 1]];
 
   const left = Uint8Array.from(maze.pellet);
@@ -201,7 +202,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     score += maze.power.has(k) ? 50 : 10;
     if (maze.power.has(k)) {
       chain = 0;
-      for (const g of ghosts) if (g.st !== "e") (g.st = "s", g.until = t + scare, g.d = (g.d + 2) % 4);
+      for (const g of ghosts) if (g.st !== "e" && g.st !== "r") (g.st = "s", g.until = t + scare, g.d = (g.d + 2) % 4);
     }
   };
   const startEaten = [];
@@ -305,9 +306,13 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   };
 
   const ghostMove = (g) => {
-    if (g.st === "e") {
-      // eaten, or Pac-Man was caught: out of sight until its time is up, then back in the den
-      if (t >= g.rel) [g.w, g.i, g.d, g.st, g.rel] = [den.w, den.i, 3, "c", t]; // back in the house, then out of the door
+    if (g.st === "e") return; // Pac-Man was caught: out of sight until the board is set again
+    if (g.st === "r") {
+      // eaten: just a pair of eyes, quick, back through the door to the den, then it comes out again
+      const k = idx(g.w, g.i);
+      const pick = nbG[k].reduce((b, o) => (toDen[idx(o[0], o[1])] < toDen[idx(b[0], b[1])] ? o : b), nbG[k][0]);
+      if (pick) [g.w, g.i, g.d] = pick;
+      if (idx(g.w, g.i) === denK) (g.st = "c", g.rel = t + 10);
       return;
     }
     if (t < g.rel) return;
@@ -349,7 +354,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       const same = g.w === pac.w && g.i === pac.i;
       const swapped = before.g[n][0] === pac.w && before.g[n][1] === pac.i && g.w === before.p[0] && g.i === before.p[1];
       if (!same && !swapped) return;
-      if (g.st === "s") (g.st = "e", g.rel = t + 14, score += 100 * 2 ** ++chain);
+      if (g.st === "s") (g.st = "r", score += 100 * 2 ** ++chain);
       else if (g.st === "c") dead = true;
     });
     return dead;
