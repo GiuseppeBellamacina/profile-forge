@@ -3,6 +3,7 @@ import { normalize } from "./config.js";
 import { intlTag, translator } from "./i18n.js";
 import { drawFrame, frameFor } from "./frames.js";
 import { ALL_LEVELS, familyOf, fxTier, isTop, levelColor } from "./levels.js";
+import { playGame } from "./pacman.js";
 import { snakeRoute } from "./snake.js";
 import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
@@ -634,6 +635,8 @@ function trophiesSection(d, X, W = 940) {
 // day (moons are drawn as an empty disc with the lit part on top). `grow` makes the shape a little larger, used to hide
 // what lies underneath. `inner` is a <title> for tooltips.
 const CELL = 13.5;
+const GHOST_BODY = "M-6.2 6.4L-6.2 -0.6A6.2 6.2 0 0 1 6.2 -0.6L6.2 6.4L4.1 4.7L2.05 6.4L0 4.7L-2.05 6.4L-4.1 4.7Z";
+const DIRS_LOOK = [[0.9, 0], [0, 0.9], [-0.9, 0], [0, -0.9]]; // where the pupils look (right, down, left, up)
 const RAINBOW = ["#ff5f6d", "#ff9f43", "#ffd93d", "#6bdb7a", "#4fd1ff", "#7c8cff", "#c77dff", "#ff6fd8"];
 export const CELL_SHAPES = ["square", "round", "triangle", "snowflake", "moon", "hexagon", "mixed"];
 const MIXED = ["square", "round", "triangle"];
@@ -719,11 +722,13 @@ function heatmapSection(d, X, W = 940) {
   }
   const max = Math.max(1, ...weeks.flat().map(([, n]) => n));
   const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil((n / max) * 4)));
+  // pacman: a whole game on these days (a calendar too narrow for a maze just shows the grid)
+  const game = o.mode === "pacman" && weeks.length >= 10 ? playGame(weeks, level, { kind: o.pacmanMaze, lives: o.pacmanLives, seedText: d.login }) : null;
   const step = 16.8;
   const x0 = 78;
   const y0 = 722;
   const rx = 3;
-  const yOf = (w, i) => y0 + i * step + (o.cell === "hexagon" && w % 2 ? step / 2 : 0); // honeycomb: odd weeks half a step lower
+  const yOf = (w, i) => y0 + i * step + (o.cell === "hexagon" && !game && w % 2 ? step / 2 : 0); // honeycomb: odd weeks half a step lower (not in the maze: it needs aligned rows)
   // one cell of the grid; `grow` / `lvl` let the snake cover it with the empty-day look
   const cell = (w, i, lvl, inner = "", grow = 0) => {
     const kind = shapeAt(o.cell, w, i);
@@ -809,6 +814,147 @@ function heatmapSection(d, X, W = 940) {
     return `<clipPath id="snkclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath>
   <g clip-path="url(#snkclip)">${wrapBody(body)}</g>`;
   };
+  // Pac-Man mode: the whole game is simulated here (src/pacman.js) and written as keyframes, like the snake. Pellets are the days
+  // with contributions (they fade when eaten), the walls are the quiet days that became walls, and a loop restarts the game.
+  const PAC_HOLD = 10; // frames at the end of a game: the board stays while WIN / GAME OVER shows
+  const WALL = mix(c.bg1, "#000000", 0.45); // dark blocks with a bright blue edge, like the walls of the arcade, not like a day
+  const WALL_EDGE = "#4a63ff";
+  const GHOST_COLORS = ["#ff4d4d", "#ffa6d9", "#4de8ff", "#ffb347"]; // Blinky, Pinky, Inky, Clyde
+  const half = CELL / 2;
+  const pac = game && game.maze.pellets > 0 ? game : null;
+  const pacGeom = () => {
+    const F = pac.frames.length;
+    const DT = Math.min(0.16, Math.max(0.05, 35 / F));
+    const T = r3(F * DT + 2.2);
+    const eatT = new Map();
+    pac.frames.forEach((f, t) => f.e.forEach((k) => eatT.set(k, t)));
+    return { F, DT, T, eatT, pct: (t) => Math.round(((t * DT) / T) * 10000) / 100, delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) };
+  };
+  let pg = null;
+  const geom = () => (pg ??= pacGeom());
+  const centre = (w, i) => [x0 + w * step + half, yOf(w, i) + half];
+  const dot = (k, big) => {
+    const [cx, cy] = centre(Math.floor(k / 7), k % 7);
+    return big
+      ? `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="3.4" fill="#fff"${A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.25" }, { dur: 0.7, ease: "steps(1)" })}/>`
+      : `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="1.7" fill="#fff" opacity="0.9"/>`;
+  };
+  // the board: walls, empty days, and the pellets (the colored day with a dot)
+  const pacBoard = () => {
+    const { maze, frames } = pac;
+    const { eatT, T, pct, delay } = geom();
+    const still = A.t !== undefined;
+    const now = still ? Math.min(frames.length - 1, Math.round((0.15 + 0.6 * A.t) * (frames.length - 1))) : 0;
+    return weeks
+      .map(
+        (wk, w) =>
+          `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
+            .map(([key, n, i]) => {
+              const k = w * 7 + i;
+              if (maze.wall[k]) return `<rect x="${r3(x0 + w * step)}" y="${r3(yOf(w, i))}" width="${CELL}" height="${CELL}" rx="3.5" fill="${WALL}" stroke="${WALL_EDGE}" stroke-width="1.6"/>`;
+              const empty = cell(w, i, 0);
+              if (!maze.pellet[k]) return empty;
+              const pellet = `${cell(w, i, level(n), `<title>${n} · ${key}</title>`)}${dot(k, maze.power.has(k))}`;
+              if (still) return eatT.has(k) && eatT.get(k) <= now ? empty : empty + pellet;
+              const e = eatT.get(k);
+              if (e === undefined) return empty + pellet;
+              A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
+              return `${empty}<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${pellet}</g>`;
+            })
+            .join("")}</g>`,
+      )
+      .join("");
+  };
+  // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
+  // and the rest is thinned out with Ramer-Douglas-Peucker so a straight corridor is one segment
+  const trackFrames = (cells) => {
+    const px = cells.map(([w, i]) => centre(w, i));
+    const keep = [];
+    px.forEach((p, t) => {
+      const same = t > 0 && p[0] === px[t - 1][0] && p[1] === px[t - 1][1];
+      const nextSame = t < px.length - 1 && px[t + 1][0] === p[0] && px[t + 1][1] === p[1];
+      if (t === 0 || t === px.length - 1 || !same || nextSame) keep.push([t, p[0], p[1]]);
+    });
+    const runs = [[keep[0]]];
+    for (let n = 1; n < keep.length; n++) {
+      const d = Math.abs(keep[n][1] - keep[n - 1][1]) + Math.abs(keep[n][2] - keep[n - 1][2]);
+      if (d > step * 1.6) runs.push([]);
+      runs.at(-1).push(keep[n]);
+    }
+    const simplify = (pts) => {
+      if (pts.length < 3) return pts;
+      const [a, b] = [pts[0], pts.at(-1)];
+      let worst = 0, at = 0;
+      for (let n = 1; n < pts.length - 1; n++) {
+        const u = (pts[n][0] - a[0]) / (b[0] - a[0] || 1);
+        const err = Math.hypot(a[1] + (b[1] - a[1]) * u - pts[n][1], a[2] + (b[2] - a[2]) * u - pts[n][2]);
+        if (err > worst) (worst = err, at = n);
+      }
+      return worst < 2 ? [a, b] : [...simplify(pts.slice(0, at + 1)).slice(0, -1), ...simplify(pts.slice(at))];
+    };
+    return runs.flatMap((r, n) => simplify(r).map((p, j, all) => [...p, n < runs.length - 1 && j === all.length - 1]));
+  };
+  const moveKeyframes = (name, cells) => {
+    const { pct } = geom();
+    A.css.push(`@keyframes ${name}{${trackFrames(cells).map(([t, x, y, jump]) => `${pct(t)}%{transform:translate(${Math.round(x * 10) / 10}px,${Math.round(y * 10) / 10}px)${jump ? ";animation-timing-function:step-end" : ""}}`).join("")}}`);
+  };
+  /** CSS for a value that changes by steps: keyframes only where it changes. vals[t] -> css text */
+  const stepKeyframes = (name, vals) => {
+    const { pct } = geom();
+    const out = [];
+    vals.forEach((v, t) => (t === 0 || v !== vals[t - 1]) && out.push(`${pct(t)}%{${v}}`));
+    A.css.push(`@keyframes ${name}{${out.join("")}}`);
+  };
+  const pacBodyStill = (r = 6.3) => `<path d="M-${r} 0A${r} ${r} 0 0 1 ${r} 0Z" transform="rotate(-30)" fill="${c.pac}"/><path d="M-${r} 0A${r} ${r} 0 0 0 ${r} 0Z" transform="rotate(30)" fill="${c.pac}"/>`;
+  const pacBodyMoving = () => `<path d="M-6.3 0A6.3 6.3 0 0 1 6.3 0Z" fill="${c.pac}" style="animation:pmt 0.34s linear infinite"/><path d="M-6.3 0A6.3 6.3 0 0 0 6.3 0Z" fill="${c.pac}" style="animation:pmb 0.34s linear infinite"/>`;
+  const ghostShape = (k, st, d, animated) => {
+    const look = [DIRS_LOOK[d][0], DIRS_LOOK[d][1]];
+    const eyes = `<circle cx="-2.4" cy="-1.2" r="2" fill="#fff"/><circle cx="2.4" cy="-1.2" r="2" fill="#fff"/><circle cx="${r3(-2.4 + look[0])}" cy="${r3(-1.2 + look[1])}" r="1" fill="#1a2cff"/><circle cx="${r3(2.4 + look[0])}" cy="${r3(-1.2 + look[1])}" r="1" fill="#1a2cff"/>`;
+    const face = `<circle cx="-2.2" cy="-1.5" r="1" fill="#ffe3e3"/><circle cx="2.2" cy="-1.5" r="1" fill="#ffe3e3"/><path d="M-3.6 2.4L-2.4 1.5L-1.2 2.4L0 1.5L1.2 2.4L2.4 1.5L3.6 2.4" fill="none" stroke="#ffe3e3" stroke-width="0.8"/>`;
+    const layer = (body, anim) => (animated ? `<g style="animation:${anim} ${geom().T}s step-end ${geom().delay}s infinite backwards">${body}</g>` : body);
+    if (!animated) return st === "s" ? `<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}` : st === "e" ? eyes : `<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>${eyes}`;
+    return `${layer(`<path d="${GHOST_BODY}" fill="${GHOST_COLORS[k]}"/>`, `gc${k}`)}${layer(`<path d="${GHOST_BODY}" fill="#2b3bff"/>${face}`, `gs${k}`)}${layer(eyes, `gn${k}`)}`;
+  };
+  const pacSprites = () => {
+    const { frames, result } = pac;
+    const { F, DT, T, delay, pct } = geom();
+    const lifeIcon = (n, on) => {
+      const x = r3(700 + (W - 940) + n * 14);
+      const body = `<path d="M${x} 694L${r3(x + 4.2 * Math.cos(0.6))} ${r3(694 - 4.2 * Math.sin(0.6))}A4.2 4.2 0 1 0 ${r3(x + 4.2 * Math.cos(0.6))} ${r3(694 + 4.2 * Math.sin(0.6))}Z" fill="${c.pac}"/>`;
+      return on === undefined ? body : on ? body : "";
+    };
+    if (A.t !== undefined) {
+      // static frame (PNG / GIF): the game as it is at this moment, from a little after the start to three quarters of it
+      const now = Math.min(F - 1, Math.round((0.15 + 0.6 * A.t) * (F - 1)));
+      const f = frames[now];
+      const [pw, pi, pd] = f.p;
+      const [px, py] = centre(pw, pi);
+      const pacSvg = `<g transform="translate(${r3(px)} ${r3(py)}) rotate(${pd * 90})${f.a ? "" : " scale(0.4)"}">${pacBodyStill()}</g>`;
+      const ghosts = f.g.map((g, k) => { const [gx, gy] = centre(g[0], g[1]); return `<g transform="translate(${r3(gx)} ${r3(gy)})">${ghostShape(k, g[2], g[3], false)}</g>`; }).join("");
+      const lives = Array.from({ length: o.pacmanLives }, (_, n) => lifeIcon(n, f.l > n)).join("");
+      return `<g>${ghosts}${pacSvg}</g>${lives}`;
+    }
+    A.css.push("@keyframes pmt{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(0deg)}}@keyframes pmb{0%,100%{transform:rotate(30deg)}50%{transform:rotate(0deg)}}");
+    const anim = (name) => `style="animation:${name} ${T}s linear ${delay}s infinite backwards"`;
+    moveKeyframes("pmv", frames.map((f) => [f.p[0], f.p[1]]));
+    stepKeyframes("pmr", frames.map((f) => (f.a ? `transform:rotate(${f.p[2] * 90}deg)` : "transform:scale(.01)")));
+    let ghosts = "";
+    for (let k = 0; k < 4; k++) {
+      moveKeyframes(`gv${k}`, frames.map((f) => [f.g[k][0], f.g[k][1]]));
+      stepKeyframes(`gc${k}`, frames.map((f) => `opacity:${f.g[k][2] === "c" ? 1 : 0}`));
+      stepKeyframes(`gs${k}`, frames.map((f) => `opacity:${f.g[k][2] === "s" ? 1 : 0}`));
+      stepKeyframes(`gn${k}`, frames.map((f) => `opacity:${f.g[k][2] === "s" ? 0 : 1}`));
+      ghosts += `<g ${anim(`gv${k}`)}>${ghostShape(k, "c", 0, true)}</g>`;
+    }
+    const lives = Array.from({ length: o.pacmanLives }, (_, n) => {
+      stepKeyframes(`lf${n}`, frames.map((f) => `opacity:${f.l > n ? 1 : 0}`));
+      return `<g style="animation:lf${n} ${T}s step-end ${delay}s infinite backwards">${lifeIcon(n)}</g>`;
+    }).join("");
+    const end = pct(F - PAC_HOLD);
+    A.css.push(`@keyframes pend{0%,${end}%{opacity:0}${r3(end + 0.05)}%,100%{opacity:1}}`);
+    const label = `<text x="${r3(690 + (W - 940))}" y="698" text-anchor="end" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.pac}" style="animation:pend ${T}s step-end ${delay}s infinite">${result === "win" ? "YOU WIN" : "GAME OVER"}</text>`;
+    return `<g ${anim("pmv")}><g style="animation:pmr ${T}s step-end ${delay}s infinite backwards">${pacBodyMoving()}</g></g>${ghosts}${lives}${label}`;
+  };
   return {
     w: W, top: 674, nx: 30, h: 180,
     draw: (H) => `
@@ -816,15 +962,19 @@ function heatmapSection(d, X, W = 940) {
     ${months}
     ${[1, 3, 5].map((wd) => `<text x="50" y="${r3(y0 + ((wd - startDow + 7) % 7) * step + 10)}" font-size="10" fill="${c.muted}">${esc(weekday(tag, wd, "short"))}</text>`).join("")}
   </g>
-  ${weeks
-    .map(
-      (wk, w) =>
-        `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
-          .map(([key, n, i]) => (o.mode === "snake" && A.t === undefined && n ? snakeDay(w, i, level(n), `<title>${n} · ${key}</title>`) : cell(w, i, level(n), `<title>${n} · ${key}</title>`)))
-          .join("")}</g>`,
-    )
-    .join("")}
-  ${o.mode === "snake" ? snakeSvg() : ""}
+  ${
+    pac
+      ? pacBoard()
+      : weeks
+          .map(
+            (wk, w) =>
+              `<g${A.a(1.8 + w * 0.025, 0.35, { o: 0 })}>${wk
+                .map(([key, n, i]) => (o.mode === "snake" && A.t === undefined && n ? snakeDay(w, i, level(n), `<title>${n} · ${key}</title>`) : cell(w, i, level(n), `<title>${n} · ${key}</title>`)))
+                .join("")}</g>`,
+          )
+          .join("")
+  }
+  ${o.mode === "snake" ? snakeSvg() : pac ? pacSprites() : ""}
   ${
     o.legend
       ? `<g${A.a(2.4, 0.5, { o: 0 })}>

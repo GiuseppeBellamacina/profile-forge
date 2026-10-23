@@ -111,7 +111,7 @@ export const COLOR_KEYS = {
   icon_color: ["accent"], ring_color: ["accent2"], fire_color: ["fire"], track_color: ["track"],
   title_color: ["title"], stroke_color: ["streakStroke"],
   currStreakNum: ["streakCurrNum"], sideNums: ["streakSideNums"], currStreakLabel: ["streakCurrLabel"],
-  sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"], frameColor: ["frame"],
+  sideLabels: ["streakSideLabels"], dates: ["streakDates"], excludeDaysLabel: ["streakExcl"], snakeColor: ["snake"], pacmanColor: ["pac"], frameColor: ["frame"],
   levelE: ["lvE"], levelD: ["lvD"], levelC: ["lvC"], levelB: ["lvB"], levelA: ["lvA"], levelS: ["lvS"], levelTop: ["lvTop"], levelX: ["lvX"],
   bg_gradient: ["bgGradient"],
 };
@@ -174,6 +174,7 @@ export function resolveTheme(name, colors = {}) {
   c.streakStroke ??= c.border;
   c.streakExcl ??= c.muted;
   c.snake ??= c.accent2;
+  c.pac ??= "#ffd23f"; // Pac-Man and the walls of his maze
   // one colour per letter (E .. S, SSS and X; "+" / "-" only shade it, see levels.js). The defaults are the same in every theme, so the levels always look different
   // from each other (a green theme would otherwise make them all green); light themes get them a little darker.
   const lv = (hex) => (c.base === "light" ? mix(hex, "#000000", 0.16) : hex);

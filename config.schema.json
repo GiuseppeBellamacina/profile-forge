@@ -18,7 +18,7 @@
         "icon_color": { "$ref": "#/definitions/hex" }, "ring_color": { "$ref": "#/definitions/hex" }, "fire_color": { "$ref": "#/definitions/hex" },
         "track_color": { "$ref": "#/definitions/hex" }, "stroke_color": { "$ref": "#/definitions/hex" },
         "currStreakNum": { "$ref": "#/definitions/hex" }, "sideNums": { "$ref": "#/definitions/hex" }, "currStreakLabel": { "$ref": "#/definitions/hex" },
-        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" }, "frameColor": { "$ref": "#/definitions/hex" },
+        "sideLabels": { "$ref": "#/definitions/hex" }, "dates": { "$ref": "#/definitions/hex" }, "excludeDaysLabel": { "$ref": "#/definitions/hex" }, "snakeColor": { "$ref": "#/definitions/hex" }, "pacmanColor": { "$ref": "#/definitions/hex" }, "frameColor": { "$ref": "#/definitions/hex" },
         "levelE": { "$ref": "#/definitions/hex" }, "levelD": { "$ref": "#/definitions/hex" }, "levelC": { "$ref": "#/definitions/hex" }, "levelB": { "$ref": "#/definitions/hex" }, "levelA": { "$ref": "#/definitions/hex" }, "levelS": { "$ref": "#/definitions/hex" }, "levelTop": { "$ref": "#/definitions/hex" }, "levelX": { "$ref": "#/definitions/hex" },
         "bg_gradient": { "type": "string" }
       }
@@ -218,7 +218,9 @@
     "heatmap": {
       "type": "object", "additionalProperties": false,
       "properties": {
-        "mode": { "enum": ["grid", "snake"], "default": "grid", "description": "grid: the plain contribution grid. snake: an animated snake eats the contributions (loops forever, plain CSS)." },
+        "mode": { "enum": ["grid", "snake", "pacman"], "default": "grid", "description": "grid: the plain contribution grid. snake: an animated snake eats the contributions (loops forever, plain CSS). pacman: an automatic game of Pac-Man with the four ghosts, played on the cells." },
+        "pacmanMaze": { "enum": ["data", "classic", "open"], "default": "data", "description": "The maze of the pacman mode. data: the quiet days become walls (the maze changes with your data, every cell stays reachable). classic: a fixed arcade-style maze. open: no walls." },
+        "pacmanLives": { "type": "integer", "minimum": 1, "maximum": 5, "default": 3, "description": "Lives of Pac-Man in the pacman mode." },
         "snakeLength": { "type": "integer", "minimum": 3, "maximum": 12, "default": 6, "description": "How many cells long the snake is." },
         "snakeStyle": { "enum": ["classic", "rainbow", "glow"], "default": "classic", "description": "classic: the snake colour. rainbow: every segment its own colour. glow: a soft halo around the body." },
         "snakePath": { "enum": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "default": "smart", "description": "Route of the snake. smart: quietest days first, then busier ones. busy: busiest first. nearest: always the closest day. sweep: column by column. rows: row by row. spiral: outside in." },

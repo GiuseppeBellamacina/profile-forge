@@ -588,3 +588,22 @@ test("extras are fetched when a trophy needs them and it is not hidden", () => {
   assert.equal(needsExtras(normalize({ trophies: { hideRanks: ["SECRET"] } })), false);
   assert.equal(needsExtras(normalize({ trophies: { hideRanks: ["SECRET"] }, stats: { show: ["prsMerged"] } })), true);
 });
+
+test("heatmap pacman: a game with Pac-Man and four ghosts, as keyframes; static frames move with t; options are checked", () => {
+  const view = (heatmap, t) => { const [d, k] = make({ layout: ["heatmap"], heatmap: { mode: "pacman", ...heatmap } }); return render(d, t === undefined ? { k } : { k, t }); };
+  for (const pacmanMaze of ["data", "classic", "open"]) {
+    const svg = view({ pacmanMaze });
+    assert.ok(/@keyframes pmv\{/.test(svg) && [0, 1, 2, 3].every((n) => svg.includes(`@keyframes gv${n}{`)), `${pacmanMaze}: Pac-Man and four ghosts move`);
+    assert.ok(/@keyframes pe\d+/.test(svg) && svg.includes("GAME OVER") !== svg.includes("YOU WIN"), "pellets fade, one ending is written");
+    assert.ok(svg.includes("backwards"), "sprites wait at their first keyframe, not at the corner");
+  }
+  const a = view({}, 0), b = view({}, 1);
+  assert.ok(!a.includes("@keyframes pmv") && a !== b, "a still frame has no CSS and shows another moment of the game");
+  assert.ok((a.match(/<path d="M-6.2 6.4/g) ?? []).length >= 1 && (a.match(/fill="#1a2cff"/g) ?? []).length >= 2, "ghosts with their eyes in a still frame");
+  assert.ok(view({ pacmanLives: 5 }).includes("@keyframes lf4") && !view({ pacmanLives: 1 }).includes("@keyframes lf1"), "one icon per life");
+  assert.ok(!view({ weeks: 6 }).includes("@keyframes pmv"), "a calendar too narrow for a maze falls back to the grid");
+  assert.ok(!render(make({ layout: ["heatmap"] })[0], { k: make({ layout: ["heatmap"] })[1] }).includes("@keyframes pmv"), "grid mode has no game");
+  assert.throws(() => normalize({ heatmap: { pacmanMaze: "maze" } }), /heatmap\.pacmanMaze/);
+  assert.throws(() => normalize({ heatmap: { pacmanLives: 9 } }), /between 1 and 5/);
+  assert.ok(view({}).includes("#ffd23f") && make({ layout: ["heatmap"], heatmap: { mode: "pacman" }, colors: { pacmanColor: "ff0000" } }) && true);
+});

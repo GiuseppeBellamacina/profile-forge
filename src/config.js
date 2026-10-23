@@ -1,5 +1,6 @@
 // config.json: schema defaults, validation, and normalization into the runtime config used by stats/render.
 import { LOCALES, normLocale } from "./i18n.js";
+import { PACMAN_MAZES } from "./pacman.js";
 import { ALL_LEVELS, OLD_RANKS } from "./levels.js";
 import { hasTheme, parseColors, registerThemes, THEME_NAMES } from "./themes.js";
 
@@ -28,7 +29,7 @@ export const DEFAULTS = {
   terminal: { title: null, lines: [] },
   rhythm: { title: null, show: ["weekdays", "months"] },
   orgs: { title: null, select: [], hide: [], order: [], sort: "contributions", mode: "static", direction: "left", speed: 30 },
-  heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
+  heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", pacmanMaze: "data", pacmanLives: 3, weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
 
@@ -39,12 +40,12 @@ const ENUMS = {
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
   "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"], "trophies.sort": ["default", "rank", "name"], "orgs.sort": ["contributions", "popularity", "custom"], "orgs.mode": ["static", "scroll"], "orgs.direction": ["left", "right"], "heatmap.snakeStyle": ["classic", "rainbow", "glow"],
-  "heatmap.mode": ["grid", "snake"], "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "hexagon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
+  "heatmap.mode": ["grid", "snake", "pacman"], "heatmap.pacmanMaze": PACMAN_MAZES, "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "hexagon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
-  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12], "orgs.speed": [5, 200],
+  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12], "heatmap.pacmanLives": [1, 5], "orgs.speed": [5, 200],
 };
 // Keys whose value shape isn't described by the default's type.
 const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
@@ -173,7 +174,7 @@ export function normalize(raw = {}) {
     if (!m || +m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > new Date(Date.UTC(2024, +m[1], 0)).getUTCDate()) throw new Error(`Config "trophies.birthday": expected "MM-DD" or "YYYY-MM-DD" (got "${birthday}")`);
   }
   for (const [n, l] of c.terminal.lines.entries()) if (typeof l !== "string") throw new Error(`Config "terminal.lines[${n}]" must be a string`);
-  if (!Number.isInteger(c.heatmap.snakeLength)) throw new Error(`Config "heatmap.snakeLength" must be a whole number`);
+  for (const key of ["snakeLength", "pacmanLives"]) if (!Number.isInteger(c.heatmap[key])) throw new Error(`Config "heatmap.${key}" must be a whole number`);
   const excludeDays = c.streak.excludeDays.map((x) => {
     const i = WEEKDAYS.indexOf(String(x).toLowerCase().slice(0, 3));
     if (i < 0) throw new Error(`Config "streak.excludeDays": invalid day "${x}" (use Sun, Mon, ...)`);

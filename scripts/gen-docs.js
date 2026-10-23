@@ -59,6 +59,10 @@ const CASES = {
   rhythm: only("rhythm"),
   orgs: only("orgs"),
   "orgs-scroll-animated": { ...only("orgs"), orgs: { mode: "scroll" }, svg: true },
+  "heatmap-pacman-data-animated": { ...only("heatmap"), heatmap: { mode: "pacman", pacmanMaze: "data" }, svg: true },
+  "heatmap-pacman-classic-animated": { ...only("heatmap"), heatmap: { mode: "pacman", pacmanMaze: "classic" }, svg: true },
+  "heatmap-pacman-open-animated": { ...only("heatmap"), heatmap: { mode: "pacman", pacmanMaze: "open" }, svg: true },
+  "heatmap-pacman": { ...only("heatmap"), heatmap: { mode: "pacman" } },
   "heatmap-snake-moon-animated": { ...only("heatmap"), heatmap: { mode: "snake", cell: "moon", snakePath: "busy" }, colors: { snakeColor: "ffd23f" }, svg: true },
   // layout / card
   "layout-default": { layout: ["header", ["stats", "streak"], "languages", "heatmap"] },

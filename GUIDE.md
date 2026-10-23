@@ -512,10 +512,12 @@ SSS:
 
 | Key | Values | Default |
 |---|---|---|
-| `mode` | `grid` `snake` | `grid` |
+| `mode` | `grid` `snake` `pacman` | `grid` |
 | `snakePath` | `smart` `busy` `nearest` `sweep` `rows` `spiral` | `smart` |
 | `snakeLength` | 3–12 | `6` |
 | `snakeStyle` | `classic` `rainbow` `glow` | `classic` |
+| `pacmanMaze` | `data` `classic` `open` | `data` |
+| `pacmanLives` | 1–5 | `3` |
 | `weeks` | 4–53 | `53` |
 | `cell` | `square` `round` `triangle` `snowflake` `moon` `hexagon` `mixed` | `square` |
 | `weekStart` | `sun` `mon` | `sun` |
@@ -555,6 +557,17 @@ SSS:
 | `snakeStyle: "rainbow"`, `snakeLength: 9` | `snakeStyle: "glow"` |
 |---|---|
 | <img src="docs/guide/heatmap-snake-rainbow-animated.svg" width="450"> | <img src="docs/guide/heatmap-snake-glow-animated.svg" width="450"> |
+
+**Pac-Man.** `"mode": "pacman"` plays a whole game of Pac-Man on the days of the heatmap: Pac-Man and the four ghosts (Blinky, Pinky, Inky and Clyde, each with its own way of chasing) in a maze made of your days, and it loops forever. The game is simulated when the card is generated and written into the SVG as keyframes (plain CSS, so it plays inside a README image); it is the same game every time for the same data.
+
+- **The days are the pellets.** Every day with contributions is a pellet (the day keeps its colour and gets a dot, which disappears when it is eaten); the busiest day of each quarter of the year is a **power pill**: the ghosts turn blue and run, and Pac-Man can eat them (they come back as eyes to the centre of the maze).
+- **The maze** (`pacmanMaze`): `data` turns the quiet days into walls, as long as every free day can still be reached (so the maze changes with your data), `classic` is a fixed arcade-style maze, `open` has no walls.
+- **A real game with `pacmanLives` lives** (3 by default): Pac-Man avoids the ghosts, goes for a power pill when one is close and hunts scared ghosts; if he is caught he loses a life and starts again. The game ends with **YOU WIN** (every pellet eaten) or **GAME OVER**, then the loop starts over. The colour of Pac-Man is `pacmanColor` (yellow by default).
+- Needs at least 10 weeks (`weeks`) and one day with contributions, otherwise the plain grid is shown. In PNG and GIF exports the game is shown as it is a few moments after the start up to three quarters of it. The `snake*` options do not apply here.
+
+| `pacmanMaze: "data"` | `"classic"` | `"open"` |
+|---|---|---|
+| <img src="docs/guide/heatmap-pacman-data-animated.svg" width="300"> | <img src="docs/guide/heatmap-pacman-classic-animated.svg" width="300"> | <img src="docs/guide/heatmap-pacman-open-animated.svg" width="300"> |
 
 ## Terminal
 
