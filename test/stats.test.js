@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { render, renderButton } from "../src/render.js";
-import { normalize, setPath } from "../src/config.js";
+import { needsExtras, normalize, setPath } from "../src/config.js";
 import { parseColors, THEME_NAMES } from "../src/themes.js";
 import { calculateRank, computeStreak, summarize, topLanguages, trophies } from "../src/stats.js";
 
@@ -578,4 +578,13 @@ test("orgs: the heading counts the organizations on the card", () => {
   const orgs = ["a", "b", "c"].map((login, i) => ({ login, avatar: null, contributions: i + 1, stars: 0 }));
   const k = normalize({ layout: ["orgs"], orgs: { hide: ["b"] } });
   assert.ok(render(summarize({ ...RAW, orgs }, k), { k, t: 1 }).includes("· 2</tspan>"));
+});
+
+test("extras are fetched when a trophy needs them and it is not hidden", () => {
+  assert.equal(needsExtras(normalize({})), true, "Sharpshooter is on by default");
+  assert.equal(needsExtras(normalize({ trophies: { hideTitles: ["Sharpshooter", "AnswerMachine"] } })), false);
+  assert.equal(needsExtras(normalize({ trophies: { titles: ["Stars"] } })), false);
+  assert.equal(needsExtras(normalize({ trophies: { titles: ["Sharpshooter"] } })), true);
+  assert.equal(needsExtras(normalize({ trophies: { hideRanks: ["SECRET"] } })), false);
+  assert.equal(needsExtras(normalize({ trophies: { hideRanks: ["SECRET"] }, stats: { show: ["prsMerged"] } })), true);
 });

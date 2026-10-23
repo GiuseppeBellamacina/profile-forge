@@ -223,5 +223,11 @@ export function stackItems(techStack, { order, byCategory }, rand = Math.random)
   return byCategory ? techStack.flatMap((c) => arrange(c.items)) : arrange(techStack.flatMap((c) => c.items));
 }
 
-/** True when stats need the extra GraphQL fields (merged PRs / discussions). */
-export const needsExtras = (k) => [...k.stats.show].some((s) => STATS_EXTRA.includes(s));
+/** True when the card needs the extra GraphQL fields (merged PRs / discussions): a stat that shows them, or a trophy built on them (Sharpshooter, Answer Machine) that is not hidden. */
+export const needsExtras = (k) => {
+  if ([...k.stats.show].some((s) => STATS_EXTRA.includes(s))) return true;
+  const t = k.trophies;
+  const shown = (title) => (!t.titles.size || t.titles.has(title)) && !t.hideTitles.has(title);
+  const secret = !t.hideRanks.has("SECRET") && (!t.ranks.size || t.ranks.has("SECRET"));
+  return secret && ["sharpshooter", "answermachine"].some(shown);
+};

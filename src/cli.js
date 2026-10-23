@@ -109,6 +109,7 @@ if (!login || !o.token) {
 const profile = await fetchProfile({
   login, token: o.token, includePrivate: k.includePrivate, tz: k.timezone, startingYear: k.streak.startingYear, extras: needsExtras(k),
 });
+if (profile.incompleteYears?.length) console.error(`Warning: the organizations of ${profile.incompleteYears.join(", ")} could not be read (GitHub did not answer); run it again for the full list.`);
 const data = summarize(profile, k);
 
 const MIME = { ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };

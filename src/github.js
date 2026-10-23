@@ -87,14 +87,20 @@ async function follows(token, a, b) {
   }
 }
 
-export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC", startingYear = null, extras = false, endpoint = API }) {
+/** onProgress(fraction 0..1, label) is called as the steps complete (the configurator draws a bar with it). */
+export async function fetchProfile({ login, token, includePrivate = false, tz = "UTC", startingYear = null, extras = false, endpoint = API, onProgress }) {
+  const step = (f, label) => onProgress?.(Math.min(1, f), label);
+  step(0.02, "Reading the profile…");
   const privacy = includePrivate ? null : "PUBLIC";
   let data = await gql(token, USER_QUERY, { login, privacy, extras }, endpoint);
   const user = data.user;
   if (!user) throw new Error(`User "${login}" not found`);
+  step(0.12, "Reading the repositories…");
   const repos = [...user.repositories.nodes];
   let page = user.repositories.pageInfo;
+  let pages = 1;
   while (page.hasNextPage) {
+    step(0.12 + Math.min(0.08, pages++ * 0.02), `Reading the repositories (${repos.length} so far)…`);
     data = await gql(token, USER_QUERY, { login, privacy, extras, after: page.endCursor }, endpoint);
     repos.push(...data.user.repositories.nodes);
     page = data.user.repositories.pageInfo;
@@ -112,19 +118,25 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       }`,
     )
     .join("\n")} } }`;
+  step(0.2, `Reading your calendar, ${years.length} years…`);
   const yearly = Object.values((await gql(token, yearsQuery, { login }, endpoint)).user);
+  step(0.35, "Looking at where the work went…");
   // which repositories each year's work went to: one small request per year, four at a time, and never fatal (an account with
   // a huge history made one big request fail with a 502)
   const kinds = ["commit", "pullRequest", "issue", "pullRequestReview"];
   const perYear = years.map((y) => `query($login: String!) { user(login: $login) { c: contributionsCollection(from: "${y}-01-01T00:00:00Z", to: "${y}-12-31T23:59:59Z") { ${kinds.map((kind) => `${kind}ContributionsByRepository(maxRepositories: 50) { ${BY_REPO} }`).join(" ")} } } }`);
   const byRepoYears = new Array(perYear.length).fill(null);
+  let done = 0;
+  const ask = async (i) => {
+    try { byRepoYears[i] = (await gql(token, perYear[i], { login }, endpoint)).user.c; } catch {}
+    step(0.35 + (0.45 * ++done) / (perYear.length * 2), `Looking at where the work went, ${years[i]}…`);
+  };
   let next = 0;
-  await Promise.all(Array.from({ length: Math.min(4, perYear.length) }, async () => {
-    while (next < perYear.length) {
-      const i = next++;
-      try { byRepoYears[i] = (await gql(token, perYear[i], { login }, endpoint)).user.c; } catch {}
-    }
-  }));
+  await Promise.all(Array.from({ length: Math.min(4, perYear.length) }, async () => { while (next < perYear.length) await ask(next++); }));
+  // a second chance, one at a time, for the years that failed: every year of the card should be there
+  done = perYear.length;
+  for (const i of byRepoYears.keys()) if (!byRepoYears[i]) await ask(i);
+  const incompleteYears = years.filter((_, i) => !byRepoYears[i]);
 
   const calendar = new Map();
   let commits = 0;
@@ -160,6 +172,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   try {
     members = (await gql(token, `query($login: String!) { user(login: $login) { organizations(first: 50) { nodes { login avatarUrl } } } }`, { login }, endpoint)).user.organizations.nodes;
   } catch {}
+  step(0.82, "Counting work in private organizations…");
   if (endpoint === API)
     for (const m of members) {
       if (byOrg.has(m.login)) continue;
@@ -174,6 +187,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       const n = (await count("commits", `author:${user.login} org:${m.login}`)) + (await count("issues", `author:${user.login} org:${m.login} type:pr`));
       if (n) byOrg.set(m.login, { login: m.login, avatarUrl: m.avatarUrl, contributions: n, repos: new Map() });
     }
+  step(0.9, "Loading the organization logos…");
   // shortcut: avatars of the 30 most active orgs only (one request each), raise it if someone needs more chips
   const orgs = await Promise.all(
     [...byOrg.values()].sort((a, b) => b.contributions - a.contributions).slice(0, 30).map(async (o) => {
@@ -200,6 +214,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   // a friend of the author: you follow each other (only checked on github.com)
   const friend = endpoint === API && user.login.toLowerCase() !== AUTHOR.toLowerCase() && (await follows(token, user.login, AUTHOR)) && (await follows(token, AUTHOR, user.login));
 
+  step(1, "Done");
   const earliest = Math.min(new Date(user.createdAt), ...repos.map((r) => new Date(r.createdAt)));
   return {
     name: user.name || user.login,
@@ -213,6 +228,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     issues: user.openIssues.totalCount + user.closedIssues.totalCount,
     contributedTo: Math.max(user.repositoriesContributedTo.totalCount, others.size),
     orgs,
+    incompleteYears,
     repoCount: user.repositories.totalCount,
     stars: repos.reduce((s, r) => s + r.stargazerCount, 0),
     commits,
