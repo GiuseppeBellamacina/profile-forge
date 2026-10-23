@@ -30,6 +30,6 @@
   "layout": ["header", ["stats", "languages"], "streak", "heatmap"],
   "languages": { "layout": "pie", "count": 6 },
   "stats": { "numberFormat": "short", "show": ["prsMerged", "discussionsStarted"] },
-  "heatmap": { "cell": "triangle", "mode": "snake", "snakePath": "spiral", "snakeStyle": "glow", "snakeLength": 7 },
+  "heatmap": { "mode": "pacman", "pacmanMaze": "data" },
   "header": { "frame": "glitch", "rankStyle": "hexagon" }
 }

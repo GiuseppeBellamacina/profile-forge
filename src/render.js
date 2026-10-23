@@ -1044,7 +1044,7 @@ function heatmapSection(d, X, W = 940) {
           )
           .join("")
   }
-  ${o.mode === "snake" ? snakeSvg() : pac ? pacSprites() : ""}
+  ${o.mode === "snake" ? snakeSvg() : pac ? `<g${A.a(2.3, 0.5, { o: 0 })}>${pacSprites()}</g>` : ""}
   ${
     o.legend
       ? `<g${A.a(2.4, 0.5, { o: 0 })}>

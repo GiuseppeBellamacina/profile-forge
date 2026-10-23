@@ -12,10 +12,10 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 |---|---|
 | [`minimal`](minimal.json) | Small and quiet: no border, no glow, a few numbers, plain square grid |
 | [`dashboard`](dashboard.json) | Dracula / Gruvbox, donut languages, trophies, snake that eats the busiest days first |
-| [`terminal`](terminal.json) | Green-on-black hacker look, `$ stats` titles, a long lime snake sweeping column by column |
+| [`terminal`](terminal.json) | Green-on-black hacker look, `$ stats` titles, a game of Pac-Man on the arcade-style `classic` maze |
 | [`pastel-it`](pastel-it.json) | Catppuccin, Italian labels, sakura frame, vertical donut, moon-phase heatmap |
 | [`trophy-case`](trophy-case.json) | Trophies first by level, two highlighted, laurel frame, triangle heatmap |
-| [`cyberpunk`](cyberpunk.json) | Two `customThemes` (neon dark + a matching light), pie chart, glitch frame, glowing spiral snake on triangles |
+| [`cyberpunk`](cyberpunk.json) | Two `customThemes` (neon dark + a matching light), pie chart, glitch frame, Pac-Man on a maze made of your quiet days |
 | [`portfolio`](portfolio.json) | Replaces your whole README: about, projects, links, tech stack by category, mixed-shape heatmap |
 | [`streak-focus`](streak-focus.json) | Consistency view: streaks, weekday rhythm, flames frame, snake row by row on a honeycomb |
 | [`open-source`](open-source.json) | Merged PRs, discussions, weighted languages, trophies by level, monthly rhythm, snowflake heatmap |
