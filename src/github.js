@@ -4,15 +4,34 @@ import { AUTHOR } from "./secrets.js";
 
 const API = "https://api.github.com/graphql";
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** One GraphQL request. A gateway error (502/503/504, an HTML page instead of JSON) or a stalled connection is retried twice. */
 async function gql(token, query, variables = {}, endpoint = API) {
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { Authorization: `bearer ${token}`, "Content-Type": "application/json", "User-Agent": "profile-forge" },
-    body: JSON.stringify({ query, variables }),
-  });
-  const json = await res.json();
-  if (!res.ok || json.errors) throw new Error(`GitHub API: ${JSON.stringify(json.errors ?? json)}`);
-  return json.data;
+  let last;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await sleep(1500 * attempt);
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { Authorization: `bearer ${token}`, "Content-Type": "application/json", "User-Agent": "profile-forge" },
+        body: JSON.stringify({ query, variables }),
+        signal: AbortSignal.timeout(45_000),
+      });
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch { last = new Error(`GitHub did not answer in time (HTTP ${res.status}). Try again in a moment.`); continue; }
+      if (!res.ok || json.errors) {
+        if (res.status >= 500) { last = new Error(`GitHub API: HTTP ${res.status}`); continue; }
+        throw new Error(`GitHub API: ${JSON.stringify(json.errors ?? json)}`);
+      }
+      return json.data;
+    } catch (e) {
+      if (String(e.message).startsWith("GitHub API")) throw e;
+      last = e.name === "TimeoutError" ? new Error("GitHub took too long to answer. Try again in a moment.") : e;
+    }
+  }
+  throw last;
 }
 
 const BY_REPO = "contributions { totalCount } repository { nameWithOwner stargazerCount owner { __typename login avatarUrl } }";
@@ -90,11 +109,22 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
       (y) => `y${y}: contributionsCollection(from: "${y}-01-01T00:00:00Z", to: "${y}-12-31T23:59:59Z") {
         totalCommitContributions restrictedContributionsCount totalPullRequestReviewContributions
         contributionCalendar { weeks { contributionDays { date contributionCount } } }
-        ${["commit", "pullRequest", "issue", "pullRequestReview"].map((kind) => `${kind}ContributionsByRepository(maxRepositories: 100) { ${BY_REPO} }`).join("\n")}
       }`,
     )
     .join("\n")} } }`;
   const yearly = Object.values((await gql(token, yearsQuery, { login }, endpoint)).user);
+  // which repositories each year's work went to: one small request per year, four at a time, and never fatal (an account with
+  // a huge history made one big request fail with a 502)
+  const kinds = ["commit", "pullRequest", "issue", "pullRequestReview"];
+  const perYear = years.map((y) => `query($login: String!) { user(login: $login) { c: contributionsCollection(from: "${y}-01-01T00:00:00Z", to: "${y}-12-31T23:59:59Z") { ${kinds.map((kind) => `${kind}ContributionsByRepository(maxRepositories: 50) { ${BY_REPO} }`).join(" ")} } } }`);
+  const byRepoYears = new Array(perYear.length).fill(null);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(4, perYear.length) }, async () => {
+    while (next < perYear.length) {
+      const i = next++;
+      try { byRepoYears[i] = (await gql(token, perYear[i], { login }, endpoint)).user.c; } catch {}
+    }
+  }));
 
   const calendar = new Map();
   let commits = 0;
@@ -113,8 +143,8 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   const byOrg = new Map();
   // every repository you do not own and contributed to, any year (GitHub's own count covers only the last year, without reviews)
   const others = new Set((user.repositoriesContributedTo.nodes ?? []).map((r) => r.nameWithOwner.toLowerCase()));
-  for (const y of yearly)
-    for (const kind of ["commit", "pullRequest", "issue", "pullRequestReview"])
+  for (const y of byRepoYears.filter(Boolean))
+    for (const kind of kinds)
       for (const { contributions, repository: r } of y[`${kind}ContributionsByRepository`] ?? []) {
         if (r.owner.login.toLowerCase() !== user.login.toLowerCase()) others.add(r.nameWithOwner.toLowerCase());
         if (r.owner.__typename !== "Organization") continue;
