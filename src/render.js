@@ -723,7 +723,7 @@ function heatmapSection(d, X, W = 940) {
   const max = Math.max(1, ...weeks.flat().map(([, n]) => n));
   const level = (n) => (n === 0 ? 0 : Math.min(4, Math.ceil((n / max) * 4)));
   // pacman: a whole game on these days (a calendar too narrow for a maze just shows the grid)
-  const game = o.mode === "pacman" && weeks.length >= 10 ? playGame(weeks, level, { kind: o.pacmanMaze, lives: o.pacmanLives, seedText: d.login }) : null;
+  const game = o.mode === "pacman" && weeks.length >= 10 ? playGame(weeks, level, { kind: o.pacmanMaze, lives: o.pacmanLives, games: o.pacmanGames, seedText: d.login }) : null;
   const step = 16.8;
   const x0 = 78;
   const y0 = 722;
@@ -816,7 +816,6 @@ function heatmapSection(d, X, W = 940) {
   };
   // Pac-Man mode: the whole game is simulated here (src/pacman.js) and written as keyframes, like the snake. Pellets are the days
   // with contributions (they fade when eaten), the walls are the quiet days that became walls, and a loop restarts the game.
-  const PAC_HOLD = 10; // frames at the end of a game: the board stays while WIN / GAME OVER shows
   const GHOST_COLORS = ["#ff4d4d", "#ffa6d9", "#4de8ff", "#ffb347"]; // Blinky, Pinky, Inky, Clyde
   const half = CELL / 2;
   const pac = game && game.maze.pellets > 0 ? game : null;
@@ -824,9 +823,10 @@ function heatmapSection(d, X, W = 940) {
     const F = pac.frames.length;
     const DT = Math.min(0.16, Math.max(0.05, 35 / F));
     const T = r3(F * DT + 2.2);
-    const eatT = new Map();
-    pac.frames.forEach((f, t) => f.e.forEach((k) => eatT.set(k, t)));
-    return { F, DT, T, eatT, pct: (t) => Math.round(((t * DT) / T) * 10000) / 100, delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) };
+    const eatT = new Map(); // pellet cell -> [[frame, game]]: it comes back at the start of the next game
+    pac.frames.forEach((f, t) => f.e.forEach((k) => eatT.set(k, [...(eatT.get(k) ?? []), [t, f.n]])));
+    const starts = pac.frames.map((f, t) => (t === 0 || f.n !== pac.frames[t - 1].n ? t : -1)).filter((t) => t >= 0);
+    return { F, DT, T, eatT, starts, pct: (t) => Math.round(((t * DT) / T) * 10000) / 100, delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) };
   };
   let pg = null;
   const geom = () => (pg ??= pacGeom());
@@ -835,7 +835,7 @@ function heatmapSection(d, X, W = 940) {
   // (a dot in the colour of its level, bigger for a busier day) and the four power pills are the busiest days. No day shapes.
   const pacBoard = () => {
     const { maze } = pac;
-    const { eatT, T, pct, delay } = geom();
+    const { eatT, starts, T, pct, delay } = geom();
     const still = A.t !== undefined;
     const now = still ? Math.min(pac.frames.length - 1, Math.round((0.15 + 0.6 * A.t) * (pac.frames.length - 1))) : 0;
     const edge = c.heat[3];
@@ -860,16 +860,24 @@ function heatmapSection(d, X, W = 940) {
     for (const [w, wk] of weeks.entries())
       for (const [key, n, i] of wk) {
         const k = w * 7 + i;
-        if (!maze.pellet[k] || (still && eatT.has(k) && eatT.get(k) <= now)) continue;
+        if (!maze.pellet[k] || (still && eatT.get(k)?.some(([e, n]) => e <= now && n === pac.frames[now].n))) continue;
         const [cx, cy] = centre(w, i);
         const lv = maze.pellet[k];
         const power = maze.power.has(k);
         const col = mix(c.heat[lv], "#ffffff", power ? 0.7 : 0.45);
         const pulse = power ? A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.3" }, { dur: 0.7, ease: "steps(1)" }) : "";
         const dotSvg = `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="${power ? 4.8 : r3(1.4 + lv * 0.45)}" fill="${col}"${pulse}><title>${n} · ${key}</title></circle>`;
-        const e = eatT.get(k);
-        if (still || e === undefined) { dots.push(dotSvg); continue; }
-        A.css.push(`@keyframes pe${k}{0%,${pct(e)}%{opacity:1}${r3(pct(e) + 0.05)}%,99.5%{opacity:0}100%{opacity:1}}`);
+        const eats = eatT.get(k);
+        if (still || eats === undefined) { dots.push(dotSvg); continue; }
+        // gone when eaten, back at the start of the next game (and of the loop)
+        const stops = [[0, 1]];
+        for (const [e, n] of eats) {
+          stops.push([pct(e), 1], [r3(pct(e) + 0.05), 0]);
+          if (n < pac.games - 1) stops.push([r3(pct(starts[n + 1]) - 0.05), 0], [pct(starts[n + 1]), 1]);
+          else stops.push([99.5, 0]);
+        }
+        stops.push([100, 1]);
+        A.css.push(`@keyframes pe${k}{${stops.map(([q, v]) => `${q}%{opacity:${v}}`).join("")}}`);
         dots.push(`<g style="animation:pe${k} ${T}s linear ${delay}s infinite">${dotSvg}</g>`);
       }
     // the ghost house, as in the arcade: a box of 5 x 3 days with a pink door in the middle of its top edge
@@ -944,35 +952,40 @@ function heatmapSection(d, X, W = 940) {
   // the score, as in the arcade ("1UP 270   HIGH SCORE 270"). Every score is a multiple of 10, so the last 0 is fixed; each of the other
   // digits is a strip of 0-9 behind a window that slides by steps, so the number changes inside a README image too.
   const pacScore = (frames, now) => {
-    const final = frames.at(-1).s;
-    const D = String(final / 10).length;
+    const fin = [];
+    frames.forEach((f) => (fin[f.n] = f.s));
+    const best = frames.map((f) => Math.max(f.s, ...fin.slice(0, f.n))); // the high score starts at 0 and keeps the best of the games before
+    const D = String(Math.max(...fin) / 10).length;
     const DW = 7.4, LH = 14;
     const showHigh = W >= 880;
     const total = 30 + DW * (D + 1) + (showHigh ? 22 + 74 + DW * (D + 1) : 0);
     const X = r3(596 + (W - 940) - total);
-    const label = (x, text) => `<text x="${r3(x)}" y="698" font-size="9" font-weight="700" font-family="${FD}" letter-spacing="1" fill="${c.pac}">${text}</text>`;
+    const label = (x, text) => `<text x="${r3(x)}" y="698" text-anchor="start" font-size="9" font-weight="700" font-family="${FD}" letter-spacing="1" fill="${c.pac}">${text}</text>`;
     const glyph = (x, ch) => `<text x="${r3(x)}" y="698" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" fill="${c.text}">${ch}</text>`;
     const digitAt = (n, p) => (n < 10 ** p && p > 0 ? 10 : Math.floor(n / 10 ** p) % 10); // 10 = blank (no leading zeros)
     const fixed = (x, value) => [...String(value)].map((ch, j) => glyph(x + DW * j + DW / 2, ch)).join("");
     const animated = now === undefined;
-    const x1 = X + 30;
-    let digits;
-    if (animated) {
-      digits = "";
+    // a number as D strips of 0-9 sliding behind a one-line window, plus the fixed last 0
+    const number = (name, x, vals) => {
+      let out = "";
       for (let j = 0; j < D; j++) {
         const p = D - 1 - j;
-        stepKeyframes(`sc${j}`, frames.map((f) => `transform:translateY(${-digitAt(f.s / 10, p) * LH}px)`));
+        stepKeyframes(`${name}${j}`, vals.map((v) => `transform:translateY(${-digitAt(v / 10, p) * LH}px)`));
         const strip = Array.from({ length: 10 }, (_, d) => `<text x="0" y="${698 + d * LH}" text-anchor="middle" font-size="11" font-weight="700" font-family="${FD}" fill="${c.text}">${d}</text>`).join("");
-        digits += `<g transform="translate(${r3(x1 + DW * j + DW / 2)} 0)"><g style="animation:sc${j} ${geom().T}s step-end ${geom().delay}s infinite backwards">${strip}</g></g>`;
+        out += `<g transform="translate(${r3(x + DW * j + DW / 2)} 0)"><g style="animation:${name}${j} ${geom().T}s step-end ${geom().delay}s infinite backwards">${strip}</g></g>`;
       }
-      digits = `<clipPath id="pacsc"><rect x="${r3(X - 10)}" y="687.5" width="${r3(total + 20)}" height="13"/></clipPath><g clip-path="url(#pacsc)">${digits}</g>${glyph(x1 + DW * D + DW / 2, "0")}`;
-    } else digits = fixed(x1, frames[now].s);
-    const xh = x1 + DW * (D + 1) + 22;
-    return `${label(X, "1UP")}${digits}${showHigh ? label(xh, "HIGH SCORE") + fixed(xh + 74, final) : ""}`;
+      return `<g clip-path="url(#pacsc)">${out}</g>${glyph(x + DW * D + DW / 2, "0")}`;
+    };
+    const x1 = X + 30;
+    const xh = x1 + DW * (D + 1) + 22 + 74;
+    const clip = animated ? `<clipPath id="pacsc"><rect x="${r3(X - 10)}" y="687.5" width="${r3(total + 20)}" height="13"/></clipPath>` : "";
+    const cur = animated ? number("sc", x1, frames.map((f) => f.s)) : fixed(x1, frames[now].s);
+    const high = !showHigh ? "" : label(xh - 74, "HIGH SCORE") + (animated ? number("hs", xh, best) : fixed(xh, best[now]));
+    return `${clip}${label(X, "1UP")}${cur}${high}`;
   };
   const pacSprites = () => {
-    const { frames, result } = pac;
-    const { F, DT, T, delay, pct } = geom();
+    const { frames } = pac;
+    const { F, T, delay } = geom();
     const lifeIcon = (n, on) => {
       const x = r3(700 + (W - 940) + n * 14);
       const body = `<path d="M${x} 694L${r3(x + 4.2 * Math.cos(0.6))} ${r3(694 - 4.2 * Math.sin(0.6))}A4.2 4.2 0 1 0 ${r3(x + 4.2 * Math.cos(0.6))} ${r3(694 + 4.2 * Math.sin(0.6))}Z" fill="${c.pac}"/>`;
@@ -1004,9 +1017,11 @@ function heatmapSection(d, X, W = 940) {
       stepKeyframes(`lf${n}`, frames.map((f) => `opacity:${f.l > n ? 1 : 0}`));
       return `<g style="animation:lf${n} ${T}s step-end ${delay}s infinite backwards">${lifeIcon(n)}</g>`;
     }).join("");
-    const end = pct(F - PAC_HOLD);
-    A.css.push(`@keyframes pend{0%,${end}%{opacity:0}${r3(end + 0.05)}%,100%{opacity:1}}`);
-    const label = `<text x="${r3(690 + (W - 940))}" y="698" text-anchor="end" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.pac}" style="animation:pend ${T}s step-end ${delay}s infinite">${result === "win" ? "YOU WIN" : "GAME OVER"}</text>`;
+    const msg = (res, text) => {
+      stepKeyframes(`p${res}`, frames.map((f) => `opacity:${f.r === res ? 1 : 0}`));
+      return `<text x="${r3(690 + (W - 940))}" y="698" text-anchor="end" font-size="11" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.pac}" style="animation:p${res} ${T}s step-end ${delay}s infinite backwards">${text}</text>`;
+    };
+    const label = msg("win", "YOU WIN") + msg("over", "GAME OVER");
     return `<clipPath id="pacclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath><g clip-path="url(#pacclip)"><g ${anim("pmv")}><g style="animation:pmr ${T}s step-end ${delay}s infinite backwards">${pacBodyMoving()}</g></g>${ghosts}</g>${lives}${label}${pacScore(frames)}`;
   };
   return {

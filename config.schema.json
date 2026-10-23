@@ -221,6 +221,7 @@
         "mode": { "enum": ["grid", "snake", "pacman"], "default": "grid", "description": "grid: the plain contribution grid. snake: an animated snake eats the contributions (loops forever, plain CSS). pacman: an automatic game of Pac-Man with the four ghosts, played on the cells." },
         "pacmanMaze": { "enum": ["data", "classic", "open"], "default": "data", "description": "The maze of the pacman mode. data: the quiet days become walls (the maze changes with your data, every cell stays reachable). classic: a fixed arcade-style maze. open: no walls." },
         "pacmanLives": { "type": "integer", "minimum": 1, "maximum": 5, "default": 3, "description": "Lives of Pac-Man in the pacman mode." },
+        "pacmanGames": { "type": "integer", "minimum": 1, "maximum": 3, "default": 1, "description": "Games played one after the other before the loop restarts (the high score carries over)." },
         "snakeLength": { "type": "integer", "minimum": 3, "maximum": 12, "default": 6, "description": "How many cells long the snake is." },
         "snakeStyle": { "enum": ["classic", "rainbow", "glow"], "default": "classic", "description": "classic: the snake colour. rainbow: every segment its own colour. glow: a soft halo around the body." },
         "snakePath": { "enum": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "default": "smart", "description": "Route of the snake. smart: quietest days first, then busier ones. busy: busiest first. nearest: always the closest day. sweep: column by column. rows: row by row. spiral: outside in." },

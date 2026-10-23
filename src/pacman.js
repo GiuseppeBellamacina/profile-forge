@@ -26,11 +26,18 @@ export const hashSeed = (s) => {
 };
 
 // the "classic" maze, the arcade board squeezed into 7 rows and mirrored left to right: a wall along the edge with the tunnel as the
-// only way through (row 3), a lane next to it, then rounded blocks in two bands (rows 1-2 and 4-5) between corridors on rows 0, 3 and 6,
-// the blocks of the two bands offset from each other. Columns are counted from the nearest edge; the body repeats every 9.
+// only way through (row 3), a lane next to it, then thin walls only, as in the arcade: T shapes and short bars. The upper band (rows 1-2)
+// has T's and bars, the lower one (rows 4-5) the same upside down and shifted by half a period, between corridors on rows 0, 3 and 6.
+// Columns are counted from the nearest edge; the body repeats every 10.
 const CLASSIC_HEAD = ["..", "#.", "#.", "..", "#.", "#.", ".."];
-const CLASSIC_BODY = [".........", "###.####.", "###.####.", ".........", "####.###.", "####.###.", "........."];
-const classicWall = (u, i) => (u < 2 ? CLASSIC_HEAD[i][u] : CLASSIC_BODY[i][(u - 2) % 9]) === "#";
+const CLASSIC_TOP = ["###.#.###.", ".#..#..#.."]; // rows 1 and 2
+const classicWall = (u, i) => {
+  if (u < 2) return CLASSIC_HEAD[i][u] === "#";
+  const b = u - 2;
+  if (i === 1 || i === 2) return CLASSIC_TOP[i - 1][b % 10] === "#";
+  if (i === 4 || i === 5) return CLASSIC_TOP[5 - i][(b + 5) % 10] === "#"; // upside down: the bar is on the lower row
+  return false;
+};
 
 /** weeks: [[date, count, row]] per week. level(count) -> 0..4. Returns the maze (see the fields below). */
 export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
@@ -381,13 +388,18 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     rec(1, eaten);
   }
   if (!result) { hold(10); result = "over"; }
+  if (result === "over" && frames.at(-1).a === 0) hold(5, 0); // game over after a death: the board stays a little longer
+  frames.slice(-10).forEach((f) => (f.r = result)); // the last moments of the game, while WIN / GAME OVER shows
   return { frames, result, pellets: maze.pellets };
 }
 
 /** The whole thing for a heatmap: the maze and a game, both from the same seed (login and contributions), so a given profile always plays the same. */
-export function playGame(weeks, level, { kind = "data", lives = 3, seedText = "" } = {}) {
+export function playGame(weeks, level, { kind = "data", lives = 3, games = 1, seedText = "" } = {}) {
   const total = weeks.flat().reduce((s, [, n]) => s + n, 0);
   const seed = hashSeed(`${seedText}:${total}:${weeks.length}`);
   const maze = buildMaze(weeks, level, kind, mulberry32(seed));
-  return { maze, ...simulate(maze, { lives, seed: seed ^ 0x9e3779b9 }) };
+  // one to three games on the same maze, one after the other (each frame says which one it belongs to: n)
+  const played = Array.from({ length: games }, (_, n) => simulate(maze, { lives, seed: (seed ^ 0x9e3779b9) + n * 7919 }));
+  played.forEach((g, n) => g.frames.forEach((f) => (f.n = n)));
+  return { maze, frames: played.flatMap((g) => g.frames), results: played.map((g) => g.result), result: played.at(-1).result, games };
 }

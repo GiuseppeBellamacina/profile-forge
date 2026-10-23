@@ -167,3 +167,16 @@ test("game: Pac-Man does not pace back and forth, and the score follows the arca
       assert.ok(frames.at(-1).s > 0 && maze.pellets > 0, "something was scored");
     }
 });
+
+test("games: up to three one after the other, each starting from 0 with fresh pellets and lives", () => {
+  const g = playGame(grid(53, 4, 0.5), level, { kind: "data", games: 3, seedText: "g" });
+  assert.deepEqual([...new Set(g.frames.map((f) => f.n))], [0, 1, 2]);
+  assert.equal(g.results.length, 3);
+  for (const n of [0, 1, 2]) {
+    const own = g.frames.filter((f) => f.n === n);
+    assert.equal(own[0].s, 0, "starts from 0");
+    assert.equal(own[0].l, 3);
+    assert.ok(own.slice(-10).every((f) => f.r === g.results[n]), "the end of each game is flagged");
+  }
+  assert.notDeepEqual(g.frames.filter((f) => f.n === 0).map((f) => f.p), g.frames.filter((f) => f.n === 1).map((f) => f.p), "each game has its own turn of luck");
+});

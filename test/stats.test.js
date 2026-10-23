@@ -594,7 +594,7 @@ test("heatmap pacman: a game with Pac-Man and four ghosts, as keyframes; static 
   for (const pacmanMaze of ["data", "classic", "open"]) {
     const svg = view({ pacmanMaze });
     assert.ok(/@keyframes pmv\{/.test(svg) && [0, 1, 2, 3].every((n) => svg.includes(`@keyframes gv${n}{`)), `${pacmanMaze}: Pac-Man and four ghosts move`);
-    assert.ok(/@keyframes pe\d+/.test(svg) && svg.includes("GAME OVER") !== svg.includes("YOU WIN"), "pellets fade, one ending is written");
+    assert.ok(/@keyframes pe\d+/.test(svg) && /@keyframes pwin\{/.test(svg) && /@keyframes pover\{/.test(svg), "pellets fade, both endings are keyed to the end of a game");
     assert.ok(svg.includes("backwards"), "sprites wait at their first keyframe, not at the corner");
   }
   const a = view({}, 0), b = view({}, 1);
@@ -605,6 +605,8 @@ test("heatmap pacman: a game with Pac-Man and four ghosts, as keyframes; static 
   assert.ok(!render(make({ layout: ["heatmap"] })[0], { k: make({ layout: ["heatmap"] })[1] }).includes("@keyframes pmv"), "grid mode has no game");
   assert.throws(() => normalize({ heatmap: { pacmanMaze: "maze" } }), /heatmap\.pacmanMaze/);
   assert.throws(() => normalize({ heatmap: { pacmanLives: 9 } }), /between 1 and 5/);
+  assert.throws(() => normalize({ heatmap: { pacmanGames: 4 } }), /between 1 and 3/);
+  assert.ok(view({ pacmanGames: 3 }).length > view({}).length * 2 && view({}, 0.5).includes("HIGH SCORE"), "more games, more keyframes; the high score is shown");
   assert.ok(view({}).includes("#ffd23f") && make({ layout: ["heatmap"], heatmap: { mode: "pacman" }, colors: { pacmanColor: "ff0000" } }) && true);
 });
 

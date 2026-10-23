@@ -29,7 +29,7 @@ export const DEFAULTS = {
   terminal: { title: null, lines: [] },
   rhythm: { title: null, show: ["weekdays", "months"] },
   orgs: { title: null, select: [], hide: [], order: [], sort: "contributions", mode: "static", direction: "left", speed: 30 },
-  heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", pacmanMaze: "data", pacmanLives: 3, weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
+  heatmap: { mode: "grid", snakePath: "smart", snakeLength: 6, snakeStyle: "classic", pacmanMaze: "data", pacmanLives: 3, pacmanGames: 1, weeks: 53, cell: "square", weekStart: "sun", legend: true, monthLabels: true },
   export: { png: false, gif: false },
 };
 
@@ -45,7 +45,7 @@ const ENUMS = {
 const RANGES = {
   "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
-  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12], "heatmap.pacmanLives": [1, 5], "orgs.speed": [5, 200],
+  "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12], "heatmap.pacmanLives": [1, 5], "heatmap.pacmanGames": [1, 3], "orgs.speed": [5, 200],
 };
 // Keys whose value shape isn't described by the default's type.
 const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
@@ -174,7 +174,7 @@ export function normalize(raw = {}) {
     if (!m || +m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > new Date(Date.UTC(2024, +m[1], 0)).getUTCDate()) throw new Error(`Config "trophies.birthday": expected "MM-DD" or "YYYY-MM-DD" (got "${birthday}")`);
   }
   for (const [n, l] of c.terminal.lines.entries()) if (typeof l !== "string") throw new Error(`Config "terminal.lines[${n}]" must be a string`);
-  for (const key of ["snakeLength", "pacmanLives"]) if (!Number.isInteger(c.heatmap[key])) throw new Error(`Config "heatmap.${key}" must be a whole number`);
+  for (const key of ["snakeLength", "pacmanLives", "pacmanGames"]) if (!Number.isInteger(c.heatmap[key])) throw new Error(`Config "heatmap.${key}" must be a whole number`);
   const excludeDays = c.streak.excludeDays.map((x) => {
     const i = WEEKDAYS.indexOf(String(x).toLowerCase().slice(0, 3));
     if (i < 0) throw new Error(`Config "streak.excludeDays": invalid day "${x}" (use Sun, Mon, ...)`);
