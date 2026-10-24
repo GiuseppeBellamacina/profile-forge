@@ -335,7 +335,8 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     if (g.acc < 1) return;
     g.acc -= 1;
     const k = idx(g.w, g.i);
-    let opts = nbG[k];
+    // a ghost never goes into the house on its own (only the eyes of an eaten one do)
+    let opts = house.has(k) ? nbG[k] : nbG[k].filter(([a, b]) => !house.has(idx(a, b)));
     const back = (g.d + 2) % 4;
     if (opts.length > 1) opts = opts.filter(([, , d]) => d !== back);
     let pick;
@@ -344,7 +345,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       pick = nbG[k].reduce((b, o) => (toDoor[idx(o[0], o[1])] < toDoor[idx(b[0], b[1])] ? o : b), nbG[k][0]);
     } else if (g.flip) {
       // the scatter / chase turn (or a power pill): at the next cell it goes back the way it came
-      pick = nbG[k].find(([, , d]) => d === back) ?? opts[0];
+      pick = opts.find(([, , d]) => d === back) ?? opts[0];
     } else if (g.st === "s") {
       pick = opts[Math.floor(rand() * opts.length)];
     } else {

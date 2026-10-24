@@ -599,7 +599,8 @@ test("heatmap pacman: a game with Pac-Man and four ghosts, as keyframes; static 
   }
   const a = view({}, 0), b = view({}, 1);
   assert.ok(!a.includes("@keyframes pmv") && a !== b, "a still frame has no CSS and shows another moment of the game");
-  assert.ok((a.match(/<path d="M-6.2 6.4/g) ?? []).length >= 1 && (a.match(/fill="#1a2cff"/g) ?? []).length >= 2, "ghosts with their eyes in a still frame");
+  const frames3 = [0, 0.5, 1].map((t) => view({}, t)).join(""); // a ghost may be scared or out of sight in one of them
+  assert.ok((frames3.match(/<path d="M-6.2 6.4/g) ?? []).length >= 1 && (frames3.match(/fill="#1a2cff"/g) ?? []).length >= 2, "ghosts with their eyes in a still frame");
   assert.ok(view({ pacmanLives: 5 }).includes("@keyframes lf4") && !view({ pacmanLives: 1 }).includes("@keyframes lf1"), "one icon per life");
   assert.ok(!view({ weeks: 6 }).includes("@keyframes pmv"), "a calendar too narrow for a maze falls back to the grid");
   assert.ok(!render(make({ layout: ["heatmap"] })[0], { k: make({ layout: ["heatmap"] })[1] }).includes("@keyframes pmv"), "grid mode has no game");

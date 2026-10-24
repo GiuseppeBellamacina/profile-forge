@@ -183,3 +183,14 @@ test("games: up to three one after the other, each starting from 0 with fresh pe
   }
   assert.notDeepEqual(g.frames.filter((f) => f.n === 0).map((f) => f.p), g.frames.filter((f) => f.n === 1).map((f) => f.p), "each game has its own turn of luck");
 });
+
+test("ghosts never go back into the house on their own; only the eyes of an eaten ghost do", () => {
+  for (const kind of KINDS) {
+    const { frames, maze } = playGame(grid(53, 9, 0.5), level, { kind, games: 2, seedText: "in" });
+    frames.forEach((f, t) => f.g.forEach((g, k) => {
+      const was = t ? frames[t - 1].g[k] : null;
+      const inside = (c) => maze.house.has(c[0] * ROWS + c[1]);
+      if (was && f.n === frames[t - 1].n && f.a && !["e", "r"].includes(g[2]) && !["e", "r"].includes(was[2])) assert.ok(!(inside(g) && !inside(was)), `${kind}: a ghost walked in at frame ${t}`);
+    }));
+  }
+});

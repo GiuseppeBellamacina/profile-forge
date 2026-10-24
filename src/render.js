@@ -822,7 +822,7 @@ function heatmapSection(d, X, W = 940) {
   // pct has three decimals: with two the rounding alone made Pac-Man's speed jitter by 6%
   const pacGeom = () => {
     const F = pac.frames.length;
-    const DT = Math.min(0.16, Math.max(0.05, 35 / F));
+    const DT = 0.115; // seconds per move: the arcade's pace (about 8.7 cells a second); faster looked like a fast-forward
     const T = r3(F * DT + 2.2);
     const eatT = new Map(); // pellet cell -> [[frame, game]]: it comes back at the start of the next game
     pac.frames.forEach((f, t) => f.e.forEach((k) => eatT.set(k, [...(eatT.get(k) ?? []), [t, f.n]])));
