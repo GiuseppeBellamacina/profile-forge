@@ -14,7 +14,11 @@ export const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 const GHOST_SPEED = 0.78;
 const SCARED_SPEED = 0.62;
 const SCATTER = [[0, 61], [236, 297], [472, 516], [691, 735]]; // ticks (from the start of a life) in which the ghosts scatter; chase otherwise
-const RELEASE = [0, 0, 0.12, 0.25]; // share of the pellets Pac-Man must have eaten before a ghost leaves the house (the arcade: 0, 0, 30, 60 of 244)
+// Pellets Pac-Man must have eaten before each ghost leaves the house: the arcade's level 1 counters (of its 244 pellets), one set for
+// the first life and one after he has lost a life. Without a pellet for 4 seconds the next ghost goes anyway.
+const RELEASE_FIRST = [0, 0, 30, 60];
+const RELEASE_AFTER = [0, 7, 17, 32];
+const IDLE_RELEASE = 35;
 const GHOST_ORDER = [3, 2, 1, 0]; // when two moves are equally good a ghost prefers up, left, down, right (as in the arcade)
 export const GHOSTS = ["blinky", "pinky", "inky", "clyde"];
 export const PACMAN_MAZES = ["data", "classic", "open"];
@@ -190,7 +194,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     noBack = 0; // until this tick he may not turn back
     ghosts = GHOSTS.map((_, k) => {
       const c = [exitK, denK, denK - ROWS, denK + ROWS][k]; // spread over the house
-      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: k < 2 ? t + 2 + k * 5 : Infinity, acc: 0, flip: false };
+      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, acc: 0, flip: false };
     });
     modeStart = t;
     eatenNow = 0; // pellets eaten in this life: they let the other two ghosts out
@@ -324,7 +328,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       const k = idx(g.w, g.i);
       const pick = nbG[k].reduce((b, o) => (toDen[idx(o[0], o[1])] < toDen[idx(b[0], b[1])] ? o : b), nbG[k][0]);
       if (pick) [g.w, g.i, g.d] = pick;
-      if (idx(g.w, g.i) === denK) (g.st = "c", g.rel = t + 10);
+      if (idx(g.w, g.i) === denK) (g.st = "c", g.rel = t); // eaten: it goes straight out again, no waiting
       return;
     }
     if (t < g.rel) return;
@@ -400,7 +404,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     if (scatterNow !== scattering) for (const g of ghosts) if (g.st === "c" && !house.has(idx(g.w, g.i))) g.flip = true;
     scattering = scatterNow;
     // the third and the fourth ghost leave when Pac-Man has eaten enough, or when he has not eaten for a while
-    for (const g of ghosts) if (g.rel === Infinity && (g.st === "c" || g.st === "s") && (g.k < 3 || ghosts[g.k - 1].rel !== Infinity) && (eatenNow >= RELEASE[g.k] * maze.pellets || t - lastEat > 40)) g.rel = t;
+    for (const g of ghosts) if (g.rel === Infinity && (g.st === "c" || g.st === "s") && (g.k < 3 || ghosts[g.k - 1].rel !== Infinity) && (eatenNow >= (livesLeft < lives ? RELEASE_AFTER : RELEASE_FIRST)[g.k] * maze.pellets / 244 || t - lastEat > IDLE_RELEASE)) g.rel = t;
     const crossing = transit.length > 0;
     let step = crossing ? transit.shift() : pacMove();
     if (step && !crossing && Math.abs(step[0] - pac.w) > 1) {
