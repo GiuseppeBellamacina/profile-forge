@@ -819,6 +819,7 @@ function heatmapSection(d, X, W = 940) {
   const GHOST_COLORS = ["#ff4d4d", "#ffa6d9", "#4de8ff", "#ffb347"]; // Blinky, Pinky, Inky, Clyde
   const half = CELL / 2;
   const pac = game && game.maze.pellets > 0 ? game : null;
+  // pct has three decimals: with two the rounding alone made Pac-Man's speed jitter by 6%
   const pacGeom = () => {
     const F = pac.frames.length;
     const DT = Math.min(0.16, Math.max(0.05, 35 / F));
@@ -826,7 +827,7 @@ function heatmapSection(d, X, W = 940) {
     const eatT = new Map(); // pellet cell -> [[frame, game]]: it comes back at the start of the next game
     pac.frames.forEach((f, t) => f.e.forEach((k) => eatT.set(k, [...(eatT.get(k) ?? []), [t, f.n]])));
     const starts = pac.frames.map((f, t) => (t === 0 || f.n !== pac.frames[t - 1].n ? t : -1)).filter((t) => t >= 0);
-    return { F, DT, T, eatT, starts, pct: (t) => Math.round(((t * DT) / T) * 10000) / 100, delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) };
+    return { F, DT, T, eatT, starts, pct: (t) => Math.round(((t * DT) / T) * 100000) / 1000, delay: r3(A.dt + 1.8 + weeks.length * 0.025 + 0.5) };
   };
   let pg = null;
   const geom = () => (pg ??= pacGeom());
@@ -891,17 +892,17 @@ function heatmapSection(d, X, W = 940) {
   };
   // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
   // and the rest is thinned out with Ramer-Douglas-Peucker so a straight corridor is one segment
-  const trackFrames = (cells) => {
+  const trackFrames = (cells, glide = true) => {
     const px = cells.map(([w, i]) => centre(w, i));
     const keep = [];
     px.forEach((p, t) => {
       const same = t > 0 && p[0] === px[t - 1][0] && p[1] === px[t - 1][1];
       const nextSame = t < px.length - 1 && px[t + 1][0] === p[0] && px[t + 1][1] === p[1];
-      if (t === 0 || t === px.length - 1 || !same || nextSame) keep.push([t, p[0], p[1]]);
+      if (t === 0 || t === px.length - 1 || !same || nextSame || !glide) keep.push([t, p[0], p[1]]); // glide: a one-tick stop is not kept, the sprite just goes a little slower there
     });
     // through the tunnel: out of the edge (half a tick), then in from the other edge (the clip hides what is outside the board)
     const wide = (weeks.length - 3) * step;
-    for (let n = keep.length - 1; n > 0; n--) {
+    for (let n = keep.length - 1; glide && n > 0; n--) { // (Pac-Man crosses through two hidden cells of his own, see simulate)
       const [t0, x0p, y0p] = keep[n - 1], [t1, x1p, y1p] = keep[n];
       if (Math.abs(x1p - x0p) > wide && y0p === y1p) {
         const dir = x1p < x0p ? 1 : -1;
@@ -928,9 +929,9 @@ function heatmapSection(d, X, W = 940) {
     };
     return runs.flatMap((r, n) => simplify(r).map((p, j, all) => [...p, n < runs.length - 1 && j === all.length - 1]));
   };
-  const moveKeyframes = (name, cells) => {
+  const moveKeyframes = (name, cells, glide = true) => {
     const { pct } = geom();
-    A.css.push(`@keyframes ${name}{${trackFrames(cells).map(([t, x, y, jump]) => `${pct(t)}%{transform:translate(${Math.round(x * 10) / 10}px,${Math.round(y * 10) / 10}px)${jump ? ";animation-timing-function:step-end" : ""}}`).join("")}}`);
+    A.css.push(`@keyframes ${name}{${trackFrames(cells, glide).map(([t, x, y, jump]) => `${pct(t)}%{transform:translate(${Math.round(x * 10) / 10}px,${Math.round(y * 10) / 10}px)${jump ? ";animation-timing-function:step-end" : ""}}`).join("")}}`);
   };
   /** CSS for a value that changes by steps: keyframes only where it changes. vals[t] -> css text */
   const stepKeyframes = (name, vals) => {
@@ -1000,11 +1001,11 @@ function heatmapSection(d, X, W = 940) {
       const pacSvg = `<g transform="translate(${r3(px)} ${r3(py)}) rotate(${pd * 90})${f.a ? "" : " scale(0.4)"}">${pacBodyStill()}</g>`;
       const ghosts = f.g.map((g, k) => { const [gx, gy] = centre(g[0], g[1]); return `<g transform="translate(${r3(gx)} ${r3(gy)})">${ghostShape(k, g[2], g[3], false)}</g>`; }).join("");
       const lives = Array.from({ length: o.pacmanLives }, (_, n) => lifeIcon(n, f.l > n)).join("");
-      return `<g>${ghosts}${pacSvg}</g>${lives}${pacScore(frames, now)}`;
+      return `<clipPath id="pacclip"><rect x="${x0 - 2}" y="${y0 - 2}" width="${r3(weeks.length * step + 2)}" height="${r3(7 * step + 2)}"/></clipPath><g clip-path="url(#pacclip)">${ghosts}${pacSvg}</g>${lives}${pacScore(frames, now)}`;
     }
     A.css.push("@keyframes pmt{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(0deg)}}@keyframes pmb{0%,100%{transform:rotate(30deg)}50%{transform:rotate(0deg)}}");
     const anim = (name) => `style="animation:${name} ${T}s linear ${delay}s infinite backwards"`;
-    moveKeyframes("pmv", frames.map((f) => [f.p[0], f.p[1]]));
+    moveKeyframes("pmv", frames.map((f) => [f.p[0], f.p[1]]), false); // Pac-Man never changes speed
     stepKeyframes("pmr", frames.map((f) => (f.a ? `transform:rotate(${f.p[2] * 90}deg)` : "transform:scale(.01)")));
     let ghosts = "";
     for (let k = 0; k < 4; k++) {

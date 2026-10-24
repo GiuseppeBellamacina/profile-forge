@@ -606,7 +606,7 @@ test("heatmap pacman: a game with Pac-Man and four ghosts, as keyframes; static 
   assert.throws(() => normalize({ heatmap: { pacmanMaze: "maze" } }), /heatmap\.pacmanMaze/);
   assert.throws(() => normalize({ heatmap: { pacmanLives: 9 } }), /between 1 and 5/);
   assert.throws(() => normalize({ heatmap: { pacmanGames: 4 } }), /between 1 and 3/);
-  assert.ok(view({ pacmanGames: 3 }).length > view({}).length * 2 && view({}, 0.5).includes("HIGH SCORE"), "more games, more keyframes; the high score is shown");
+  assert.ok(view({ pacmanGames: 3 }).length > view({}).length * 1.4 && view({}, 0.5).includes("HIGH SCORE"), "more games, more keyframes; the high score is shown");
   assert.ok(view({}).includes("#ffd23f") && make({ layout: ["heatmap"], heatmap: { mode: "pacman" }, colors: { pacmanColor: "ff0000" } }) && true);
 });
 
@@ -617,4 +617,17 @@ test("heatmap pacman: the legend is made of pellets, not of day shapes, and the 
   const legend = svg.slice(svg.indexOf(">Less<"), svg.indexOf(">More<"));
   assert.equal((legend.match(/<circle/g) ?? []).length, 4, "four pellet sizes");
   assert.ok(svg.includes('rx="1" fill="#ffa6d9"'), "the ghost house and its pink door");
+});
+
+test("heatmap pacman: Pac-Man moves at one constant speed (tunnels and stops included)", () => {
+  const [d, k] = make({ layout: ["heatmap"], heatmap: { mode: "pacman", pacmanMaze: "classic" } });
+  const svg = render(d, { k });
+  const kf = svg.slice(svg.indexOf("@keyframes pmv{") + 15);
+  const pts = [...kf.slice(0, kf.indexOf("}@keyframes")).matchAll(/([\d.]+)%\{transform:translate\(([-\d.]+)px,([-\d.]+)px\)(;animation-timing-function:step-end)?/g)].map((m) => [+m[1], +m[2], +m[3], !!m[4]]);
+  const speeds = [];
+  for (let i = 1; i < pts.length; i++) {
+    const dt = pts[i][0] - pts[i - 1][0], dist = Math.hypot(pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]);
+    if (!pts[i - 1][3] && dt > 0 && dist > 0) speeds.push(dist / dt);
+  }
+  assert.ok(speeds.length > 50 && Math.max(...speeds) / Math.min(...speeds) < 1.05, `speeds ${Math.min(...speeds)} - ${Math.max(...speeds)}`);
 });

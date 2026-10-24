@@ -65,14 +65,15 @@ test("game: it ends, is the same for the same data, and obeys the rules", () => 
       let lives = 3, eaten = 0;
       const seen = new Set();
       frames.forEach((f, t) => {
-        assert.ok(free(f.p[0], f.p[1]), "Pac-Man is never in a wall");
+        const hidden = (f.p[0] === -1 || f.p[0] === maze.W) && maze.tunnels.includes(f.p[1]); // the two cells outside the board that make a tunnel
+        assert.ok(hidden || free(f.p[0], f.p[1]), "Pac-Man is never in a wall");
         for (const g of f.g) assert.ok(free(g[0], g[1]), "nor a ghost");
         assert.ok(f.l <= lives, "lives never come back");
         lives = f.l;
         for (const k of f.e) { assert.ok(!seen.has(k) && maze.pellet[k], "a pellet is eaten once"); seen.add(k); eaten++; }
         if (t && f.a && frames[t - 1].a) {
           const dw = Math.abs(f.p[0] - frames[t - 1].p[0]), di = Math.abs(f.p[1] - frames[t - 1].p[1]);
-          const tunnel = dw === maze.W - 1 && di === 0 && maze.tunnels.includes(f.p[1]);
+          const tunnel = dw === maze.W + 1 && di === 0 && maze.tunnels.includes(f.p[1]); // from one hidden cell to the other
           assert.ok(dw + di <= 1 || tunnel || f.l < frames[t - 1].l, "a step of one cell, or through a tunnel");
         }
       });
@@ -98,7 +99,7 @@ test("game: a power pill scares the ghosts; an eaten ghost is a pair of eyes tha
           assert.deepEqual([g[0], g[1]], [maze.den.w, maze.den.i], "they get to the den before the ghost is back");
         }
       });
-      if (t && Math.abs(f.p[0] - frames[t - 1].p[0]) === maze.W - 1) tunnel++;
+      if (t && Math.abs(f.p[0] - frames[t - 1].p[0]) === maze.W + 1) tunnel++;
     });
   }
   assert.ok(scared > 0 && eyes > 0 && back > 0, `scared ${scared}, eyes ${eyes}, back ${back}`);

@@ -8,7 +8,13 @@
 export const ROWS = 7;
 /** right, down, left, up: the index is the rotation (x 90 degrees) of a sprite looking right. */
 export const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-const GHOST_SPEED = 2 / 3; // cells per tick of a chasing ghost
+// Ghosts as in the arcade (level 1), but a little slower than there (0.78 of Pac-Man against the arcade 0.94, a maze this narrow is harder).
+// Speeds are cells per tick, a tick being one move of Pac-Man: a ghost is slower than him,
+// a scared one much slower. The scatter / chase turns come from the arcade's 7, 20, 7, 20, 5, 20, 5 seconds, at about 8.7 moves a second.
+const GHOST_SPEED = 0.78;
+const SCARED_SPEED = 0.62;
+const SCATTER = [[0, 61], [236, 297], [472, 516], [691, 735]]; // ticks (from the start of a life) in which the ghosts scatter; chase otherwise
+const RELEASE = [0, 0, 0.12, 0.25]; // share of the pellets Pac-Man must have eaten before a ghost leaves the house (the arcade: 0, 0, 30, 60 of 244)
 const GHOST_ORDER = [3, 2, 1, 0]; // when two moves are equally good a ghost prefers up, left, down, right (as in the arcade)
 export const GHOSTS = ["blinky", "pinky", "inky", "clyde"];
 export const PACMAN_MAZES = ["data", "classic", "open"];
@@ -173,7 +179,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   const frames = [];
   let t = 0;
   let livesLeft = lives;
-  let pac, ghosts, modeStart, stall, goal, before0, trail, noBack;
+  let pac, ghosts, modeStart, stall, goal, before0, trail, noBack, eatenNow, lastEat, scattering, transit;
   let score = 0; // as in the arcade: 10 a pellet, 50 a power pill, then 200, 400, 800, 1600 for the ghosts it makes edible
   let chain = 0;
   const reset = () => {
@@ -184,9 +190,13 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     noBack = 0; // until this tick he may not turn back
     ghosts = GHOSTS.map((_, k) => {
       const c = [exitK, denK, denK - ROWS, denK + ROWS][k]; // spread over the house
-      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: t + 2 + k * 9 };
+      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: k < 2 ? t + 2 + k * 5 : Infinity, acc: 0, flip: false };
     });
     modeStart = t;
+    eatenNow = 0; // pellets eaten in this life: they let the other two ghosts out
+    lastEat = t;
+    scattering = true;
+    transit = []; // the hidden cells of a tunnel still to cross
   };
   reset();
   stall = 0;
@@ -198,11 +208,13 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     left[k] = 0;
     remaining--;
     stall = 0;
+    eatenNow++;
+    lastEat = t;
     eaten.push(k);
     score += maze.power.has(k) ? 50 : 10;
     if (maze.power.has(k)) {
       chain = 0;
-      for (const g of ghosts) if (g.st !== "e" && g.st !== "r") (g.st = "s", g.until = t + scare, g.d = (g.d + 2) % 4);
+      for (const g of ghosts) if (g.st !== "e" && g.st !== "r") (g.st = "s", g.until = t + scare, g.flip = true);
     }
   };
   const startEaten = [];
@@ -221,7 +233,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     for (const g of threats) {
       const d = bfs([idx(g.w, g.i)]);
       const delay = Math.max(0, g.rel - t);
-      for (let k = 0; k < N; k++) if (d[k] >= 0 && d[k] / GHOST_SPEED + delay < arrive[k]) arrive[k] = d[k] / 0.75 + delay;
+      for (let k = 0; k < N; k++) if (d[k] >= 0 && d[k] / GHOST_SPEED + delay < arrive[k]) arrive[k] = d[k] / GHOST_SPEED + delay;
     }
     // a long time without a pellet: take more risk, then none at all
     const margin = stall > 90 ? -Infinity : stall > 40 ? 0 : 1;
@@ -317,8 +329,11 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     }
     if (t < g.rel) return;
     if (g.st === "s" && t >= g.until) g.st = "c";
-    if (g.st === "c" && t % 3 === 2) return; // a little slower than Pac-Man
-    if (g.st === "s" && t % 2 === 1) return;
+    // Blinky stops scattering when few pellets are left (the arcade's Cruise Elroy, without the extra speed: here that would be unbeatable)
+    const elroy = g.k === 0 && remaining <= maze.pellets * 0.1;
+    g.acc += g.st === "s" ? SCARED_SPEED : GHOST_SPEED;
+    if (g.acc < 1) return;
+    g.acc -= 1;
     const k = idx(g.w, g.i);
     let opts = nbG[k];
     const back = (g.d + 2) % 4;
@@ -327,20 +342,23 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     if (house.has(k)) {
       // in the house: to the middle, then out of the door
       pick = nbG[k].reduce((b, o) => (toDoor[idx(o[0], o[1])] < toDoor[idx(b[0], b[1])] ? o : b), nbG[k][0]);
+    } else if (g.flip) {
+      // the scatter / chase turn (or a power pill): at the next cell it goes back the way it came
+      pick = nbG[k].find(([, , d]) => d === back) ?? opts[0];
     } else if (g.st === "s") {
       pick = opts[Math.floor(rand() * opts.length)];
     } else {
-      const scatter = (t - modeStart) % 56 < 20;
       const [pd0, pd1] = DIRS[pac.d];
       let tw, ti;
-      if (scatter) [tw, ti] = corners[g.k];
+      if (scattering && !elroy) [tw, ti] = corners[g.k];
       else if (g.k === 0) [tw, ti] = [pac.w, pac.i];
-      else if (g.k === 1) [tw, ti] = [pac.w + 4 * pd0, pac.i + 4 * pd1];
-      else if (g.k === 2) { const b = ghosts[0]; [tw, ti] = [2 * (pac.w + 2 * pd0) - b.w, 2 * (pac.i + 2 * pd1) - b.i]; }
-      else if (Math.abs(g.w - pac.w) + Math.abs(g.i - pac.i) > 8) [tw, ti] = [pac.w, pac.i];
+      else if (g.k === 1) [tw, ti] = [pac.w + 4 * pd0, pac.i + 4 * pd1]; // four cells ahead of him
+      else if (g.k === 2) { const b = ghosts[0]; [tw, ti] = [2 * (pac.w + 2 * pd0) - b.w, 2 * (pac.i + 2 * pd1) - b.i]; } // twice the way from Blinky to two cells ahead
+      else if ((g.w - pac.w) ** 2 + (g.i - pac.i) ** 2 > 64) [tw, ti] = [pac.w, pac.i]; // Clyde: chases from afar, goes to his corner when closer than 8
       else [tw, ti] = corners[3];
       pick = opts.reduce((b, o) => ((o[0] - tw) ** 2 + (o[1] - ti) ** 2 < (b[0] - tw) ** 2 + (b[1] - ti) ** 2 ? o : b), opts[0]);
     }
+    g.flip = false;
     if (!pick) return;
     [g.w, g.i, g.d] = pick;
   };
@@ -376,7 +394,20 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     t++;
     stall++;
     const before = { p: [pac.w, pac.i], g: ghosts.map((g) => [g.w, g.i]) };
-    const step = pacMove();
+    // scatter / chase: every turn sends the ghosts back the way they came
+    const scatterNow = SCATTER.some(([a, b]) => t - modeStart >= a && t - modeStart < b);
+    if (scatterNow !== scattering) for (const g of ghosts) if (g.st === "c" && !house.has(idx(g.w, g.i))) g.flip = true;
+    scattering = scatterNow;
+    // the third and the fourth ghost leave when Pac-Man has eaten enough, or when he has not eaten for a while
+    for (const g of ghosts) if (g.rel === Infinity && (g.st === "c" || g.st === "s") && (g.k < 3 || ghosts[g.k - 1].rel !== Infinity) && (eatenNow >= RELEASE[g.k] * maze.pellets || t - lastEat > 40)) g.rel = t;
+    const crossing = transit.length > 0;
+    let step = crossing ? transit.shift() : pacMove();
+    if (step && !crossing && Math.abs(step[0] - pac.w) > 1) {
+      // through the tunnel: out of one edge, two hidden cells (the clip hides them), in from the other, so he never changes speed
+      const right = step[0] < pac.w;
+      transit = right ? [[-1, step[1]], step] : [[W, step[1]], step];
+      step = [right ? W : -1, step[1]];
+    }
     const eaten = [];
     if (step) {
       const d = DIRS.findIndex(([a, b]) => pac.w + a === step[0] && pac.i + b === step[1]);
