@@ -910,6 +910,28 @@ function heatmapSection(d, X, W = 940) {
         keep.splice(n, 0, [mid, x0p + dir * step, y0p], [mid + 0.01, x1p - dir * step, y1p]);
       }
     }
+    // A ghost that is slower than Pac-Man moves on some ticks and waits on others; played as it is, it lurches. Along a stretch of
+    // steady moves the arrival times are replaced by a line fitted through its neighbours (±3 moves), so the speed is even; the ends
+    // of the stretch (a stop, a jump) keep their time.
+    if (glide) {
+      const steady = (n) => n > 0 && keep[n][0] - keep[n - 1][0] <= 2 && (keep[n][1] !== keep[n - 1][1] || keep[n][2] !== keep[n - 1][2]) && Math.abs(keep[n][1] - keep[n - 1][1]) + Math.abs(keep[n][2] - keep[n - 1][2]) <= step * 1.6;
+      for (let a = 0; a < keep.length; ) {
+        let b = a;
+        while (b + 1 < keep.length && steady(b + 1)) b++;
+        if (b - a >= 3) {
+          const orig = keep.slice(a, b + 1).map((q) => q[0]);
+          for (let j = 1; j < orig.length - 1; j++) {
+            const lo = Math.max(0, j - 3), hi = Math.min(orig.length - 1, j + 3);
+            let sj = 0, st = 0, sjj = 0, sjt = 0;
+            for (let m = lo; m <= hi; m++) (sj += m, st += orig[m], sjj += m * m, sjt += m * orig[m]);
+            const cnt = hi - lo + 1, slope = (cnt * sjt - sj * st) / (cnt * sjj - sj * sj);
+            const fit = st / cnt + slope * (j - sj / cnt);
+            keep[a + j][0] = Math.min(Math.max(fit, keep[a + j - 1][0] + 0.2), orig.at(-1) - 0.2 * (orig.length - 1 - j));
+          }
+        }
+        a = b + 1;
+      }
+    }
     const runs = [[keep[0]]];
     for (let n = 1; n < keep.length; n++) {
       const d = Math.abs(keep[n][1] - keep[n - 1][1]) + Math.abs(keep[n][2] - keep[n - 1][2]);
