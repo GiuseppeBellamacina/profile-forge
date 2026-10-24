@@ -890,48 +890,16 @@ function heatmapSection(d, X, W = 940) {
     const house = `<g${A.a(1.9, 0.5, { o: 0 })}><rect x="${hx}" y="${hy}" width="${hw}" height="${hh}" rx="5" fill="${edge}"/><rect x="${r3(hx + 1.5)}" y="${r3(hy + 1.5)}" width="${r3(hw - 3)}" height="${r3(hh - 3)}" rx="3.6" fill="${c.bg1}"/><rect x="${r3(dxm + 1.5)}" y="${r3(hy - 0.4)}" width="${CELL - 3}" height="2.4" rx="1" fill="#ffa6d9"/></g>`;
     return `${walls}${house}<g${A.a(2.0, 0.5, { o: 0 })}>${dots.join("")}</g>`;
   };
-  // positions as keyframes: frames where nothing moves for one tick are skipped (the sprite glides), a jump (the respawn) is a step,
+  // positions as keyframes: the middle of a stop is skipped, a jump (the respawn) is a step,
   // and the rest is thinned out with Ramer-Douglas-Peucker so a straight corridor is one segment
-  const trackFrames = (cells, glide = true) => {
+  const trackFrames = (cells) => {
     const px = cells.map(([w, i]) => centre(w, i));
     const keep = [];
     px.forEach((p, t) => {
       const same = t > 0 && p[0] === px[t - 1][0] && p[1] === px[t - 1][1];
       const nextSame = t < px.length - 1 && px[t + 1][0] === p[0] && px[t + 1][1] === p[1];
-      if (t === 0 || t === px.length - 1 || !same || nextSame || !glide) keep.push([t, p[0], p[1]]); // glide: a one-tick stop is not kept, the sprite just goes a little slower there
+      if (t === 0 || t === px.length - 1 || !(same && nextSame)) keep.push([t, p[0], p[1]]); // the middle of a stop adds nothing
     });
-    // through the tunnel: out of the edge (half a tick), then in from the other edge (the clip hides what is outside the board)
-    const wide = (weeks.length - 3) * step;
-    for (let n = keep.length - 1; glide && n > 0; n--) { // (Pac-Man crosses through two hidden cells of his own, see simulate)
-      const [t0, x0p, y0p] = keep[n - 1], [t1, x1p, y1p] = keep[n];
-      if (Math.abs(x1p - x0p) > wide && y0p === y1p) {
-        const dir = x1p < x0p ? 1 : -1;
-        const mid = (t0 + t1) / 2;
-        keep.splice(n, 0, [mid, x0p + dir * step, y0p], [mid + 0.01, x1p - dir * step, y1p]);
-      }
-    }
-    // A ghost that is slower than Pac-Man moves on some ticks and waits on others; played as it is, it lurches. Along a stretch of
-    // steady moves the arrival times are replaced by a line fitted through its neighbours (±3 moves), so the speed is even; the ends
-    // of the stretch (a stop, a jump) keep their time.
-    if (glide) {
-      const steady = (n) => n > 0 && keep[n][0] - keep[n - 1][0] <= 2 && (keep[n][1] !== keep[n - 1][1] || keep[n][2] !== keep[n - 1][2]) && Math.abs(keep[n][1] - keep[n - 1][1]) + Math.abs(keep[n][2] - keep[n - 1][2]) <= step * 1.6;
-      for (let a = 0; a < keep.length; ) {
-        let b = a;
-        while (b + 1 < keep.length && steady(b + 1)) b++;
-        if (b - a >= 3) {
-          const orig = keep.slice(a, b + 1).map((q) => q[0]);
-          for (let j = 1; j < orig.length - 1; j++) {
-            const lo = Math.max(0, j - 3), hi = Math.min(orig.length - 1, j + 3);
-            let sj = 0, st = 0, sjj = 0, sjt = 0;
-            for (let m = lo; m <= hi; m++) (sj += m, st += orig[m], sjj += m * m, sjt += m * orig[m]);
-            const cnt = hi - lo + 1, slope = (cnt * sjt - sj * st) / (cnt * sjj - sj * sj);
-            const fit = st / cnt + slope * (j - sj / cnt);
-            keep[a + j][0] = Math.min(Math.max(fit, keep[a + j - 1][0] + 0.2), orig.at(-1) - 0.2 * (orig.length - 1 - j));
-          }
-        }
-        a = b + 1;
-      }
-    }
     const runs = [[keep[0]]];
     for (let n = 1; n < keep.length; n++) {
       const d = Math.abs(keep[n][1] - keep[n - 1][1]) + Math.abs(keep[n][2] - keep[n - 1][2]);
@@ -951,9 +919,9 @@ function heatmapSection(d, X, W = 940) {
     };
     return runs.flatMap((r, n) => simplify(r).map((p, j, all) => [...p, n < runs.length - 1 && j === all.length - 1]));
   };
-  const moveKeyframes = (name, cells, glide = true) => {
+  const moveKeyframes = (name, cells) => {
     const { pct } = geom();
-    A.css.push(`@keyframes ${name}{${trackFrames(cells, glide).map(([t, x, y, jump]) => `${pct(t)}%{transform:translate(${Math.round(x * 10) / 10}px,${Math.round(y * 10) / 10}px)${jump ? ";animation-timing-function:step-end" : ""}}`).join("")}}`);
+    A.css.push(`@keyframes ${name}{${trackFrames(cells).map(([t, x, y, jump]) => `${pct(t)}%{transform:translate(${Math.round(x * 10) / 10}px,${Math.round(y * 10) / 10}px)${jump ? ";animation-timing-function:step-end" : ""}}`).join("")}}`);
   };
   /** CSS for a value that changes by steps: keyframes only where it changes. vals[t] -> css text */
   const stepKeyframes = (name, vals) => {
@@ -1027,7 +995,7 @@ function heatmapSection(d, X, W = 940) {
     }
     A.css.push("@keyframes pmt{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(0deg)}}@keyframes pmb{0%,100%{transform:rotate(30deg)}50%{transform:rotate(0deg)}}");
     const anim = (name) => `style="animation:${name} ${T}s linear ${delay}s infinite backwards"`;
-    moveKeyframes("pmv", frames.map((f) => [f.p[0], f.p[1]]), false); // Pac-Man never changes speed
+    moveKeyframes("pmv", frames.map((f) => [f.p[0], f.p[1]]));
     stepKeyframes("pmr", frames.map((f) => (f.a ? `transform:rotate(${f.p[2] * 90}deg)` : "transform:scale(.01)")));
     let ghosts = "";
     for (let k = 0; k < 4; k++) {

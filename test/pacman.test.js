@@ -67,7 +67,7 @@ test("game: it ends, is the same for the same data, and obeys the rules", () => 
       frames.forEach((f, t) => {
         const hidden = (f.p[0] === -1 || f.p[0] === maze.W) && maze.tunnels.includes(f.p[1]); // the two cells outside the board that make a tunnel
         assert.ok(hidden || free(f.p[0], f.p[1]), "Pac-Man is never in a wall");
-        for (const g of f.g) assert.ok(free(g[0], g[1]), "nor a ghost");
+        for (const g of f.g) assert.ok(free(g[4], g[5]), "nor a ghost (g[0], g[1] are where it is drawn, g[4], g[5] the cell it is nearest to)");
         assert.ok(f.l <= lives, "lives never come back");
         lives = f.l;
         for (const k of f.e) { assert.ok(!seen.has(k) && maze.pellet[k], "a pellet is eaten once"); seen.add(k); eaten++; }
@@ -93,10 +93,10 @@ test("game: a power pill scares the ghosts; an eaten ghost is a pair of eyes tha
         if (g[2] === "e") hidden++;
         if (g[2] === "r") {
           eyes++;
-          if (was[2] === "r") assert.ok(Math.abs(g[0] - was[0]) + Math.abs(g[1] - was[1]) <= 1 || Math.abs(g[0] - was[0]) === maze.W - 1, "the eyes go one cell at a time (or through a tunnel)");
+          if (was[2] === "r") assert.ok(Math.abs(g[0] - was[0]) + Math.abs(g[1] - was[1]) <= 1.01 || Math.abs(g[0] - was[0]) > maze.W - 3, "the eyes go one cell at a time (or through a tunnel)");
         } else if (was?.[2] === "r") {
           back++;
-          assert.deepEqual([g[0], g[1]], [maze.den.w, maze.den.i], "they get to the den before the ghost is back");
+          assert.deepEqual([g[4], g[5]], [maze.den.w, maze.den.i], "they get to the den before the ghost is back");
         }
       });
       if (t && Math.abs(f.p[0] - frames[t - 1].p[0]) === maze.W + 1) tunnel++;
@@ -144,11 +144,11 @@ test("ghost house: 5 x 3 days with a door above the middle of the top edge; Pac-
     assert.ok(!maze.wall[maze.door.w * ROWS + maze.door.i] && maze.door.i === maze.den.i - 2 && maze.door.w === maze.den.w, "a free door above the middle of the top edge");
     for (const k of maze.house) assert.ok(!maze.pellet[k] && !maze.wall[k]);
     for (const f of frames) assert.ok(!maze.house.has(f.p[0] * ROWS + f.p[1]), "Pac-Man stays out");
-    assert.ok(frames[0].g.every((g) => maze.house.has(g[0] * ROWS + g[1])), "the ghosts start in the house");
+    assert.ok(frames[0].g.every((g) => maze.house.has(g[4] * ROWS + g[5])), "the ghosts start in the house");
     // they leave by the door: the first cell outside the house is the door
     for (let k = 0; k < 4; k++) {
-      const out = frames.find((f) => !maze.house.has(f.g[k][0] * ROWS + f.g[k][1]));
-      assert.deepEqual([out.g[k][0], out.g[k][1]], [maze.door.w, maze.door.i]);
+      const out = frames.find((f) => !maze.house.has(f.g[k][4] * ROWS + f.g[k][5]));
+      assert.deepEqual([out.g[k][4], out.g[k][5]], [maze.door.w, maze.door.i]);
     }
   }
 });
@@ -189,8 +189,30 @@ test("ghosts never go back into the house on their own; only the eyes of an eate
     const { frames, maze } = playGame(grid(53, 9, 0.5), level, { kind, games: 2, seedText: "in" });
     frames.forEach((f, t) => f.g.forEach((g, k) => {
       const was = t ? frames[t - 1].g[k] : null;
-      const inside = (c) => maze.house.has(c[0] * ROWS + c[1]);
+      const inside = (c) => maze.house.has(c[4] * ROWS + c[5]);
       if (was && f.n === frames[t - 1].n && f.a && !["e", "r"].includes(g[2]) && !["e", "r"].includes(was[2])) assert.ok(!(inside(g) && !inside(was)), `${kind}: a ghost walked in at frame ${t}`);
     }));
   }
+});
+
+test("game: a ghost is eaten, and Pac-Man is caught, only when the two are drawn on top of each other", () => {
+  let eaten = 0, caught = 0;
+  for (const kind of KINDS)
+    for (let s = 1; s <= 12; s++) {
+      const { frames, maze } = playGame(grid(53, s * 3, 0.5), level, { kind, seedText: "c" + s });
+      const apart = (f, g) => (Math.abs(f.p[0] - g[0]) > maze.W - 3 ? 0 : Math.hypot(f.p[0] - g[0], f.p[1] - g[1])); // a tunnel: not measured
+      frames.forEach((f, t) => {
+        if (!t || f.n !== frames[t - 1].n) return;
+        const prev = frames[t - 1];
+        f.g.forEach((g, k) => {
+          if (prev.g[k][2] === "s" && g[2] === "r") { eaten++; assert.ok(apart(f, g) < 1.2, `${kind}: eaten ${apart(f, g).toFixed(2)} cells away`); }
+        });
+        if (f.a === 0 && prev.a === 1) {
+          caught++;
+          const near = Math.min(...prev.g.map((g, k) => (g[2] === "c" ? apart(f, f.g[k]) : 9)));
+          assert.ok(near < 1.2, `${kind}: caught with the nearest ghost ${near.toFixed(2)} cells away`);
+        }
+      });
+    }
+  assert.ok(eaten > 0 && caught > 0, `${eaten} eaten, ${caught} caught`);
 });
