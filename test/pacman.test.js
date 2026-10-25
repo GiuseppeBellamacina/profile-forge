@@ -216,3 +216,20 @@ test("game: a ghost is eaten, and Pac-Man is caught, only when the two are drawn
     }
   assert.ok(eaten > 0 && caught > 0, `${eaten} eaten, ${caught} caught`);
 });
+
+test("ghosts: none comes out of the house scared, none goes round and round a few cells", () => {
+  for (const kind of KINDS)
+    for (let s = 1; s <= 10; s++) {
+      const { frames, maze } = playGame(grid(53, s * 7, 0.5), level, { kind, games: 2, seedText: "l" + s });
+      const inside = (g) => maze.house.has(g[4] * ROWS + g[5]);
+      for (let k = 0; k < 4; k++)
+        frames.forEach((f, t) => {
+          if (!t || f.n !== frames[t - 1].n) return;
+          if (inside(frames[t - 1].g[k]) && !inside(f.g[k])) assert.notEqual(f.g[k][2], "s", `${kind} ${s}: ghost ${k} came out scared at ${t}`);
+          if (t < 40) return;
+          const seg = frames.slice(t - 40, t + 1);
+          if (seg.some((x) => x.n !== f.n || x.a === 0 || x.g[k][2] !== "c" || inside(x.g[k]))) return;
+          assert.ok(new Set(seg.map((x) => x.g[k][4] * ROWS + x.g[k][5])).size > 8, `${kind} ${s}: ghost ${k} circled a few cells at ${t}`);
+        });
+    }
+});

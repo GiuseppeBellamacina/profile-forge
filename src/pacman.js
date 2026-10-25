@@ -179,6 +179,11 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   const toDoor = bfs([doorK]);
   const toDen = bfs([denK]);
   const corners = [[W - 1, 0], [0, 0], [W - 1, ROWS - 1], [0, ROWS - 1]];
+  // Scattering to a corner of an open board ends in a tiny circle round it. Each ghost goes to its corner and then to a second point
+  // on the same side, back and forth, so the walk is a patrol of the corner's quarter.
+  const patrol = corners.map(([w, i]) => [w === 0 ? Math.min(14, W - 1) : Math.max(W - 15, 0), ROWS - 1 - i]);
+  const openCells = [];
+  for (let k = 0; k < N; k++) if (!wall[k] && !house.has(k)) openCells.push([Math.floor(k / ROWS), k % ROWS]);
 
   const left = Uint8Array.from(maze.pellet);
   let remaining = maze.pellets;
@@ -196,7 +201,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     noBack = 0; // until this tick he may not turn back
     ghosts = GHOSTS.map((_, k) => {
       const c = [exitK, denK, denK - ROWS, denK + ROWS][k]; // spread over the house
-      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, nx: null, p: 0, flip: false };
+      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, nx: null, p: 0, flip: false, sc: 0, hist: [], detour: null, detourUntil: 0 };
     });
     modeStart = t;
     visited = new Set([idx(start.w, start.i)]);
@@ -229,7 +234,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     score += maze.power.has(k) ? 50 : 10;
     if (maze.power.has(k)) {
       chain = 0;
-      for (const g of ghosts) if (g.st !== "e" && g.st !== "r") (g.st = "s", g.until = t + scare, g.flip = true);
+      for (const g of ghosts) if (g.st !== "e" && g.st !== "r" && !house.has(idx(g.w, g.i))) (g.st = "s", g.until = t + scare, g.flip = true); // one still in the house stays as it is
     }
   };
   const startEaten = [];
@@ -332,6 +337,18 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     return [Math.floor(k / ROWS), k % ROWS];
   };
 
+  // Scatter and detour targets can be a wall or behind one, and "the exit nearest in a straight line" then circles the block for ever; so
+  // for those the ghost takes the exit nearest by the way it would walk to the free cell closest to the target (the chase keeps the arcade's rule).
+  const walkTo = new Map();
+  const byWalking = (opts, tw, ti) => {
+    let c = openCells[0];
+    for (const o of openCells) if ((o[0] - tw) ** 2 + (o[1] - ti) ** 2 < (c[0] - tw) ** 2 + (c[1] - ti) ** 2) c = o;
+    const key = idx(c[0], c[1]);
+    if (!walkTo.has(key)) walkTo.set(key, bfs([key]));
+    const d = walkTo.get(key);
+    const len = (o) => (d[idx(o[0], o[1])] < 0 ? Infinity : d[idx(o[0], o[1])]);
+    return opts.reduce((b, o) => (len(o) < len(b) ? o : b), opts[0]);
+  };
   // the next cell for a ghost that has just got to (g.w, g.i) going g.d
   const choose = (g) => {
     const k = idx(g.w, g.i);
@@ -354,23 +371,40 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     } else {
       const [pd0, pd1] = DIRS[pac.d];
       let tw, ti;
-      if (scattering && !elroy) [tw, ti] = corners[g.k];
+      let walking = false; // scatter and detour: by the way it would walk
+      if (g.detourUntil > t) ([tw, ti] = g.detour, (walking = true)); // off on a detour (see the end of this function)
+      else if (scattering && !elroy) {
+        let goal = g.sc ? patrol[g.k] : corners[g.k];
+        if ((goal[0] - g.w) ** 2 + (goal[1] - g.i) ** 2 <= 9) goal = (g.sc = 1 - g.sc) ? patrol[g.k] : corners[g.k];
+        ([tw, ti] = goal, (walking = true));
+      }
       else if (g.k === 0) [tw, ti] = [pac.w, pac.i];
       else if (g.k === 1) [tw, ti] = [pac.w + 4 * pd0, pac.i + 4 * pd1]; // four cells ahead of him
       else if (g.k === 2) { const [bw, bi] = tile(ghosts[0]); [tw, ti] = [2 * (pac.w + 2 * pd0) - bw, 2 * (pac.i + 2 * pd1) - bi]; } // twice the way from Blinky to two cells ahead
       else if ((g.w - pac.w) ** 2 + (g.i - pac.i) ** 2 > 64) [tw, ti] = [pac.w, pac.i]; // Clyde: chases from afar, goes to his corner when closer than 8
       else [tw, ti] = corners[3];
-      pick = opts.reduce((b, o) => ((o[0] - tw) ** 2 + (o[1] - ti) ** 2 < (b[0] - tw) ** 2 + (b[1] - ti) ** 2 ? o : b), opts[0]);
+      pick = walking ? byWalking(opts, tw, ti) : opts.reduce((b, o) => ((o[0] - tw) ** 2 + (o[1] - ti) ** 2 < (b[0] - tw) ** 2 + (b[1] - ti) ** 2 ? o : b), opts[0]);
     }
     g.flip = false;
+    // Circling a small block for a long time (a target behind a wall does that): a ghost that has been on eight cells or fewer
+    // through its last 16 turns goes off to a far point of the board for a while, then comes back to its task.
+    if (!house.has(k) && g.st === "c") {
+      g.hist.push(k);
+      if (g.hist.length > 16) g.hist.shift();
+      if (g.hist.length === 16 && new Set(g.hist).size <= 8) {
+        const far = openCells.filter(([w, i]) => Math.abs(w - g.w) + Math.abs(i - g.i) >= 10);
+        if (far.length) (g.detour = far[Math.floor(rand() * far.length)], g.detourUntil = t + 45);
+        g.hist = [];
+      }
+    }
     return pick;
   };
   const ghostMove = (g) => {
     if (g.st === "e") return; // Pac-Man was caught: out of sight until the board is set again
     let speed = 1; // eyes: quick
+    if (g.st === "s" && t >= g.until) g.st = "c"; // even for one that has not left yet
     if (g.st !== "r") {
       if (t < g.rel) return;
-      if (g.st === "s" && t >= g.until) g.st = "c";
       speed = g.st === "s" ? SCARED_SPEED : GHOST_SPEED;
     }
     if (!g.nx) { g.nx = choose(g) ?? null; g.p = 0; if (!g.nx) return; }
