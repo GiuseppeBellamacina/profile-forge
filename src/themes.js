@@ -105,7 +105,7 @@ const THEMES = {
   paper: dv("light", "#fbfaf7", "#1c1c1c", "#2b2b2b", "#8a6d3b", "#b4532a", { heat: ["#ecebe6", "#c9c7bf", "#97948a", "#5e5b53", "#1c1c1c"] }),
   // Inspired by the look of five series (palettes and mood, nothing copied): pair them with the presets of the same name
   "hero-x": dv("dark", "#0a0a10", "#f4f4f8", "#19f0ff", "#ff2e97", "#ffe600", { bgGradient: "135,#0a0a10,#160f2e,#0a0a10", heat: ["#16161f", "#17435a", "#1096b3", "#19f0ff", "#ffe600"] }),
-  "shadow-monarch": dv("dark", "#0b0714", "#e6e0ff", "#7c4dff", "#35d0ff", "#c77dff", { bgGradient: "150,#0b0714,#1a1033,#0b0714", panel: "#0d0a15", snake: "#efd7da", frame: "#6a43db", heat: ["#150d26", "#2a1a52", "#4b2fa3", "#7c4dff", "#35d0ff"] }),
+  "shadow-monarch": dv("dark", "#080118", "#e6e0ff", "#7c4dff", "#35d0ff", "#c77dff", { bgGradient: "150,#080118,#170d30,#080118", panel: "#0d0a15", snake: "#efd7da", frame: "#6a43db", heat: ["#150d26", "#2a1a52", "#4b2fa3", "#7c4dff", "#35d0ff"] }),
   "plus-ultra": dv("dark", "#0b1a3a", "#fff7e0", "#ffd21f", "#ff3b30", "#ff7a1a", { bgGradient: "160,#0b1a3a,#123073,#0b1a3a", heat: ["#13244d", "#1c3f8f", "#2a64d6", "#6aa5ff", "#ffd21f"] }),
   dante: dv("dark", "#0e0708", "#f3ece8", "#d11a2a", "#cfd3dc", "#ffb02e", { bgGradient: "145,#0e0708,#2a0b10,#0e0708", heat: ["#1b0c0e", "#4a0f16", "#8f1420", "#d11a2a", "#ff6a4d"] }),
   edgerunner: dv("dark", "#071a26", "#f6f2d8", "#f7e600", "#22d3ee", "#ff7a45", { bgGradient: "165,#071a26,#0a2b3b,#06131c", border: "#1b4a5c", heat: ["#0f2733", "#124456", "#17808f", "#22d3ee", "#f7e600"] }),
