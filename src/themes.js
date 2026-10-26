@@ -108,7 +108,8 @@ const THEMES = {
   "shadow-monarch": dv("dark", "#0b0714", "#e6e0ff", "#7c4dff", "#35d0ff", "#c77dff", { bgGradient: "150,#0b0714,#1a1033,#0b0714", heat: ["#150d26", "#2a1a52", "#4b2fa3", "#7c4dff", "#35d0ff"] }),
   "plus-ultra": dv("dark", "#0b1a3a", "#fff7e0", "#ffd21f", "#ff3b30", "#ff7a1a", { bgGradient: "160,#0b1a3a,#123073,#0b1a3a", heat: ["#13244d", "#1c3f8f", "#2a64d6", "#6aa5ff", "#ffd21f"] }),
   dante: dv("dark", "#0e0708", "#f3ece8", "#d11a2a", "#cfd3dc", "#ffb02e", { bgGradient: "145,#0e0708,#2a0b10,#0e0708", heat: ["#1b0c0e", "#4a0f16", "#8f1420", "#d11a2a", "#ff6a4d"] }),
-  edgerunner: dv("dark", "#0a0820", "#f2f0ff", "#00f0ff", "#ff3cac", "#d7ff3a", { bgGradient: "135,#0a0820,#1b0b3f,#0a0820", heat: ["#14103a", "#1d2b78", "#0097b8", "#00f0ff", "#d7ff3a"] }),
+  edgerunner: dv("dark", "#071a26", "#f6f2d8", "#f7e600", "#22d3ee", "#ff7a45", { bgGradient: "165,#071a26,#0a2b3b,#06131c", border: "#1b4a5c", heat: ["#0f2733", "#124456", "#17808f", "#22d3ee", "#f7e600"] }),
+  "edgerunner-red": dv("dark", "#2b0509", "#fff0b8", "#f7e600", "#ff2a45", "#ff7a45", { bgGradient: "160,#2b0509,#3d0a10,#1f0306", border: "#7a1420", heat: ["#3a0c12", "#6b1220", "#a8182c", "#ff2a45", "#f7e600"] }),
 };
 
 // Override keys follow the original projects' names where they exist (bg_color, border_color, currStreakNum, ...).

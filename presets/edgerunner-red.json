@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": {
+    "dark": "edgerunner-red",
+    "light": "edgerunner-red-day"
+  },
+  "customThemes": {
+    "edgerunner-red-day": {
+      "base": "light",
+      "bg_color": "fff4d6",
+      "panel_color": "ffe9a8",
+      "border_color": "a8182c",
+      "text_color": "2b0509",
+      "muted_color": "7a4a4a",
+      "icon_color": "b3121f",
+      "ring_color": "d97706",
+      "fire_color": "c2410c"
+    }
+  },
+  "card": {
+    "radius": 4,
+    "background": {
+      "pattern": "circuit",
+      "patternOpacity": 0.12,
+      "patternColor": "ff2a45",
+      "glowColor": "ff2a45",
+      "glowX": 88,
+      "glowY": 0,
+      "glowSize": 70,
+      "glowOpacity": 0.25
+    },
+    "decor": [
+      {
+        "motif": "hud",
+        "x": 47,
+        "y": 9,
+        "size": 11,
+        "opacity": 0.5,
+        "color": "f7e600",
+        "color2": "ff2a45"
+      },
+      {
+        "motif": "barcode",
+        "x": 8,
+        "y": 6,
+        "anchor": "bottom",
+        "size": 9,
+        "opacity": 0.35,
+        "color": "f7e600"
+      },
+      {
+        "motif": "glitch",
+        "x": 93,
+        "y": 7,
+        "anchor": "bottom",
+        "size": 12,
+        "opacity": 0.4,
+        "color": "ff2a45",
+        "color2": "f7e600"
+      },
+      {
+        "motif": "reticle",
+        "x": 60,
+        "y": 6,
+        "anchor": "bottom",
+        "size": 8,
+        "opacity": 0.4,
+        "motion": "pulse",
+        "color": "f7e600",
+        "color2": "ff2a45"
+      }
+    ]
+  },
+  "layout": [
+    "header",
+    [
+      "stats",
+      "streak"
+    ],
+    "languages",
+    "heatmap"
+  ],
+  "header": {
+    "rankStyle": "shield"
+  },
+  "heatmap": {
+    "mode": "snake",
+    "snakePath": "busy",
+    "snakeLength": 8,
+    "snakeStyle": "glow"
+  }
+}

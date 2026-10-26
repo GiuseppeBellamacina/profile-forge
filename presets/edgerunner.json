@@ -7,25 +7,28 @@
   "customThemes": {
     "edgerunner-day": {
       "base": "light",
-      "bg_color": "f4f1ff",
-      "panel_color": "ece6ff",
-      "border_color": "c9b8ff",
-      "text_color": "1a1033",
-      "muted_color": "6b5a99",
-      "icon_color": "0097b8",
-      "ring_color": "d1197f",
-      "fire_color": "5f8a00"
+      "bg_color": "fff6a6",
+      "panel_color": "ffee66",
+      "border_color": "0a2b3b",
+      "text_color": "0a1f2c",
+      "muted_color": "4b6470",
+      "icon_color": "0a6f84",
+      "ring_color": "d9531e",
+      "fire_color": "c2410c",
+      "bg_gradient": "165,fff6a6,ffe94d,ffd800"
     }
   },
   "card": {
     "radius": 8,
     "background": {
       "pattern": "circuit",
-      "patternOpacity": 0.12,
-      "glowColor": "ff3cac",
-      "glowX": 12,
-      "glowY": 100,
-      "glowSize": 80
+      "patternOpacity": 0.1,
+      "patternColor": "22d3ee",
+      "glowColor": "f7e600",
+      "glowX": 70,
+      "glowY": 0,
+      "glowSize": 75,
+      "glowOpacity": 0.28
     },
     "decor": [
       {
@@ -34,7 +37,9 @@
         "y": 21,
         "anchor": "bottom",
         "size": 42,
-        "opacity": 0.25
+        "opacity": 0.4,
+        "color": "ff7a45",
+        "color2": "f7e600"
       },
       {
         "motif": "glitch",
@@ -42,15 +47,19 @@
         "y": 7,
         "anchor": "bottom",
         "size": 12,
-        "opacity": 0.35
+        "opacity": 0.4,
+        "color": "22d3ee",
+        "color2": "f7e600"
       },
       {
         "motif": "reticle",
         "x": 44,
         "y": 9,
         "size": 10,
-        "opacity": 0.55,
-        "motion": "pulse"
+        "opacity": 0.6,
+        "motion": "pulse",
+        "color": "22d3ee",
+        "color2": "f7e600"
       }
     ]
   },

@@ -678,7 +678,7 @@ A list (`["dracula", "nord"]` → `profile-forge-dracula.svg`, `profile-forge-no
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-There are 78 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
+There are 79 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
 
 | | |
 |---|---|
@@ -692,7 +692,7 @@ There are 78 built-in themes. Previews of all of them are in [`docs/themes/`](do
 | **More editor themes** | `tokyo-night` `tokyo-night-storm` `tokyo-night-day` `kanagawa-wave` `moonlight` `poimandres` `vesper` `rose-pine-moon` `rose-pine-dawn` `night-owl-light` `andromeda` `panda` `everblush` `cyberdream` `nord-light` |
 | **Gradient** | `ambient-gradient` `sunset-gradient` `aurora-gradient` `ocean-gradient` `candy-gradient` |
 | **Originals** | `sakura` `lava` `glacier` `forest-night` `coffee` `amber` `paper` |
-| **Inspired by a series** | `hero-x` `shadow-monarch` `plus-ultra` `dante` `edgerunner` (palettes and mood only; each has a preset with art on the card) |
+| **Inspired by a series** | `hero-x` `shadow-monarch` `plus-ultra` `dante` `edgerunner` `edgerunner-red` (palettes and mood only; each has a preset with art on the card) |
 
 Dark themes use the dark trophy palette and light themes the light one (`base`).
 

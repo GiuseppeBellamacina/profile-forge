@@ -23,6 +23,7 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | [`zen`](zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, halo frame, honeycomb heatmap, trophies by level |
 | [`showcase`](showcase.json) | Tokyo Night with every new piece: terminal, rhythm, rainbow snake, highlighted trophies |
 | [`edgerunner`](edgerunner.json) | Neon night, a circuit pattern, a skyline, a reticle and glitch bars; hexagon rank, classic Pac-Man maze |
+| [`edgerunner-red`](edgerunner-red.json) | Dark red with yellow labels: a circuit pattern, a system window, a barcode and glitch bars; shield rank, glowing snake |
 | [`shadow-monarch`](shadow-monarch.json) | Violet and electric blue, a hex pattern, a rune circle and system window; shield rank, glowing snake |
 | [`dante`](dante.json) | Black, crimson and silver, faint wings and blades; shield rank |
 | [`hero-x`](hero-x.json) | Pop-art halftone in cyan, magenta and yellow, a burst and a bolt; open Pac-Man maze |
@@ -165,3 +166,11 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | Dark | Light |
 |---|---|
 | <img src="../docs/presets/plus-ultra-dark.png"> | <img src="../docs/presets/plus-ultra-light.png"> |
+
+## edgerunner-red
+
+[`edgerunner-red.json`](edgerunner-red.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/edgerunner-red-dark.png"> | <img src="../docs/presets/edgerunner-red-light.png"> |

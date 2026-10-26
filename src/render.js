@@ -1374,7 +1374,7 @@ function stackSection(d, X, W = 940) {
  * Render the full card. d: summarize() output; k: normalized config (src/config.js).
  * opts.t undefined = animated SVG, number = static frame at that progress.
  */
-export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), colors, boxesOnly = false } = {}) {
+export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), colors, boxesOnly = false, ghost = false } = {}) {
   const c = resolveTheme(theme, colors ?? k.colors);
   if (t === undefined && !k.card.animations) t = 1;
   const A = animator(t);
@@ -1522,7 +1522,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   </defs>${fontCss || A.css.length ? `\n  <style>${fontCss}${A.css.join("")}</style>` : ""}
   ${card("url(#bg)", k.card.hideBorder ? "none" : c.border)}
   <g clip-path="url(#dc-clip)">${under}</g>
-  ${parts.join("\n  ")}
+  ${ghost ? `<g opacity="0.1">${parts.join("\n  ")}</g>` : parts.join("\n  ")}
   ${over}
   <text x="${W - 30}" y="${SH - 16}" text-anchor="end" font-size="10" fill="${c.muted}">${esc(X.tr("generated"))} · ${d.days.at(-1)[0]}</text>
 </svg>`;
