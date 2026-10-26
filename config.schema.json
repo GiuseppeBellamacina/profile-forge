@@ -94,7 +94,7 @@
           "items": {
             "type": "object", "additionalProperties": false,
             "properties": {
-              "motif": { "enum": ["lightning", "shards", "skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
+              "motif": { "enum": ["lightning", "explosion", "shards", "skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
               "image": { "type": "string", "description": "Path of an image relative to config.json, instead of a motif." },
               "text": { "type": "string", "maxLength": 24, "description": "A word on the card (a comic caption), instead of a motif or an image; color is its fill, color2 its outline." },
               "x": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },

@@ -1,43 +1,42 @@
 {
   "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
   "themes": {
-    "dark": "hero-x-night",
-    "light": "hero-x"
+    "dark": "hero-x"
   },
   "card": {
-    "radius": 4,
+    "radius": 6,
     "panels": "pop",
     "titles": "tag",
     "background": {
       "pattern": "rays",
       "patternColor": "ffcf00",
-      "patternOpacity": 0.28,
+      "patternOpacity": 0.4,
       "glowColor": "ff2bd6",
-      "glowX": 84,
-      "glowY": 4,
-      "glowSize": 70,
-      "glowOpacity": 0.22
+      "glowX": 50,
+      "glowY": 0,
+      "glowSize": 80,
+      "glowOpacity": 0.2
     },
     "decor": [
       {
-        "motif": "shards",
+        "motif": "explosion",
         "x": 46,
-        "y": 9,
-        "size": 15,
+        "y": 11,
+        "size": 22,
         "opacity": 1
       },
       {
-        "motif": "shards",
-        "x": 90,
-        "y": 27,
+        "motif": "explosion",
+        "x": 88,
+        "y": 30,
         "anchor": "bottom",
-        "size": 44,
-        "opacity": 0.35,
-        "rotate": 14
+        "size": 52,
+        "opacity": 0.45,
+        "rotate": 18
       },
       {
         "text": "BOOM!",
-        "x": 88,
+        "x": 90,
         "y": 11,
         "anchor": "bottom",
         "size": 15,
@@ -51,8 +50,8 @@
         "x": 6,
         "y": 12,
         "anchor": "bottom",
-        "size": 18,
-        "opacity": 0.4
+        "size": 20,
+        "opacity": 0.5
       }
     ]
   },

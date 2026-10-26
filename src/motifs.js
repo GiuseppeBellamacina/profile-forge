@@ -52,6 +52,19 @@ export const MOTIFS = {
     const dots = Array.from({ length: 14 }, (_, k) => { const [x, y] = polar(50, 50, 24 + (k % 5) * 4, k * 26 + 8); return `<circle cx="${x}" cy="${y}" r="0.9" fill="${ink}" opacity=".55"/>`; }).join("");
     return `${rays}${dots}<path d="M${star}Z" fill="#ffffff" stroke="${ink}" stroke-width="1.6" stroke-linejoin="miter"/>`;
   },
+  /** the whole key visual: long shards in four colours fanning out behind a big yellow star with a white and a black outline, and a patch of halftone */
+  explosion: (a, b) => {
+    const ink = "#14141c";
+    const fills = [a, "#ffe600", b, "#ff8a00", a, "#ff2bd6", "#ffe600", b];
+    const rays = Array.from({ length: 26 }, (_, k) => {
+      const deg = k * (360 / 26) + (k % 4) * 2, far = 34 + ((k * 7) % 5) * 4 + (k % 2 ? 0 : 6), half = 4.5 + (k % 3) * 2;
+      const [x1, y1] = polar(50, 50, 12, deg - half), [x2, y2] = polar(50, 50, 12, deg + half), [tx, ty] = polar(50, 50, far, deg + ((k % 3) - 1) * 3);
+      return `<path d="M${x1} ${y1}L${tx} ${ty}L${x2} ${y2}Z" fill="${fills[k % 8]}" stroke="${ink}" stroke-width="0.9" stroke-linejoin="miter"/>`;
+    }).join("");
+    const star = (r1, r2_, n) => Array.from({ length: n * 2 }, (_, k) => polar(50, 50, k % 2 ? r2_ : r1, -90 + (180 / n) * k).join(" ")).join("L");
+    const dots = Array.from({ length: 30 }, (_, k) => { const [x, y] = polar(50, 50, 22 + (k % 6) * 3.6, k * 12 + 5); return `<circle cx="${x}" cy="${y}" r="${0.5 + (k % 3) * 0.35}" fill="${ink}" opacity=".5"/>`; }).join("");
+    return `${rays}${dots}<path d="M${star(22, 11, 9)}Z" fill="#ffffff" stroke="${ink}" stroke-width="2.4" stroke-linejoin="miter"/><path d="M${star(19, 9.5, 9)}Z" fill="#ffe600" stroke="${ink}" stroke-width="1.2" stroke-linejoin="miter"/>`;
+  },
   /** a pop-art starburst */
   burst: (a, b) => {
     const pts = (r1, r2_) => Array.from({ length: 24 }, (_, k) => polar(50, 50, k % 2 ? r2_ : r1, k * 15).join(" ")).join("L");

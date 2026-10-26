@@ -207,7 +207,7 @@ More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`, 
 
 Up to 12 pieces of art on the card, each one a **motif** of the library or an **image** of yours (the file is embedded in the card, like the tech stack icons). The motifs are original line art drawn in the colours of the theme; they are in the spirit of a style (neon city, system windows, comic halftones, gothic ornaments), not copies of anything.
 
-<img src="docs/guide/decor-motifs.png" alt="the 18 motifs: lightning shards skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
+<img src="docs/guide/decor-motifs.png" alt="the 19 motifs: lightning explosion shards skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
 
 ```json
 { "card": { "decor": [
@@ -219,7 +219,7 @@ Up to 12 pieces of art on the card, each one a **motif** of the library or an **
 
 | Key | Values | Default |
 |---|---|---|
-| `motif`, `image` or `text` | a motif name (`lightning` `shards` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image, or a word (`text`, at most 24 characters: a bold slanted caption, `color` its fill, `color2` its outline) | one of them is required |
+| `motif`, `image` or `text` | a motif name (`lightning` `explosion` `shards` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image, or a word (`text`, at most 24 characters: a bold slanted caption, `color` its fill, `color2` its outline) | one of them is required |
 | `x` `y` | the centre, in percent of the card **width** (1 = 10 px): `x` from the left, `y` from the top, or from the bottom with `anchor: "bottom"`; −50–150 and −50–200 | `50` `20` |
 | `anchor` | `top` `bottom` | `top` |
 | `size` | the width of the piece, percent of the card width, 2–150 | `20` |

@@ -26,7 +26,7 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | [`edgerunner-red`](edgerunner-red.json) | Dark red with yellow labels, like the character cards of the series: notched panels with tag titles, a circuit pattern, a system window, a barcode and glitch bars; shield rank, glowing snake |
 | [`shadow-monarch`](shadow-monarch.json) | Violet and electric blue, a hex pattern, a rune circle and system window; shield rank, glowing snake |
 | [`dante`](dante.json) | Black, crimson and silver, faint wings and blades; shield rank |
-| [`hero-x`](hero-x.json) | After the key art of To Be Hero X: white, black outlines and shards of magenta, yellow, orange and blue (a dark night version too), square panels with tag titles, halftone and exploding shards; open Pac-Man maze |
+| [`hero-x`](hero-x.json) | After the key art of To Be Hero X, bright: white, black outlines, yellow rays, an explosion of shards round a yellow star, pop panels with tag titles, a starburst rank and a BOOM! caption; one card for every mode, open Pac-Man maze |
 | [`plus-ultra`](plus-ultra.json) | Comic blue, red and yellow, speed lines and a starburst; rainbow snake |
 
 `portfolio` reads its tech stack icons from `assets/img/` (relative to `config.json`): copy [`assets/img/`](assets/img) next to your config, and replace the placeholder text, URLs and `your-login`.
@@ -155,9 +155,11 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 
 [`hero-x.json`](hero-x.json)
 
-| Dark | Light |
-|---|---|
-| <img src="../docs/presets/hero-x-dark.png"> | <img src="../docs/presets/hero-x-light.png"> |
+One card, bright on every mode (a single theme).
+
+| Card |
+|---|
+| <img src="../docs/presets/hero-x-dark.png"> |
 
 ## plus-ultra
 
