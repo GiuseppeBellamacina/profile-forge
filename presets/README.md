@@ -22,6 +22,11 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | [`aurora`](aurora.json) | Northern-lights gradient, a terminal, weekday rhythm, glowing snake that always goes to the closest day |
 | [`zen`](zen.json) | Quiet paper / Rosé Pine Moon, rhythm first, halo frame, honeycomb heatmap, trophies by level |
 | [`showcase`](showcase.json) | Tokyo Night with every new piece: terminal, rhythm, rainbow snake, highlighted trophies |
+| [`edgerunner`](edgerunner.json) | Neon night, a circuit pattern, a skyline, a reticle and glitch bars; hexagon rank, classic Pac-Man maze |
+| [`shadow-monarch`](shadow-monarch.json) | Violet and electric blue, a hex pattern, a rune circle and system window; shield rank, glowing snake |
+| [`dante`](dante.json) | Black, crimson and silver, faint wings and blades; shield rank |
+| [`hero-x`](hero-x.json) | Pop-art halftone in cyan, magenta and yellow, a burst and a bolt; open Pac-Man maze |
+| [`plus-ultra`](plus-ultra.json) | Comic blue, red and yellow, speed lines and a starburst; rainbow snake |
 
 `portfolio` reads its tech stack icons from `assets/img/` (relative to `config.json`): copy [`assets/img/`](assets/img) next to your config, and replace the placeholder text, URLs and `your-login`.
 
@@ -120,3 +125,43 @@ Every preset defines a `dark` and a `light` slot, so the README `<picture>` snip
 | Dark | Light |
 |---|---|
 | <img src="../docs/presets/showcase-dark.png"> | <img src="../docs/presets/showcase-light.png"> |
+
+## edgerunner
+
+[`edgerunner.json`](edgerunner.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/edgerunner-dark.png"> | <img src="../docs/presets/edgerunner-light.png"> |
+
+## shadow-monarch
+
+[`shadow-monarch.json`](shadow-monarch.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/shadow-monarch-dark.png"> | <img src="../docs/presets/shadow-monarch-light.png"> |
+
+## dante
+
+[`dante.json`](dante.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/dante-dark.png"> | <img src="../docs/presets/dante-light.png"> |
+
+## hero-x
+
+[`hero-x.json`](hero-x.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/hero-x-dark.png"> | <img src="../docs/presets/hero-x-light.png"> |
+
+## plus-ultra
+
+[`plus-ultra.json`](plus-ultra.json)
+
+| Dark | Light |
+|---|---|
+| <img src="../docs/presets/plus-ultra-dark.png"> | <img src="../docs/presets/plus-ultra-light.png"> |

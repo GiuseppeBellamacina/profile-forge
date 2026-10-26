@@ -121,12 +121,12 @@ const must = (path, list, valid) => {
   return new Set(list);
 };
 
-// card.decor: up to 12 pieces of art. Position and size are percents of the card (size: of its width), so a piece keeps its place
-// whatever the height of the card.
+// card.decor: up to 12 pieces of art. Position and size are percents of the card's WIDTH (1 = 10 px on the standard card): x from the
+// left, y from the top (or from the bottom with anchor: bottom), so a piece keeps its place whatever the height of the card.
 export const DECOR_MAX = 12;
-const DECOR_DEFAULTS = { motif: null, image: null, x: 50, y: 50, size: 20, rotate: 0, opacity: 0.5, color: null, color2: null, layer: "back", flip: false, motion: "none" };
-const DECOR_ENUMS = { layer: ["back", "front"], motion: ["none", "float", "pulse"] };
-const DECOR_RANGES = { x: [-50, 150], y: [-50, 150], size: [2, 150], rotate: [-360, 360], opacity: [0, 1] };
+const DECOR_DEFAULTS = { motif: null, image: null, x: 50, y: 20, anchor: "top", size: 20, rotate: 0, opacity: 0.5, color: null, color2: null, layer: "back", flip: false, motion: "none" };
+const DECOR_ENUMS = { anchor: ["top", "bottom"], layer: ["back", "front"], motion: ["none", "float", "pulse"] };
+const DECOR_RANGES = { x: [-50, 150], y: [-50, 200], size: [2, 150], rotate: [-360, 360], opacity: [0, 1] };
 function decorList(list) {
   if (!Array.isArray(list)) throw new Error(`Config "card.decor" must be a list`);
   if (list.length > DECOR_MAX) throw new Error(`Config "card.decor": at most ${DECOR_MAX} pieces (got ${list.length})`);

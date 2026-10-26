@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": {
+    "dark": "hero-x",
+    "light": "hero-x-day"
+  },
+  "customThemes": {
+    "hero-x-day": {
+      "base": "light",
+      "bg_color": "fbfaf7",
+      "panel_color": "f1efe8",
+      "border_color": "1c1c1c",
+      "text_color": "14141c",
+      "muted_color": "5c5c6b",
+      "icon_color": "0097b8",
+      "ring_color": "d1197f",
+      "fire_color": "c79a00"
+    }
+  },
+  "card": {
+    "radius": 10,
+    "background": {
+      "pattern": "halftone",
+      "patternOpacity": 0.2,
+      "glowColor": "ff2e97",
+      "glowX": 90,
+      "glowY": 0,
+      "glowSize": 60
+    },
+    "decor": [
+      {
+        "motif": "halftone",
+        "x": 90,
+        "y": 14,
+        "anchor": "bottom",
+        "size": 24,
+        "opacity": 0.4
+      },
+      {
+        "motif": "burst",
+        "x": 44,
+        "y": 9,
+        "size": 10,
+        "opacity": 0.6,
+        "motion": "pulse"
+      },
+      {
+        "motif": "bolt",
+        "x": 52,
+        "y": 5,
+        "anchor": "bottom",
+        "size": 9,
+        "opacity": 0.45,
+        "rotate": 12
+      }
+    ]
+  },
+  "layout": [
+    "header",
+    [
+      "stats",
+      "languages"
+    ],
+    "streak",
+    "heatmap"
+  ],
+  "header": {
+    "rankStyle": "hexagon"
+  },
+  "heatmap": {
+    "mode": "pacman",
+    "pacmanMaze": "open"
+  }
+}

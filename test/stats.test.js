@@ -643,7 +643,7 @@ test("card art: motifs, images and the background are validated and drawn behind
   const view = (card, images) => { const [d, k] = make({ layout: ["header"], card }); if (images) k.images = images; return render(d, { k }); };
   const plain = view({});
   assert.ok(plain.includes('cx="850" cy="0" r="650"') && !plain.includes('<pattern id="pat"'), "the defaults draw what they always did");
-  const svg = view({ decor: [{ motif: "skyline", x: 20, y: 80, size: 30, color: "ff00aa" }, { motif: "bolt", layer: "front", flip: true, rotate: 20, motion: "float" }], background: { pattern: "halftone", patternColor: "00ffee", glowX: 10, glowY: 50, glowColor: "ff0000" } });
+  const svg = view({ decor: [{ motif: "skyline", x: 20, y: 5, anchor: "bottom", size: 30, color: "ff00aa" }, { motif: "bolt", layer: "front", flip: true, rotate: 20, motion: "float" }], background: { pattern: "halftone", patternColor: "00ffee", glowX: 10, glowY: 50, glowColor: "ff0000" } });
   assert.ok(svg.includes('fill="#ff00aa"') && svg.includes('<pattern id="pat"') && svg.includes('cx="100" cy="') && svg.includes('stop-color="#ff0000"'), "colours, pattern and glow follow the options");
   assert.ok(svg.indexOf("#ff00aa") < svg.indexOf("</svg>") && svg.lastIndexOf('clip-path="url(#dc-clip)"') > svg.indexOf("translate(") , "a front piece comes after the sections");
   assert.ok(/@keyframes lp\d+/.test(svg), "motion float is a loop");

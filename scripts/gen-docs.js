@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { FRAMES } from "../src/frames.js";
 import { SECRETS, SECRET_GROUPS } from "../src/secrets.js";
 import { THEME_NAMES } from "../src/themes.js";
+import { MOTIFS, MOTIF_NAMES } from "../src/motifs.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const demo = join(root, "scripts", "demo.js");
@@ -75,6 +76,19 @@ const CASES = {
   "bg-dots": { ...only("header"), card: { background: { pattern: "dots" } } },
   "bg-grid": { ...only("header"), card: { background: { pattern: "grid" } } },
   "bg-diagonal": { ...only("header"), card: { background: { pattern: "diagonal" } } },
+  "bg-halftone": { ...only("header"), card: { background: { pattern: "halftone" } } },
+  "bg-hex": { ...only("header"), card: { background: { pattern: "hex", patternOpacity: 0.25 } } },
+  "bg-circuit": { ...only("header"), card: { background: { pattern: "circuit", patternColor: "35e0ff", patternOpacity: 0.3 } } },
+  "bg-scanlines": { ...only("header"), card: { background: { pattern: "scanlines", patternOpacity: 0.25 } } },
+  "bg-glow": { ...only("header"), card: { background: { glowX: 15, glowY: 100, glowSize: 90, glowColor: "ff3cac", glowOpacity: 0.3 } } },
+  "decor-example": {
+    ...only("header", ["stats", "streak"]),
+    card: { background: { pattern: "circuit", patternOpacity: 0.12 }, decor: [
+      { motif: "skyline", x: 82, y: 21, anchor: "bottom", size: 42, opacity: 0.3 },
+      { motif: "reticle", x: 44, y: 9, size: 10, opacity: 0.55, motion: "pulse" },
+      { motif: "glitch", x: 6, y: 7, anchor: "bottom", size: 12, opacity: 0.4 },
+    ] },
+  },
   "bg-no-glow": { ...only("header"), card: { background: { glow: false } } },
   // header
   "header-circle": only("header"),
@@ -169,6 +183,13 @@ const render = (config, out, extra = []) => {
 };
 
 mkdirSync(join(root, "docs", "guide"), { recursive: true });
+// the sheet of motifs of the library (docs/guide/decor-motifs.png)
+if (!process.argv.slice(2).length || process.argv.slice(2).includes("decor-motifs")) {
+  const { Resvg } = await import("@resvg/resvg-js");
+  const cells = MOTIF_NAMES.map((n, i) => `<g transform="translate(${(i % 4) * 150 + 20} ${Math.floor(i / 4) * 150 + 16}) scale(1.1)">${MOTIFS[n]("#ff4fa3", "#35e0ff")}<text x="0" y="122" font-size="11" font-family="sans-serif" fill="#c9d1e3">${n}</text></g>`).join("");
+  const sheet = `<svg xmlns="http://www.w3.org/2000/svg" width="620" height="${Math.ceil(MOTIF_NAMES.length / 4) * 150 + 20}"><rect width="100%" height="100%" rx="12" fill="#101018"/>${cells}</svg>`;
+  writeFileSync(join(root, "docs", "guide", "decor-motifs.png"), new Resvg(sheet).render().asPng());
+}
 mkdirSync(join(root, "docs", "presets"), { recursive: true });
 const wanted = process.argv.slice(2);
 for (const [name, c] of Object.entries(CASES)) {

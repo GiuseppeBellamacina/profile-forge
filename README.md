@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![Themes](https://img.shields.io/badge/themes-73-8b5cf6)
+![Themes](https://img.shields.io/badge/themes-78-8b5cf6)
 ![Locales](https://img.shields.io/badge/languages-8-f59e0b)
 
 [**Web configurator**](https://giuseppebellamacina.github.io/profile-forge-configurator/) · [**Quick start**](#quick-start-github-action) · [**Full guide**](GUIDE.md) · [**Presets**](presets) · [**Trophies**](TROPHIES.md) · [**Themes**](docs/themes)

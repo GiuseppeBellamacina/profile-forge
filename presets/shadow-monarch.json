@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": {
+    "dark": "shadow-monarch",
+    "light": "shadow-monarch-day"
+  },
+  "customThemes": {
+    "shadow-monarch-day": {
+      "base": "light",
+      "bg_color": "f3f0ff",
+      "panel_color": "e6dfff",
+      "border_color": "c3b5f5",
+      "text_color": "1b1232",
+      "muted_color": "6a5a99",
+      "icon_color": "5a30d6",
+      "ring_color": "0b8fb8",
+      "fire_color": "7a3fd1"
+    }
+  },
+  "card": {
+    "radius": 14,
+    "background": {
+      "pattern": "hex",
+      "patternOpacity": 0.12,
+      "glowColor": "35d0ff",
+      "glowX": 80,
+      "glowY": 0,
+      "glowSize": 70
+    },
+    "decor": [
+      {
+        "motif": "runes",
+        "x": 44,
+        "y": 9,
+        "size": 16,
+        "opacity": 0.35,
+        "motion": "float"
+      },
+      {
+        "motif": "stars",
+        "x": 49,
+        "y": 14,
+        "size": 6,
+        "opacity": 0.7,
+        "motion": "pulse"
+      },
+      {
+        "motif": "hud",
+        "x": 93,
+        "y": 8,
+        "anchor": "bottom",
+        "size": 14,
+        "opacity": 0.4
+      }
+    ]
+  },
+  "layout": [
+    "header",
+    "stats",
+    [
+      "languages",
+      "streak"
+    ],
+    "heatmap"
+  ],
+  "header": {
+    "rankStyle": "shield"
+  },
+  "heatmap": {
+    "mode": "snake",
+    "snakePath": "smart",
+    "snakeStyle": "glow",
+    "snakeLength": 8
+  }
+}

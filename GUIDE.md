@@ -176,6 +176,59 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 |---|---|---|
 | <img src="docs/guide/bg-dots.png"> | <img src="docs/guide/bg-grid.png"> | <img src="docs/guide/bg-diagonal.png"> |
 
+More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`.
+
+| `pattern: "halftone"` | `pattern: "hex"` | `pattern: "circuit"` | `pattern: "scanlines"` |
+|---|---|---|---|
+| <img src="docs/guide/bg-halftone.png"> | <img src="docs/guide/bg-hex.png"> | <img src="docs/guide/bg-circuit.png"> | <img src="docs/guide/bg-scanlines.png"> |
+
+| Key (`card.background`) | Values | Default |
+|---|---|---|
+| `pattern` | `none` `dots` `grid` `diagonal` `halftone` `scanlines` `stripes` `hex` `circuit` `crosses` | `none` |
+| `patternColor` | colour | the muted colour of the theme |
+| `patternOpacity` | 0–1 | each pattern has its own |
+| `patternSize` | 25–400 (percent) | `100` |
+| `glow` | `true` `false` | `true` |
+| `glowColor` | colour | the ring colour of the theme |
+| `glowX` `glowY` | 0–100 (percent of the card) | `85` `0` |
+| `glowSize` | 10–200 (percent of the width) | `65` |
+| `glowOpacity` | 0–1 | `0.18` |
+| `image` | path of an svg, png, jpg, webp or gif (relative to `config.json`) | none |
+| `imageOpacity` `imageFit` | 0–1, `cover` `contain` | `0.35`, `cover` |
+
+<img src="docs/guide/bg-glow.png" alt="a glow moved to the bottom left and made pink">
+
+### Art on the card (`card.decor`)
+
+Up to 12 pieces of art on the card, each one a **motif** of the library or an **image** of yours (the file is embedded in the card, like the tech stack icons). The motifs are original line art drawn in the colours of the theme; they are in the spirit of a style (neon city, system windows, comic halftones, gothic ornaments), not copies of anything.
+
+<img src="docs/guide/decor-motifs.png" alt="the 16 motifs: skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
+
+```json
+{ "card": { "decor": [
+  { "motif": "skyline", "x": 82, "y": 21, "anchor": "bottom", "size": 42, "opacity": 0.3 },
+  { "motif": "reticle", "x": 44, "y": 9, "size": 10, "opacity": 0.55, "motion": "pulse" },
+  { "image": "assets/img/logo.svg", "x": 92, "y": 8, "size": 8, "layer": "front" }
+] } }
+```
+
+| Key | Values | Default |
+|---|---|---|
+| `motif` or `image` | a motif name (`skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image | one of them is required |
+| `x` `y` | the centre, in percent of the card **width** (1 = 10 px): `x` from the left, `y` from the top, or from the bottom with `anchor: "bottom"`; −50–150 and −50–200 | `50` `20` |
+| `anchor` | `top` `bottom` | `top` |
+| `size` | the width of the piece, percent of the card width, 2–150 | `20` |
+| `rotate` | degrees, −360–360 | `0` |
+| `opacity` | 0–1 | `0.5` |
+| `color` `color2` | the main and the accent colour of a motif | the ring and the icon colour of the theme |
+| `layer` | `back` (behind the sections) `front` | `back` |
+| `flip` | mirror the piece | `false` |
+| `motion` | `none` `float` `pulse` (plain CSS, it also runs in a README image) | `none` |
+
+The configurator has an editor for all of this, with a gallery of the motifs, upload and a slider for each value.
+
+<img src="docs/guide/decor-example.png" alt="a card with a skyline, a reticle and glitch bars">
+
 ## Header
 
 ```json
@@ -625,7 +678,7 @@ A list (`["dracula", "nord"]` → `profile-forge-dracula.svg`, `profile-forge-no
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-There are 73 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
+There are 78 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
 
 | | |
 |---|---|
@@ -639,6 +692,7 @@ There are 73 built-in themes. Previews of all of them are in [`docs/themes/`](do
 | **More editor themes** | `tokyo-night` `tokyo-night-storm` `tokyo-night-day` `kanagawa-wave` `moonlight` `poimandres` `vesper` `rose-pine-moon` `rose-pine-dawn` `night-owl-light` `andromeda` `panda` `everblush` `cyberdream` `nord-light` |
 | **Gradient** | `ambient-gradient` `sunset-gradient` `aurora-gradient` `ocean-gradient` `candy-gradient` |
 | **Originals** | `sakura` `lava` `glacier` `forest-night` `coffee` `amber` `paper` |
+| **Inspired by a series** | `hero-x` `shadow-monarch` `plus-ultra` `dante` `edgerunner` (palettes and mood only; each has a preset with art on the card) |
 
 Dark themes use the dark trophy palette and light themes the light one (`base`).
 

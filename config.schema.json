@@ -88,14 +88,15 @@
         },
         "decor": {
           "type": "array", "maxItems": 12,
-          "description": "Art on the card: motifs of the library or your own images. Position and size are percents of the card (size: of its width).",
+          "description": "Art on the card: motifs of the library or your own images. Position and size are percents of the card width.",
           "items": {
             "type": "object", "additionalProperties": false,
             "properties": {
               "motif": { "enum": ["skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
               "image": { "type": "string", "description": "Path of an image relative to config.json, instead of a motif." },
               "x": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },
-              "y": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },
+              "y": { "type": "number", "minimum": -50, "maximum": 200, "default": 20, "description": "In percent of the card width, from the top (or from the bottom with anchor: bottom)." },
+              "anchor": { "enum": ["top", "bottom"], "default": "top" },
               "size": { "type": "number", "minimum": 2, "maximum": 150, "default": 20 },
               "rotate": { "type": "number", "minimum": -360, "maximum": 360, "default": 0 },
               "opacity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },

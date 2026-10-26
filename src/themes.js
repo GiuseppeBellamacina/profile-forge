@@ -103,6 +103,12 @@ const THEMES = {
   coffee: dv("dark", "#1e1612", "#ecdcc9", "#d4a373", "#a3b18a", "#e76f51", { heat: ["#2b211b", "#4a3426", "#7a5236", "#b37c4f", "#e3b27c"] }),
   amber: dv("dark", "#0d0800", "#ffb000", "#ffcc33", "#ff8c00", "#ffe066", { muted: "#b37a00", heat: ["#1f1500", "#4d3300", "#805500", "#cc8800", "#ffcc33"] }),
   paper: dv("light", "#fbfaf7", "#1c1c1c", "#2b2b2b", "#8a6d3b", "#b4532a", { heat: ["#ecebe6", "#c9c7bf", "#97948a", "#5e5b53", "#1c1c1c"] }),
+  // Inspired by the look of five series (palettes and mood, nothing copied): pair them with the presets of the same name
+  "hero-x": dv("dark", "#0a0a10", "#f4f4f8", "#19f0ff", "#ff2e97", "#ffe600", { bgGradient: "135,#0a0a10,#160f2e,#0a0a10", heat: ["#16161f", "#17435a", "#1096b3", "#19f0ff", "#ffe600"] }),
+  "shadow-monarch": dv("dark", "#0b0714", "#e6e0ff", "#7c4dff", "#35d0ff", "#c77dff", { bgGradient: "150,#0b0714,#1a1033,#0b0714", heat: ["#150d26", "#2a1a52", "#4b2fa3", "#7c4dff", "#35d0ff"] }),
+  "plus-ultra": dv("dark", "#0b1a3a", "#fff7e0", "#ffd21f", "#ff3b30", "#ff7a1a", { bgGradient: "160,#0b1a3a,#123073,#0b1a3a", heat: ["#13244d", "#1c3f8f", "#2a64d6", "#6aa5ff", "#ffd21f"] }),
+  dante: dv("dark", "#0e0708", "#f3ece8", "#d11a2a", "#cfd3dc", "#ffb02e", { bgGradient: "145,#0e0708,#2a0b10,#0e0708", heat: ["#1b0c0e", "#4a0f16", "#8f1420", "#d11a2a", "#ff6a4d"] }),
+  edgerunner: dv("dark", "#0a0820", "#f2f0ff", "#00f0ff", "#ff3cac", "#d7ff3a", { bgGradient: "135,#0a0820,#1b0b3f,#0a0820", heat: ["#14103a", "#1d2b78", "#0097b8", "#00f0ff", "#d7ff3a"] }),
 };
 
 // Override keys follow the original projects' names where they exist (bg_color, border_color, currStreakNum, ...).

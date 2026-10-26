@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
+  "themes": {
+    "dark": "dante",
+    "light": "dante-day"
+  },
+  "customThemes": {
+    "dante-day": {
+      "base": "light",
+      "bg_color": "faf3f0",
+      "panel_color": "f2e4e0",
+      "border_color": "dcb8b0",
+      "text_color": "2a0d10",
+      "muted_color": "8a5a5e",
+      "icon_color": "b3121f",
+      "ring_color": "6b7280",
+      "fire_color": "c47a00"
+    }
+  },
+  "card": {
+    "radius": 4,
+    "background": {
+      "pattern": "stripes",
+      "patternOpacity": 0.06,
+      "glowColor": "d11a2a",
+      "glowX": 50,
+      "glowY": 100,
+      "glowSize": 90
+    },
+    "decor": [
+      {
+        "motif": "wings",
+        "x": 50,
+        "y": 45,
+        "size": 74,
+        "opacity": 0.07
+      },
+      {
+        "motif": "blade",
+        "x": 44,
+        "y": 9,
+        "size": 14,
+        "opacity": 0.4
+      },
+      {
+        "motif": "blade",
+        "x": 6,
+        "y": 12,
+        "anchor": "bottom",
+        "size": 20,
+        "opacity": 0.22,
+        "rotate": -18,
+        "flip": true
+      }
+    ]
+  },
+  "layout": [
+    "header",
+    [
+      "stats",
+      "streak"
+    ],
+    "languages",
+    "trophies",
+    "heatmap"
+  ],
+  "header": {
+    "rankStyle": "shield"
+  },
+  "heatmap": {
+    "mode": "grid",
+    "cell": "square"
+  }
+}

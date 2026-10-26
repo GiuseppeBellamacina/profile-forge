@@ -1498,7 +1498,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
         const inner = it.motif ? MOTIFS[it.motif](a, b) : images[it.image] ? `<image href="${images[it.image]}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : "";
         if (!inner) return "";
         const sc = r3((it.size / 100) * W / 100);
-        const piece = `<g transform="translate(${r3((it.x / 100) * W)} ${r3((it.y / 100) * SH)}) rotate(${it.rotate}) scale(${it.flip ? -sc : sc} ${sc}) translate(-50 -50)" opacity="${it.opacity}">${inner}</g>`;
+        const piece = `<g transform="translate(${r3((it.x / 100) * W)} ${r3(it.anchor === "bottom" ? SH - (it.y / 100) * W : (it.y / 100) * W)}) rotate(${it.rotate}) scale(${it.flip ? -sc : sc} ${sc}) translate(-50 -50)" opacity="${it.opacity}">${inner}</g>`;
         if (it.motion === "float") return `<g${A.loop({ "0%,100%": "transform:translateY(0)", "50%": "transform:translateY(-6px)" }, { dur: 6, delay: 1 })}>${piece}</g>`;
         if (it.motion === "pulse") return `<g${A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.45" }, { dur: 3.4, delay: 1 })}>${piece}</g>`;
         return piece;
