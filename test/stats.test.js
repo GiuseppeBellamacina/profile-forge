@@ -360,7 +360,12 @@ test("rank effects grow with the level: S a halo, SSS a running light, sparkles 
   const x = view("X");
   assert.ok(x.includes('filter="url(#rkglow)"') && x.includes('stroke-dasharray="16 84"') && !x.includes("#ff5f6d") && x.includes('fill="#ff2d2d">X<'), "X: red, glowing, arcs and sparks, no rainbow");
   const rb = view("B", undefined, { rankEffect: "rainbow" });
-  assert.ok(rb.includes('stroke-dasharray="6 6"') && rb.includes("#ff5f6d") && rb.includes('fill="url(#rg)">B<'), "rainbow: any level, picked by hand");
+  assert.ok(rb.includes('stroke-dasharray="1.5 1.5"') && rb.includes("#ff5f6d") && rb.includes('fill="url(#rg)">B<'), "rainbow: any level, picked by hand");
+  for (const rankStyle of ["hexagon", "shield"])
+    for (const level of ["SSS", "X"]) {
+      const sh = view(level, undefined, { rankStyle, frame: "none" });
+      assert.ok(!/rotate\(-?360deg\)/.test(sh), `${rankStyle} ${level}: nothing turns about the centre (a hexagon would sweep, a shield turn upside down)`);
+    }
   assert.ok(!/@keyframes lp\d+/.test(view("X", undefined, { rankEffect: "none" })), "none: no effect even at X");
   assert.throws(() => normalize({ header: { rankEffect: "sparkle" } }), /header\.rankEffect/);
   assert.ok(!/@keyframes lp\d+/.test(view("A+")), "below S there are no loops");

@@ -4,6 +4,7 @@ import { intlTag, translator } from "./i18n.js";
 import { drawFrame, frameFor } from "./frames.js";
 import { ALL_LEVELS, familyOf, fxTier, isTop, levelColor } from "./levels.js";
 import { playGame } from "./pacman.js";
+import { ringAt, ringPath } from "./ringshape.js";
 import { snakeRoute } from "./snake.js";
 import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
@@ -154,18 +155,11 @@ function headerSection(d, X) {
   const thick = hs.rankThickness;
   // the rank indicator at `grow` pixels outside its base size, as a ring, a hexagon or a shield; pathLength is 100 so that dashes are percents
   const ringEl = (grow, attrs) => {
-    const R = 50 + grow;
-    if (ringStyle === "hexagon") {
-      const pts = Array.from({ length: 6 }, (_, k) => { const a = ((-90 + 60 * k) * Math.PI) / 180; return `${r3(900 + R * 1.06 * Math.cos(a))} ${r3(90 + R * 1.06 * Math.sin(a))}`; });
-      return `<path d="M${pts.join("L")}Z" fill="none" pathLength="100" stroke-linejoin="round" ${attrs}/>`;
-    }
-    if (ringStyle === "shield") {
-      const k = R / 50;
-      const P = (x, y) => `${r3(900 + (x - 900) * k)} ${r3(92 + (y - 92) * k)}`;
-      return `<path d="M${P(900, 40)}L${P(947, 54)}V${r3(92 + (92 - 92) * k)}C${P(947, 120)} ${P(924, 137)} ${P(900, 146)}C${P(876, 137)} ${P(853, 120)} ${P(853, 92)}V${r3(92 + (54 - 92) * k)}Z" fill="none" pathLength="100" stroke-linejoin="round" ${attrs}/>`;
-    }
-    return `<circle cx="900" cy="90" r="${R}" fill="none" pathLength="100" ${attrs}/>`;
+    const d = ringPath(ringStyle, grow);
+    return d ? `<path d="${d}" fill="none" pathLength="100" stroke-linejoin="round" ${attrs}/>` : `<circle cx="900" cy="90" r="${50 + grow}" fill="none" pathLength="100" ${attrs}/>`;
   };
+  // the effects keep their distance from the ring whatever its thickness: `gap` px outside its outer edge
+  const edge = (gap) => thick / 2 + gap;
   // the progress colour: the colour of the level, lighter at the start (the top 1% runs from pink to gold)
   const lvCol = levelColor(c, d.rank.level);
   // the effect around the rank: "auto" grows with the level (S a halo, SSS a light and sparkles, X glowing embers); any effect
@@ -194,20 +188,22 @@ function headerSection(d, X) {
     ${rounded ? `<clipPath id="av"><rect x="40" y="38" width="104" height="104" rx="24"/></clipPath>` : `<clipPath id="av"><circle cx="92" cy="90" r="52"/></clipPath>`}`;
   // effects grow with the level (plain CSS loops): S-, S, S+ a pulsing halo; SSS also a light that runs around the ring and
   // sparkles; X all of that in rainbow colours, plus a second ring turning the other way and more sparkles
-  const haloRing = () => ringEl(9, `stroke="${lvCol}" stroke-width="2.5" stroke-opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`);
+  const haloRing = () => ringEl(edge(4.5), `stroke="${lvCol}" stroke-width="2.5" stroke-opacity="0.4"${A.loop({ "0%,100%": "opacity:.15", "50%": "opacity:.75" }, { dur: 2.4, delay: 1.2 })}`);
   const topRing = () => {
     const col = levelColor(c, d.rank.level);
     const many = rainbow ? 10 : 6;
     const spark = (k) => {
-      const a = (((360 / many) * k + (many === 10 ? 0 : 15)) * Math.PI) / 180; // never straight below, over the RANK label
-      const x = r3(900 + 66 * Math.cos(a));
-      const y = r3(90 + 66 * Math.sin(a));
+      // spread round the outline (never straight below, over the RANK label), each one outside it by the same distance
+      const [sx, sy] = ringAt(ringStyle, ((((360 / many) * k + (many === 10 ? 0 : 15)) + 90) % 360) / 360, edge(12));
+      const x = r3(sx);
+      const y = r3(sy);
+      if (ringStyle !== "ring" && y > 138) return ""; // the tip of a shield or hexagon: that is where the RANK label is
       const s = 4.2;
       return `<path d="M${x} ${r3(y - s)}L${r3(x + s * 0.3)} ${r3(y - s * 0.3)}L${r3(x + s)} ${y}L${r3(x + s * 0.3)} ${r3(y + s * 0.3)}L${x} ${r3(y + s)}L${r3(x - s * 0.3)} ${r3(y + s * 0.3)}L${r3(x - s)} ${y}L${r3(x - s * 0.3)} ${r3(y - s * 0.3)}Z" fill="${rainbow ? RAINBOW[k % RAINBOW.length] : col}" opacity="0.9"${A.loop({ "0%,100%": "opacity:0;transform:scale(.3)", "50%": "opacity:1;transform:scale(1)" }, { dur: 2, delay: 1.2 + k * (2 / many), origin: [x, y] })}/>`;
     };
     // rainbow: a dashed rainbow ring just outside, turning the other way
     const xRing = rainbow
-      ? `<g${A.loop({ "0%": "transform:rotate(0deg)", "100%": "transform:rotate(-360deg)" }, { dur: 14, ease: "linear", delay: 1.2, origin: [900, 90] })}>${ringEl(14, `stroke="url(#rg)" stroke-width="2" stroke-dasharray="6 6" opacity="0.8"`)}</g>`
+      ? ringEl(edge(10), `stroke="url(#rg)" stroke-width="2" stroke-dasharray="1.5 1.5" opacity="0.8"${A.loop({ "0%": "stroke-dashoffset:0", "100%": "stroke-dashoffset:3" }, { dur: 4.7, ease: "linear", delay: 1.2 })}`)
       : "";
     return `${haloRing()}${xRing}
     ${ringEl(0, `stroke="#fff" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="7 93" opacity="0.55"${A.loop({ "0%": "stroke-dashoffset:0", "100%": "stroke-dashoffset:-100" }, { dur: rainbow ? 2.2 : 3.2, ease: "linear", delay: 1.2, still: ' stroke-dashoffset="-12"' })}`)}
@@ -219,18 +215,21 @@ function headerSection(d, X) {
     const hot = mix(col, "#ff9a3c", 0.6);
     X.defs.push(`<filter id="rkglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4.5"/></filter>`);
     const glow = `<g filter="url(#rkglow)"${A.loop({ "0%,100%": "opacity:.45", "50%": "opacity:1" }, { dur: 1.8, delay: 1.2, still: ' opacity="0.8"' })}>${ringEl(0, `stroke="${col}" stroke-width="${thick + 6}"`)}</g>`;
-    const arc = (grow, w, dash, fill, dur, dir) => `<g${A.loop({ "0%": "transform:rotate(0deg)", "100%": `transform:rotate(${360 * dir}deg)` }, { dur, ease: "linear", delay: 1.2, origin: [900, 90] })}>${ringEl(grow, `stroke="${fill}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${dash}"`)}</g>`;
+    const arc = (gap, w, dash, fill, dur, dir) => ringEl(edge(gap), `stroke="${fill}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${dash}"${A.loop({ "0%": "stroke-dashoffset:0", "100%": `stroke-dashoffset:${-100 * dir}` }, { dur, ease: "linear", delay: 1.2 })}`);
     // sparks start on the lower half and the sides of the ring and float up, fading out
     const sparks = Array.from({ length: 12 }, (_, k) => {
       const ang = ((200 + k * 13.6 + (k % 2) * 160) * Math.PI) / 180;
-      const x = r3(900 + 54 * Math.cos(ang));
-      const y = r3(90 + 54 * Math.sin(ang) * -1);
+      // where the old circle put it (its angle), but on the real outline; the tip of a shield is left out, it is over the RANK label
+      const u = (((Math.atan2(-Math.sin(ang), Math.cos(ang)) * 180) / Math.PI + 90 + 360) % 360) / 360;
+      const [sx, sy] = ringAt(ringStyle, u, edge(0));
+      const x = r3(sx);
+      const y = r3(Math.min(sy, 146));
       const rise = 38 + (k % 4) * 9;
       const drift = (k % 3) - 1;
       const fill = [col, hot, "#ffd36e"][k % 3];
       return `<circle cx="${x}" cy="${y}" r="${r3(1.4 + (k % 3) * 0.5)}" fill="${fill}"${A.loop({ "0%": "opacity:0;transform:translate(0,0) scale(1)", "15%": "opacity:1", "100%": `opacity:0;transform:translate(${drift * 8}px,${-rise}px) scale(.4)` }, { dur: 1.9 + (k % 4) * 0.35, ease: "ease-out", delay: 1.2 + k * 0.23, origin: [x, y], still: ` opacity="${k % 2 ? 0.7 : 0.35}" transform="translate(0 ${-(k % 4) * 8})"` })}/>`;
     }).join("");
-    return { under: glow, over: `${arc(11, 2.4, "16 84", col, 3.6, 1)}${arc(11, 1.6, "9 91", hot, 5.2, -1)}${sparks}` };
+    return { under: glow, over: `${arc(7, 2.4, "16 84", col, 3.6, 1)}${arc(7, 1.6, "9 91", hot, 5.2, -1)}${sparks}` };
   };
   const em = eff === "embers" ? embers() : null;
   const rank = () => `<g${A.a(0.3, 0.5, { o: 0, s: 0.7 }, {}, [900, 90])}>
