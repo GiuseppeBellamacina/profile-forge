@@ -6,6 +6,7 @@ import { ALL_LEVELS, familyOf, fxTier, isTop, levelColor } from "./levels.js";
 import { playGame } from "./pacman.js";
 import { ringAt, ringPath } from "./ringshape.js";
 import { MOTIFS } from "./motifs.js";
+import { inlineSvg } from "./svgart.js";
 import { snakeRoute } from "./snake.js";
 import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
@@ -1507,9 +1508,13 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   const decorSvg = (layer) =>
     k.decor
       .filter((it) => it.layer === layer)
-      .map((it) => {
+      .map((it, n) => {
         const a = it.color ?? c.accent2, b = it.color2 ?? c.accent;
-        const inner = it.motif ? MOTIFS[it.motif](a, b) : images[it.image] ? `<image href="${images[it.image]}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : "";
+        const art = { speed: it.speed, still: A.t !== undefined };
+        const picture = it.image ? images[it.image] : "";
+        const inner = it.motif
+          ? MOTIFS[it.motif](a, b, art)
+          : picture ? inlineSvg(picture, { prefix: `dc${n}`, color: it.color ? a : null, ...art }) ?? `<image href="${picture}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : "";
         if (!inner) return "";
         const sc = r3((it.size / 100) * W / 100);
         const piece = `<g transform="translate(${r3((it.x / 100) * W)} ${r3(it.anchor === "bottom" ? SH - (it.y / 100) * W : (it.y / 100) * W)}) rotate(${it.rotate}) scale(${it.flip ? -sc : sc} ${sc}) translate(-50 -50)" opacity="${it.opacity}">${inner}</g>`;

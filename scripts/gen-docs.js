@@ -186,7 +186,7 @@ mkdirSync(join(root, "docs", "guide"), { recursive: true });
 // the sheet of motifs of the library (docs/guide/decor-motifs.png)
 if (!process.argv.slice(2).length || process.argv.slice(2).includes("decor-motifs")) {
   const { Resvg } = await import("@resvg/resvg-js");
-  const cells = MOTIF_NAMES.map((n, i) => `<g transform="translate(${(i % 4) * 150 + 20} ${Math.floor(i / 4) * 150 + 16}) scale(1.1)">${MOTIFS[n]("#ff4fa3", "#35e0ff")}<text x="0" y="122" font-size="11" font-family="sans-serif" fill="#c9d1e3">${n}</text></g>`).join("");
+  const cells = MOTIF_NAMES.map((n, i) => `<g transform="translate(${(i % 4) * 150 + 20} ${Math.floor(i / 4) * 150 + 16}) scale(1.1)">${MOTIFS[n]("#ff4fa3", "#35e0ff", { still: true })}<text x="0" y="122" font-size="11" font-family="sans-serif" fill="#c9d1e3">${n}</text></g>`).join("");
   const sheet = `<svg xmlns="http://www.w3.org/2000/svg" width="620" height="${Math.ceil(MOTIF_NAMES.length / 4) * 150 + 20}"><rect width="100%" height="100%" rx="12" fill="#101018"/>${cells}</svg>`;
   writeFileSync(join(root, "docs", "guide", "decor-motifs.png"), new Resvg(sheet).render().asPng());
 }

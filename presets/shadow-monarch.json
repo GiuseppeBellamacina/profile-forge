@@ -29,12 +29,21 @@
     },
     "decor": [
       {
-        "motif": "runes",
-        "x": 44,
+        "motif": "lightning",
+        "x": 45,
         "y": 9,
-        "size": 16,
-        "opacity": 0.35,
-        "motion": "float"
+        "size": 17,
+        "opacity": 0.9,
+        "color": "35d0ff"
+      },
+      {
+        "motif": "runes",
+        "x": 9,
+        "y": 16,
+        "size": 22,
+        "opacity": 0.22,
+        "motion": "float",
+        "anchor": "bottom"
       },
       {
         "motif": "stars",

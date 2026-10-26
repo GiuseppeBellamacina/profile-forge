@@ -671,3 +671,18 @@ test("card panels and titles: notched panels and tag titles are drawn, the defau
   assert.throws(() => normalize({ card: { panels: "round" } }), /card\.panels/);
   assert.throws(() => normalize({ card: { titles: "big" } }), /card\.titles/);
 });
+
+test("animated art: the lightning motif loops and can be recoloured and sped up, and an svg of yours is put into the card as markup", () => {
+  const view = (decor, images, t) => { const [d, k] = make({ layout: ["header"], card: { decor } }); if (images) k.images = images; return render(d, t === undefined ? { k } : { k, t }); };
+  const bolt = view([{ motif: "lightning", color: "35d0ff", speed: 2 }]);
+  assert.ok((bolt.match(/<animate /g) ?? []).length > 30 && bolt.includes('dur="1.5s"') && bolt.includes('fill="#35d0ff"') && !bolt.includes("#ff0000") && !bolt.includes("__"), "a loop of frames, twice as fast, in the colour asked for");
+  const still = view([{ motif: "lightning" }], undefined, 1);
+  assert.ok(!still.includes("<animate ") && still.includes('fill="#'), "a still frame for PNG / GIF");
+  const svg = (inner) => `data:image/svg+xml;base64,${Buffer.from(`<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>alert(1)</script><defs><linearGradient id="g"><stop stop-color="red"/></linearGradient></defs><rect id="r" onclick="x()" fill="url(#g)" stroke="blue" width="10" height="10"><animate attributeName="x" dur="2s" values="0;1" repeatCount="indefinite"/></rect>${inner}</svg>`).toString("base64")}`;
+  const mine = view([{ image: "a.svg", color: "ff00aa", speed: 2 }], { "a.svg": svg('<image href="https://evil.example/x.png"/>') });
+  assert.ok(mine.includes('<svg x="0" y="0" width="100" height="100" viewBox="0 0 10 10"') && !mine.includes("alert(1)") && !mine.includes("onclick") && !mine.includes("evil.example"), "scripts, handlers and outside links are dropped");
+  assert.ok(mine.includes('id="dc0-g"') && mine.includes("url(#dc0-g)") && mine.includes('stroke="#ff00aa"') && mine.includes('dur="1s"'), "ids are prefixed, colours replaced, the pace changed");
+  const flat = view([{ image: "a.svg" }], { "a.svg": svg("") });
+  assert.ok(flat.includes('stroke="blue"') && flat.includes('dur="2s"'), "without a colour or a speed the file stays as it is");
+  assert.throws(() => normalize({ card: { decor: [{ motif: "bolt", speed: 9 }] } }), /between 0.25 and 4/);
+});

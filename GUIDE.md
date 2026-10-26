@@ -207,7 +207,7 @@ More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`.
 
 Up to 12 pieces of art on the card, each one a **motif** of the library or an **image** of yours (the file is embedded in the card, like the tech stack icons). The motifs are original line art drawn in the colours of the theme; they are in the spirit of a style (neon city, system windows, comic halftones, gothic ornaments), not copies of anything.
 
-<img src="docs/guide/decor-motifs.png" alt="the 16 motifs: skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
+<img src="docs/guide/decor-motifs.png" alt="the 17 motifs: lightning skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
 
 ```json
 { "card": { "decor": [
@@ -219,16 +219,19 @@ Up to 12 pieces of art on the card, each one a **motif** of the library or an **
 
 | Key | Values | Default |
 |---|---|---|
-| `motif` or `image` | a motif name (`skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image | one of them is required |
+| `motif` or `image` | a motif name (`lightning` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image | one of them is required |
 | `x` `y` | the centre, in percent of the card **width** (1 = 10 px): `x` from the left, `y` from the top, or from the bottom with `anchor: "bottom"`; −50–150 and −50–200 | `50` `20` |
 | `anchor` | `top` `bottom` | `top` |
 | `size` | the width of the piece, percent of the card width, 2–150 | `20` |
 | `rotate` | degrees, −360–360 | `0` |
 | `opacity` | 0–1 | `0.5` |
 | `color` `color2` | the main and the accent colour of a motif | the ring and the icon colour of the theme |
+| `speed` | 0.25–4: the pace of an animated piece (`lightning`, or an animated svg of yours); 2 is twice as fast | `1` |
 | `layer` | `back` (behind the sections) `front` | `back` |
 | `flip` | mirror the piece | `false` |
 | `motion` | `none` `float` `pulse` (plain CSS, it also runs in a README image) | `none` |
+
+**Animated art.** `lightning` is a hand-drawn loop of 36 frames (about 90 KB in the card): `color` sets its colour and `speed` its pace. An **svg of yours** (`image` pointing to an `.svg`) is put into the card as markup, not as a picture, so its animations (SMIL, or CSS) keep running; scripts, event handlers and links to outside files are removed, its ids are renamed so two pieces never clash, `color` (when given) replaces every flat fill and stroke, and `speed` scales the duration of its SMIL animations. In PNG / GIF exports and with `card.animations: false` one frame is shown. To add an animated motif to the library, put the svg in `scripts/assets/` and run `node scripts/pack-motif.js file.svg name`.
 
 The configurator has an editor for all of this, with a gallery of the motifs, upload and a slider for each value.
 

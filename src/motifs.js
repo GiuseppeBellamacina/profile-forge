@@ -2,11 +2,21 @@
 // `b` (the accent). Nothing here copies a logo or a character: they are shapes in the spirit of a style (neon city, system windows,
 // comic halftones, gothic ornaments...) that the themes can lean on. render.js places, scales, rotates and fades them.
 
+import { ANIMATED } from "./motifs-animated.js";
+
 const r2 = (x) => Math.round(x * 100) / 100;
 const polar = (cx, cy, r, deg) => [r2(cx + r * Math.cos((deg * Math.PI) / 180)), r2(cy + r * Math.sin((deg * Math.PI) / 180))];
 const sparkle = (x, y, s, fill) => `<path d="M${x} ${y - s}L${r2(x + s * 0.25)} ${r2(y - s * 0.25)}L${x + s} ${y}L${r2(x + s * 0.25)} ${r2(y + s * 0.25)}L${x} ${y + s}L${r2(x - s * 0.25)} ${r2(y + s * 0.25)}L${x - s} ${y}L${r2(x - s * 0.25)} ${r2(y - s * 0.25)}Z" fill="${fill}"/>`;
 
+// an animated motif (scripts/pack-motif.js): `speed` scales its loop, `still` gives one frame (PNG / GIF, animations off)
+const animated = (name, a, { speed = 1, still = false } = {}) => {
+  const m = ANIMATED[name];
+  return `<svg x="0" y="0" width="100" height="100" viewBox="${m.viewBox}" preserveAspectRatio="xMidYMid meet">${(still ? m.still : m.animated).replaceAll("__COLOR__", a).replaceAll("__DUR__", String(Math.round((m.dur / speed) * 1000) / 1000))}</svg>`;
+};
+
 export const MOTIFS = {
+  /** an animated bolt of lightning (a hand-drawn loop of 36 frames); the main colour is its colour, `speed` its pace */
+  lightning: (a, _b, o) => animated("lightning", a, o),
   /** a night skyline: towers with lit windows and an antenna */
   skyline: (a, b) => `<path d="M0 100V66h7V54h9v12h5V44h11v22h6V58h8V30h9v36h7V50h8V36h4V28h2v8h4v14h6V60h7v40Z" fill="${a}"/><path d="M52 30V16" stroke="${a}" stroke-width="1.4"/><circle cx="52" cy="14" r="1.8" fill="${b}"/><g fill="${b}">${[[10, 58], [12, 62], [24, 50], [28, 56], [28, 62], [44, 36], [48, 44], [44, 52], [48, 58], [62, 54], [66, 60], [76, 42], [80, 48], [78, 56], [90, 64]].map(([x, y]) => `<rect x="${x}" y="${y}" width="2" height="2.4"/>`).join("")}</g>`,
   /** printed-circuit traces ending in pads */
