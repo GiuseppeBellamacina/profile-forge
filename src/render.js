@@ -1526,8 +1526,11 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   const bgImage = bg.image && images[bg.image]
     ? `<image href="${images[bg.image]}" width="${W}" height="${SH}" opacity="${bg.imageOpacity}" preserveAspectRatio="xMidYMid ${bg.imageFit === "contain" ? "meet" : "slice"}"/>`
     : "";
-  const over = k.decor.some((it) => it.layer === "front") ? `<g clip-path="url(#dc-clip)">${decorSvg("front")}</g>` : ""; // built here: its loops add to the style block
-  const under = `${bgImage}${bg.glow ? card("url(#glow)") : ""}${pat ? `<g opacity="${bg.patternOpacity ?? pat[3]}">${card("url(#pat)")}</g>` : ""}${decorSvg("back")}`;
+  // the art comes in last: after the sections have finished appearing (their rows come one after the other, each one drawing its own parts)
+  A.dt = 0;
+  const artIn = k.decor.length ? A.a(Math.max(0, ...items.map((it) => it.delay)) + 3, 0.8, { o: 0 }) : "";
+  const over = k.decor.some((it) => it.layer === "front") ? `<g clip-path="url(#dc-clip)"><g${artIn}>${decorSvg("front")}</g></g>` : ""; // built here: its loops add to the style block
+  const under = `${bgImage}${bg.glow ? card("url(#glow)") : ""}${pat ? `<g opacity="${bg.patternOpacity ?? pat[3]}">${card("url(#pat)")}</g>` : ""}${k.decor.some((it) => it.layer === "back") ? `<g${artIn}>${decorSvg("back")}</g>` : ""}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${SH}" viewBox="0 0 ${W} ${SH}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
   <title>${esc(d.name)} (@${esc(d.login)}) — GitHub profile</title>
   <defs>

@@ -233,6 +233,8 @@ Up to 12 pieces of art on the card, each one a **motif** of the library or an **
 
 **Animated art.** `lightning` is a hand-drawn loop of 36 frames (about 90 KB in the card): `color` sets its colour and `speed` its pace. An **svg of yours** (`image` pointing to an `.svg`) is put into the card as markup, not as a picture, so its animations (SMIL, or CSS) keep running; scripts, event handlers and links to outside files are removed, its ids are renamed so two pieces never clash, `color` (when given) replaces every flat fill and stroke, and `speed` scales the duration of its SMIL animations. In PNG / GIF exports and with `card.animations: false` one frame is shown. To add an animated motif to the library, put the svg in `scripts/assets/` and run `node scripts/pack-motif.js file.svg name`.
 
+The art fades in last, after every section has appeared.
+
 The configurator has an editor for all of this, with a gallery of the motifs, upload and a slider for each value.
 
 <img src="docs/guide/decor-example.png" alt="a card with a skyline, a reticle and glitch bars">
