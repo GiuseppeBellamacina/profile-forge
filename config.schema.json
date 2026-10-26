@@ -71,8 +71,40 @@
           "type": "object", "additionalProperties": false,
           "properties": {
             "gradient": { "type": ["string", "null"], "description": "angle,color1,color2,... e.g. 35,4158d0,c850c0,ffcc70" },
-            "pattern": { "enum": ["none", "dots", "grid", "diagonal"], "default": "none" },
-            "glow": { "type": "boolean", "default": true }
+            "pattern": { "enum": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"], "default": "none" },
+            "patternColor": { "oneOf": [{ "$ref": "#/definitions/hex" }, { "type": "null" }], "description": "Colour of the pattern (the muted colour of the theme by default)." },
+            "patternOpacity": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Opacity of the pattern (each pattern has its own default)." },
+            "patternSize": { "type": "number", "minimum": 25, "maximum": 400, "default": 100, "description": "Scale of the pattern, in percent." },
+            "glow": { "type": "boolean", "default": true },
+            "glowColor": { "oneOf": [{ "$ref": "#/definitions/hex" }, { "type": "null" }], "description": "Colour of the glow (the ring colour of the theme by default)." },
+            "glowX": { "type": "number", "minimum": 0, "maximum": 100, "default": 85, "description": "Where the glow is centred, in percent of the card width." },
+            "glowY": { "type": "number", "minimum": 0, "maximum": 100, "default": 0, "description": "Where the glow is centred, in percent of the card height." },
+            "glowSize": { "type": "number", "minimum": 10, "maximum": 200, "default": 65, "description": "Radius of the glow, in percent of the card width." },
+            "glowOpacity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.18 },
+            "image": { "type": ["string", "null"], "description": "An image (svg, png, jpg, webp, gif) behind everything, relative to config.json; it is embedded in the card." },
+            "imageOpacity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.35 },
+            "imageFit": { "enum": ["cover", "contain"], "default": "cover" }
+          }
+        },
+        "decor": {
+          "type": "array", "maxItems": 12,
+          "description": "Art on the card: motifs of the library or your own images. Position and size are percents of the card (size: of its width).",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+              "motif": { "enum": ["skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
+              "image": { "type": "string", "description": "Path of an image relative to config.json, instead of a motif." },
+              "x": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },
+              "y": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },
+              "size": { "type": "number", "minimum": 2, "maximum": 150, "default": 20 },
+              "rotate": { "type": "number", "minimum": -360, "maximum": 360, "default": 0 },
+              "opacity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+              "color": { "oneOf": [{ "$ref": "#/definitions/hex" }, { "type": "null" }] },
+              "color2": { "oneOf": [{ "$ref": "#/definitions/hex" }, { "type": "null" }] },
+              "layer": { "enum": ["back", "front"], "default": "back" },
+              "flip": { "type": "boolean", "default": false },
+              "motion": { "enum": ["none", "float", "pulse"], "default": "none" }
+            }
           }
         }
       }

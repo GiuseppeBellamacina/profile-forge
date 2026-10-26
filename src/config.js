@@ -2,7 +2,8 @@
 import { LOCALES, normLocale } from "./i18n.js";
 import { PACMAN_MAZES } from "./pacman.js";
 import { ALL_LEVELS, OLD_RANKS } from "./levels.js";
-import { hasTheme, parseColors, registerThemes, THEME_NAMES } from "./themes.js";
+import { hasTheme, hex, parseColors, registerThemes, THEME_NAMES } from "./themes.js";
+import { MOTIF_NAMES } from "./motifs.js";
 
 export const SECTIONS = ["header", "about", "workingOn", "stats", "streak", "languages", "trophies", "heatmap", "techStack", "terminal", "rhythm", "orgs"];
 export const STATS_ITEMS = ["stars", "commits", "prs", "issues", "reviews", "contributed", "followers", "repos"];
@@ -16,7 +17,15 @@ export const DEFAULTS = {
   user: null, title: null, about: [], workingOn: [], links: [], techStack: [],
   locale: "en", timezone: "UTC", includePrivate: false,
   themes: ["dark", "light"], customThemes: {}, colors: {}, colorsByTheme: {},
-  card: { radius: 20, hideBorder: false, animations: true, background: { gradient: null, pattern: "none", glow: true } },
+  card: {
+    radius: 20, hideBorder: false, animations: true,
+    background: {
+      gradient: null, pattern: "none", patternColor: null, patternOpacity: null, patternSize: 100,
+      glow: true, glowColor: null, glowX: 85, glowY: 0, glowSize: 65, glowOpacity: 0.18,
+      image: null, imageOpacity: 0.35, imageFit: "cover",
+    },
+    decor: [], // [{ motif | image, x, y, size, rotate, opacity, color, color2, layer, flip, motion }]: art on the card (see GUIDE)
+  },
   layout: ["header", "about", "workingOn", ["stats", "streak"], "languages", "trophies", "heatmap", "techStack"],
   hideSections: [],
   grid: null, // [{ section, cols, height? }]: free 6-column grid instead of `layout` (see GUIDE)
@@ -35,7 +44,7 @@ export const DEFAULTS = {
 
 const FACTS = ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"];
 const ENUMS = {
-  locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal"],
+  locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"], "card.background.imageFit": ["cover", "contain"],
   "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "embers", "rainbow"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
@@ -43,13 +52,13 @@ const ENUMS = {
   "heatmap.mode": ["grid", "snake", "pacman"], "heatmap.pacmanMaze": PACMAN_MAZES, "heatmap.snakePath": ["smart", "busy", "nearest", "sweep", "rows", "spiral"], "heatmap.cell": ["square", "round", "triangle", "snowflake", "moon", "hexagon", "mixed"], "heatmap.weekStart": ["sun", "mon"],
 };
 const RANGES = {
-  "card.radius": [0, 60], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
+  "card.radius": [0, 60], "card.background.patternOpacity": [0, 1], "card.background.patternSize": [25, 400], "card.background.glowX": [0, 100], "card.background.glowY": [0, 100], "card.background.glowSize": [10, 200], "card.background.glowOpacity": [0, 1], "card.background.imageOpacity": [0, 1], "stats.numberPrecision": [0, 2], "stats.lineHeight": [18, 60], "stats.commitsYear": [2005, 2100],
   "streak.startingYear": [2005, 2100], "languages.count": [1, 20], "languages.sizeWeight": [0, 10], "languages.countWeight": [0, 10],
   "trophies.columns": [-1, 12], "trophies.rows": [0, 10], "trophies.marginW": [0, 60], "trophies.marginH": [0, 60], "trophies.padding": [0, 60], "heatmap.weeks": [4, 53], "header.rankThickness": [4, 16], "marquee.speed": [5, 200], "marquee.rows": [1, 4], "heatmap.snakeLength": [3, 12], "heatmap.pacmanLives": [1, 5], "heatmap.pacmanGames": [1, 3], "orgs.speed": [5, 200],
 };
 // Keys whose value shape isn't described by the default's type.
-const FREE = new Set(["themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
-const NUMERIC_NULL = new Set(["stats.numberPrecision", "stats.commitsYear", "streak.startingYear"]);
+const FREE = new Set(["card.decor", "themes", "customThemes", "colors", "colorsByTheme", "layout", "grid", "about", "workingOn", "links", "techStack"]);
+const NUMERIC_NULL = new Set(["card.background.patternOpacity", "stats.numberPrecision", "stats.commitsYear", "streak.startingYear"]);
 const isPlain = (v) => v && typeof v === "object" && !Array.isArray(v);
 
 function check(p, d, v) {
@@ -111,6 +120,36 @@ const must = (path, list, valid) => {
   for (const x of list) if (!valid.includes(x)) throw new Error(`Config "${path}": unknown value "${x}". Valid: ${valid.join(", ")}`);
   return new Set(list);
 };
+
+// card.decor: up to 12 pieces of art. Position and size are percents of the card (size: of its width), so a piece keeps its place
+// whatever the height of the card.
+export const DECOR_MAX = 12;
+const DECOR_DEFAULTS = { motif: null, image: null, x: 50, y: 50, size: 20, rotate: 0, opacity: 0.5, color: null, color2: null, layer: "back", flip: false, motion: "none" };
+const DECOR_ENUMS = { layer: ["back", "front"], motion: ["none", "float", "pulse"] };
+const DECOR_RANGES = { x: [-50, 150], y: [-50, 150], size: [2, 150], rotate: [-360, 360], opacity: [0, 1] };
+function decorList(list) {
+  if (!Array.isArray(list)) throw new Error(`Config "card.decor" must be a list`);
+  if (list.length > DECOR_MAX) throw new Error(`Config "card.decor": at most ${DECOR_MAX} pieces (got ${list.length})`);
+  return list.map((it, n) => {
+    const p = `card.decor[${n}]`;
+    if (!isPlain(it)) throw new Error(`Config "${p}" must be an object`);
+    for (const key of Object.keys(it)) if (!(key in DECOR_DEFAULTS)) throw new Error(`Unknown config key "${p}.${key}". Valid keys: ${Object.keys(DECOR_DEFAULTS).join(", ")}`);
+    const o = { ...DECOR_DEFAULTS, ...it };
+    if (!o.motif === !o.image) throw new Error(`Config "${p}" needs exactly one of "motif" and "image"`);
+    if (o.motif && !MOTIF_NAMES.includes(o.motif)) throw new Error(`Config "${p}.motif": unknown motif "${o.motif}". Available: ${MOTIF_NAMES.join(", ")}`);
+    if (o.image !== null && typeof o.image !== "string") throw new Error(`Config "${p}.image" must be a path`);
+    for (const [key, [lo, hi]] of Object.entries(DECOR_RANGES)) {
+      if (typeof o[key] !== "number" || !Number.isFinite(o[key])) throw new Error(`Config "${p}.${key}" must be a number, got ${JSON.stringify(o[key])}`);
+      if (o[key] < lo || o[key] > hi) throw new Error(`Config "${p}.${key}" must be between ${lo} and ${hi}, got ${o[key]}`);
+    }
+    for (const [key, valid] of Object.entries(DECOR_ENUMS)) if (!valid.includes(o[key])) throw new Error(`Config "${p}.${key}" must be one of: ${valid.join(", ")} (got "${o[key]}")`);
+    if (typeof o.flip !== "boolean") throw new Error(`Config "${p}.flip" must be true or false`);
+    for (const key of ["color", "color2"]) if (o[key] !== null) o[key] = hex(`${p}.${key}`, String(o[key]));
+    return o;
+  });
+}
+/** The image files a config refers to (the background image and the images of the decor): the callers embed them as data URIs. */
+export const imageRefs = (k) => [...new Set([k.card.background.image, ...k.decor.map((d) => d.image)].filter(Boolean))];
 
 /** Validate + fill defaults + derive sets. Returns the runtime config `k`. */
 export function normalize(raw = {}) {
@@ -175,6 +214,9 @@ export function normalize(raw = {}) {
   }
   for (const [n, l] of c.terminal.lines.entries()) if (typeof l !== "string") throw new Error(`Config "terminal.lines[${n}]" must be a string`);
   for (const key of ["snakeLength", "pacmanLives", "pacmanGames"]) if (!Number.isInteger(c.heatmap[key])) throw new Error(`Config "heatmap.${key}" must be a whole number`);
+  const bgc = c.card.background;
+  for (const key of ["patternColor", "glowColor"]) if (bgc[key] !== null) bgc[key] = hex(`card.background.${key}`, bgc[key]);
+  const decor = decorList(c.card.decor);
   const excludeDays = c.streak.excludeDays.map((x) => {
     const i = WEEKDAYS.indexOf(String(x).toLowerCase().slice(0, 3));
     if (i < 0) throw new Error(`Config "streak.excludeDays": invalid day "${x}" (use Sun, Mon, ...)`);
@@ -184,7 +226,7 @@ export function normalize(raw = {}) {
   return {
     ...c,
     locale: normLocale(c.locale),
-    slots, colors, colorsByTheme, layout, grid, hideSections,
+    slots, colors, colorsByTheme, layout, grid, hideSections, decor,
     header: { ...c.header, facts },
     stats: {
       ...c.stats,

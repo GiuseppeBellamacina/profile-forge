@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { render, renderButton } from "../src/render.js";
-import { needsExtras, normalize, setPath } from "../src/config.js";
+import { imageRefs, needsExtras, normalize, setPath } from "../src/config.js";
+import { MOTIF_NAMES } from "../src/motifs.js";
 import { parseColors, THEME_NAMES } from "../src/themes.js";
 import { calculateRank, computeStreak, summarize, topLanguages, trophies } from "../src/stats.js";
 
@@ -636,4 +637,26 @@ test("heatmap pacman: Pac-Man moves at one constant speed (tunnels and stops inc
     if (!pts[i - 1][3] && dt > 0 && dist > 0) speeds.push(dist / dt);
   }
   assert.ok(speeds.length > 50 && Math.max(...speeds) / Math.min(...speeds) < 1.05, `speeds ${Math.min(...speeds)} - ${Math.max(...speeds)}`);
+});
+
+test("card art: motifs, images and the background are validated and drawn behind or in front of the sections", () => {
+  const view = (card, images) => { const [d, k] = make({ layout: ["header"], card }); if (images) k.images = images; return render(d, { k }); };
+  const plain = view({});
+  assert.ok(plain.includes('cx="850" cy="0" r="650"') && !plain.includes('<pattern id="pat"'), "the defaults draw what they always did");
+  const svg = view({ decor: [{ motif: "skyline", x: 20, y: 80, size: 30, color: "ff00aa" }, { motif: "bolt", layer: "front", flip: true, rotate: 20, motion: "float" }], background: { pattern: "halftone", patternColor: "00ffee", glowX: 10, glowY: 50, glowColor: "ff0000" } });
+  assert.ok(svg.includes('fill="#ff00aa"') && svg.includes('<pattern id="pat"') && svg.includes('cx="100" cy="') && svg.includes('stop-color="#ff0000"'), "colours, pattern and glow follow the options");
+  assert.ok(svg.indexOf("#ff00aa") < svg.indexOf("</svg>") && svg.lastIndexOf('clip-path="url(#dc-clip)"') > svg.indexOf("translate(") , "a front piece comes after the sections");
+  assert.ok(/@keyframes lp\d+/.test(svg), "motion float is a loop");
+  const withImage = view({ decor: [{ image: "a.png" }], background: { image: "b.png" } }, { "a.png": "data:image/png;base64,AA", "b.png": "data:image/png;base64,BB" });
+  assert.ok(withImage.includes('href="data:image/png;base64,AA"') && withImage.includes('href="data:image/png;base64,BB"'), "images are embedded");
+  assert.deepEqual(imageRefs(normalize({ card: { decor: [{ image: "a.png" }, { image: "a.png" }], background: { image: "b.png" } } })), ["b.png", "a.png"]);
+  assert.throws(() => normalize({ card: { decor: [{ motif: "unicorn" }] } }), /unknown motif/);
+  assert.throws(() => normalize({ card: { decor: [{}] } }), /exactly one of/);
+  assert.throws(() => normalize({ card: { decor: [{ motif: "bolt", size: 500 }] } }), /between 2 and 150/);
+  assert.throws(() => normalize({ card: { decor: Array.from({ length: 13 }, () => ({ motif: "bolt" })) } }), /at most 12/);
+  assert.throws(() => normalize({ card: { decor: [{ motif: "bolt", colour: "red" }] } }), /Unknown config key/);
+  assert.throws(() => normalize({ card: { background: { pattern: "wavy" } } }), /card\.background\.pattern/);
+  assert.throws(() => normalize({ card: { background: { glowColor: "nothex" } } }), /Invalid hex/);
+  for (const pattern of ["dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"]) assert.ok(view({ background: { pattern } }).includes('<pattern id="pat"'), pattern);
+  for (const motif of MOTIF_NAMES) assert.ok(view({ decor: [{ motif }] }).includes('opacity="0.5"'), motif);
 });

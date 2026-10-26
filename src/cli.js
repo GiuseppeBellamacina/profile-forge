@@ -3,7 +3,7 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { needsExtras, normalize, setPath, stackItems } from "./config.js";
+import { imageRefs, needsExtras, normalize, setPath, stackItems } from "./config.js";
 import { fetchProfile } from "./github.js";
 import { render, renderButton } from "./render.js";
 import { summarize } from "./stats.js";
@@ -124,6 +124,9 @@ k.stack = await Promise.all(
 );
 
 if (k.header.flag) k.flagData = `data:${MIME[extname(k.header.flag).toLowerCase()] ?? "image/png"};base64,${(await readFile(join(base, k.header.flag))).toString("base64")}`;
+
+// Images of the card (the background image and the images of the decor): the same, embedded as data URIs.
+k.images = Object.fromEntries(await Promise.all(imageRefs(k).map(async (ref) => [ref, `data:${MIME[extname(ref).toLowerCase()] ?? "image/png"};base64,${(await readFile(join(base, ref))).toString("base64")}`])));
 
 // Webfonts are embedded as data URIs: GitHub shows README SVGs as images, which can't fetch fonts.
 const fontDir = join(dirname(fileURLToPath(import.meta.url)), "..", "fonts");

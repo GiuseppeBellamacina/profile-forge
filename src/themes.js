@@ -117,7 +117,7 @@ export const COLOR_KEYS = {
 };
 export const COLOR_NAMES = Object.keys(COLOR_KEYS);
 const HEX = /^#?([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
-const hex = (k, v) => {
+export const hex = (k, v) => {
   if (!HEX.test(v)) throw new Error(`Invalid hex color for ${k}: "${v}" (use rgb, rgba, rrggbb or rrggbbaa)`);
   return v.startsWith("#") ? v : "#" + v;
 };

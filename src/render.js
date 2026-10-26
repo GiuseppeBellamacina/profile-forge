@@ -5,6 +5,7 @@ import { drawFrame, frameFor } from "./frames.js";
 import { ALL_LEVELS, familyOf, fxTier, isTop, levelColor } from "./levels.js";
 import { playGame } from "./pacman.js";
 import { ringAt, ringPath } from "./ringshape.js";
+import { MOTIFS } from "./motifs.js";
 import { snakeRoute } from "./snake.js";
 import { GLYPHS, TONES } from "./secrets.js";
 import { trophyMatches } from "./stats.js";
@@ -1469,26 +1470,60 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
         .map((col, i, a) => `<stop offset="${r3(i / (a.length - 1))}" stop-color="${col}"/>`)
         .join("")}</linearGradient>`
     : `<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.bg1}"/><stop offset="1" stop-color="${c.bg2}"/></linearGradient>`;
+  // the pattern over the background: a tile in the pattern colour (the muted one by default), scaled by patternSize
+  const pcol = bg.patternColor ?? c.muted;
   const PATTERNS = {
-    dots: `<pattern id="pat" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="${c.muted}" opacity="0.3"/></pattern>`,
-    grid: `<pattern id="pat" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${c.muted}" stroke-opacity="0.15"/></pattern>`,
-    diagonal: `<pattern id="pat" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 12L12 0" stroke="${c.muted}" stroke-opacity="0.15"/></pattern>`,
+    dots: [18, 18, 1, 0.3, `<circle cx="2" cy="2" r="1" fill="${pcol}"/>`],
+    grid: [24, 24, 1, 0.15, `<path d="M24 0H0V24" fill="none" stroke="${pcol}"/>`],
+    diagonal: [12, 12, 1, 0.15, `<path d="M0 12L12 0" stroke="${pcol}"/>`],
+    halftone: [12, 12, 1, 0.22, `<circle cx="3" cy="3" r="1.7" fill="${pcol}"/><circle cx="9" cy="9" r="1.7" fill="${pcol}"/>`],
+    scanlines: [4, 4, 1, 0.12, `<rect width="4" height="1.2" fill="${pcol}"/>`],
+    stripes: [20, 20, 1, 0.08, `<path d="M-5 5L5 -5M0 20L20 0M15 25L25 15" fill="none" stroke="${pcol}" stroke-width="5"/>`],
+    hex: [56, 100, 0.28, 0.15, `<path d="M28 66L0 50V16L28 0L56 16V50L28 66V100M28 0V34L0 50V84L28 100L56 84V50L28 34" fill="none" stroke="${pcol}" stroke-width="2"/>`],
+    circuit: [40, 40, 1, 0.15, `<path d="M0 10H14L20 16V30M40 28H28L22 22M10 40V32M30 0V8L36 14H40" fill="none" stroke="${pcol}"/><circle cx="20" cy="30" r="1.8" fill="${pcol}"/><circle cx="10" cy="32" r="1.8" fill="${pcol}"/><circle cx="36" cy="14" r="1.8" fill="${pcol}"/>`],
+    crosses: [20, 20, 1, 0.2, `<path d="M10 7V13M7 10H13" fill="none" stroke="${pcol}"/>`],
   };
+  const pat = PATTERNS[bg.pattern];
+  const patDef = pat
+    ? `<pattern id="pat" width="${pat[0]}" height="${pat[1]}" patternUnits="userSpaceOnUse" patternTransform="scale(${r3((pat[2] * bg.patternSize) / 100)})">${pat[4]}</pattern>`
+    : "";
   const card = (fill, stroke = "none") => `<rect x="0.5" y="0.5" width="${W - 1}" height="${SH - 1}" rx="${k.card.radius}" fill="${fill}" stroke="${stroke}"/>`;
+  // art on the card: a piece is a motif (motifs.js) or an image of the user's, placed in percents of the card, clipped to its corners
+  const images = k.images ?? {};
+  const decorSvg = (layer) =>
+    k.decor
+      .filter((it) => it.layer === layer)
+      .map((it) => {
+        const a = it.color ?? c.accent2, b = it.color2 ?? c.accent;
+        const inner = it.motif ? MOTIFS[it.motif](a, b) : images[it.image] ? `<image href="${images[it.image]}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : "";
+        if (!inner) return "";
+        const sc = r3((it.size / 100) * W / 100);
+        const piece = `<g transform="translate(${r3((it.x / 100) * W)} ${r3((it.y / 100) * SH)}) rotate(${it.rotate}) scale(${it.flip ? -sc : sc} ${sc}) translate(-50 -50)" opacity="${it.opacity}">${inner}</g>`;
+        if (it.motion === "float") return `<g${A.loop({ "0%,100%": "transform:translateY(0)", "50%": "transform:translateY(-6px)" }, { dur: 6, delay: 1 })}>${piece}</g>`;
+        if (it.motion === "pulse") return `<g${A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.45" }, { dur: 3.4, delay: 1 })}>${piece}</g>`;
+        return piece;
+      })
+      .join("");
+  const bgImage = bg.image && images[bg.image]
+    ? `<image href="${images[bg.image]}" width="${W}" height="${SH}" opacity="${bg.imageOpacity}" preserveAspectRatio="xMidYMid ${bg.imageFit === "contain" ? "meet" : "slice"}"/>`
+    : "";
+  const over = k.decor.some((it) => it.layer === "front") ? `<g clip-path="url(#dc-clip)">${decorSvg("front")}</g>` : ""; // built here: its loops add to the style block
+  const under = `${bgImage}${bg.glow ? card("url(#glow)") : ""}${pat ? `<g opacity="${bg.patternOpacity ?? pat[3]}">${card("url(#pat)")}</g>` : ""}${decorSvg("back")}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${SH}" viewBox="0 0 ${W} ${SH}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
   <title>${esc(d.name)} (@${esc(d.login)}) — GitHub profile</title>
   <defs>
     ${bgFill}
     <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.accent}"/><stop offset="1" stop-color="${c.accent2}"/></linearGradient>
     <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b9a"/><stop offset=".5" stop-color="#b48cff"/><stop offset="1" stop-color="#4fd1ff"/></linearGradient>
-    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="850" cy="0" r="650"><stop offset="0" stop-color="${c.accent2}" stop-opacity="0.18"/><stop offset="1" stop-color="${c.accent2}" stop-opacity="0"/></radialGradient>
-    ${PATTERNS[bg.pattern] ?? ""}
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="${r3((bg.glowX / 100) * W)}" cy="${r3((bg.glowY / 100) * SH)}" r="${r3((bg.glowSize / 100) * W)}"><stop offset="0" stop-color="${bg.glowColor ?? c.accent2}" stop-opacity="${bg.glowOpacity}"/><stop offset="1" stop-color="${bg.glowColor ?? c.accent2}" stop-opacity="0"/></radialGradient>
+    <clipPath id="dc-clip"><rect x="0.5" y="0.5" width="${W - 1}" height="${SH - 1}" rx="${k.card.radius}"/></clipPath>
+    ${patDef}
     ${defs.join("\n    ")}
   </defs>${fontCss || A.css.length ? `\n  <style>${fontCss}${A.css.join("")}</style>` : ""}
   ${card("url(#bg)", k.card.hideBorder ? "none" : c.border)}
-  ${bg.glow ? card("url(#glow)") : ""}
-  ${PATTERNS[bg.pattern] ? card("url(#pat)") : ""}
+  <g clip-path="url(#dc-clip)">${under}</g>
   ${parts.join("\n  ")}
+  ${over}
   <text x="${W - 30}" y="${SH - 16}" text-anchor="end" font-size="10" fill="${c.muted}">${esc(X.tr("generated"))} · ${d.days.at(-1)[0]}</text>
 </svg>`;
 }

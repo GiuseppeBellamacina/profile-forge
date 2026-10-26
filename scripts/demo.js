@@ -8,7 +8,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { needsExtras, normalize } from "../src/config.js";
+import { imageRefs, needsExtras, normalize } from "../src/config.js";
 import { PERCENTILE_OF } from "../src/levels.js";
 import { render } from "../src/render.js";
 import { SECRETS } from "../src/secrets.js";
@@ -91,6 +91,9 @@ k.stack = await Promise.all(
     data: `data:${MIME[extname(it.image).toLowerCase()] ?? "image/png"};base64,${(await readFile(join(base, it.image))).toString("base64")}`,
   })),
 );
+
+// Images of the card (the background image and the images of the decor): the same, embedded as data URIs.
+k.images = Object.fromEntries(await Promise.all(imageRefs(k).map(async (ref) => [ref, `data:${MIME[extname(ref).toLowerCase()] ?? "image/png"};base64,${(await readFile(join(base, ref))).toString("base64")}`])));
 
 const fontDir = join(dirname(fileURLToPath(import.meta.url)), "..", "fonts");
 const face = async (family, file) =>
