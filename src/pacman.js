@@ -8,10 +8,10 @@
 export const ROWS = 7;
 /** right, down, left, up: the index is the rotation (x 90 degrees) of a sprite looking right. */
 export const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-// Ghosts as in the arcade (level 1), but a little slower than there (0.78 of Pac-Man against the arcade 0.94, a maze this narrow is harder).
+// Ghosts as in the arcade (level 1), but a little slower than there (0.74 of Pac-Man against the arcade 0.94, a maze this narrow is harder).
 // Speeds are cells per tick, a tick being one move of Pac-Man: a ghost is slower than him,
 // a scared one much slower. The scatter / chase turns come from the arcade's 7, 20, 7, 20, 5, 20, 5 seconds, at about 8.7 moves a second.
-const GHOST_SPEED = 0.78;
+const GHOST_SPEED = 0.74;
 const SCARED_SPEED = 0.62;
 const SCATTER = [[0, 61], [236, 297], [472, 516], [691, 735]]; // ticks (from the start of a life) in which the ghosts scatter; chase otherwise
 // Cells Pac-Man must have walked on before each ghost leaves the house: the arcade's level 1 counters (of its 244 pellets), one set for
@@ -201,7 +201,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     noBack = 0; // until this tick he may not turn back
     ghosts = GHOSTS.map((_, k) => {
       const c = [doorK, denK, denK - ROWS, denK + ROWS][k]; // Blinky waits outside, above the door, as in the arcade; the others in the house
-      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: k === 0 ? 2 : 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, nx: null, p: 0, flip: false, sc: 0, hist: [], detour: null, detourUntil: 0 };
+      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: k === 0 ? 2 : 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, nx: null, p: 0, flip: false, sc: 0, hist: [], detour: null, detourUntil: 0, walkUntil: 0, lastLoop: -999 };
     });
     modeStart = t;
     visited = new Set([idx(start.w, start.i)]);
@@ -383,18 +383,26 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
       else if (g.k === 2) { const [bw, bi] = tile(ghosts[0]); [tw, ti] = [2 * (pac.w + 2 * pd0) - bw, 2 * (pac.i + 2 * pd1) - bi]; } // twice the way from Blinky to two cells ahead
       else if ((g.w - pac.w) ** 2 + (g.i - pac.i) ** 2 > 64) [tw, ti] = [pac.w, pac.i]; // Clyde: chases from afar, goes to his corner when closer than 8
       else [tw, ti] = corners[3];
+      if (g.walkUntil > t) walking = true; // it has been going round in circles: for a while it follows the real way to its target
       pick = walking ? byWalking(opts, tw, ti) : opts.reduce((b, o) => ((o[0] - tw) ** 2 + (o[1] - ti) ** 2 < (b[0] - tw) ** 2 + (b[1] - ti) ** 2 ? o : b), opts[0]);
     }
+    // Going round a small block (a target behind a wall does that, and so does a chase that cannot get any closer): a ghost that has been
+    // on eight cells or fewer through its last 14 turns follows the real way to its target for 45 moves; one that does it again soon
+    // goes off to a far point it can reach, then comes back to its task.
+    if (g.flip) g.hist = [];
     g.flip = false;
-    // Circling a small block for a long time (a target behind a wall does that): a ghost that has been on eight cells or fewer
-    // through its last 16 turns goes off to a far point of the board for a while, then comes back to its task.
     if (!house.has(k) && g.st === "c") {
       g.hist.push(k);
-      if (g.hist.length > 16) g.hist.shift();
-      if (g.hist.length === 16 && new Set(g.hist).size <= 8) {
-        const far = openCells.filter(([w, i]) => Math.abs(w - g.w) + Math.abs(i - g.i) >= 10);
-        if (far.length) (g.detour = far[Math.floor(rand() * far.length)], g.detourUntil = t + 45);
+      if (g.hist.length > 14) g.hist.shift();
+      if (g.hist.length === 14 && new Set(g.hist).size <= 8) {
         g.hist = [];
+        if (t - g.lastLoop < 90) {
+          const reach = bfs([k]);
+          const far = openCells.filter(([w, i]) => reach[idx(w, i)] >= 10);
+          if (far.length) (g.detour = far[Math.floor(rand() * far.length)], g.detourUntil = t + 45);
+        }
+        g.walkUntil = t + 45;
+        g.lastLoop = t;
       }
     }
     return pick;
@@ -402,7 +410,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
   const ghostMove = (g) => {
     if (g.st === "e") return; // Pac-Man was caught: out of sight until the board is set again
     let speed = 1; // eyes: quick
-    if (g.st === "s" && t >= g.until) g.st = "c"; // even for one that has not left yet
+    if (g.st === "s" && t >= g.until) (g.st = "c", g.hist = []); // even for one that has not left yet
     if (g.st !== "r") {
       if (t < g.rel) return;
       speed = g.st === "s" ? SCARED_SPEED : GHOST_SPEED;
