@@ -176,7 +176,7 @@ Default: `["header", "about", "workingOn", ["stats", "streak"], "languages", "tr
 |---|---|---|
 | <img src="docs/guide/bg-dots.png"> | <img src="docs/guide/bg-grid.png"> | <img src="docs/guide/bg-diagonal.png"> |
 
-More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`.
+More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`, and `rays` (wedges fanning out from the glow, like the speed lines of a comic; `patternSize` is how many).
 
 | `pattern: "halftone"` | `pattern: "hex"` | `pattern: "circuit"` | `pattern: "scanlines"` |
 |---|---|---|---|
@@ -184,12 +184,12 @@ More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`.
 
 | Key (`card`) | Values | Default |
 |---|---|---|
-| `panels` | `rounded` `square` `notched` (chamfered corners and an accent stroke, like a game HUD) | `rounded` |
+| `panels` | `rounded` `square` `notched` (chamfered corners and an accent stroke, like a game HUD) `pop` (a thick outline and a hard offset shadow, like a comic panel) | `rounded` |
 | `titles` | `plain` `tag` (the title as a label in the accent colour with a slanted end) | `plain` |
 
 | Key (`card.background`) | Values | Default |
 |---|---|---|
-| `pattern` | `none` `dots` `grid` `diagonal` `halftone` `scanlines` `stripes` `hex` `circuit` `crosses` | `none` |
+| `pattern` | `none` `dots` `grid` `diagonal` `halftone` `scanlines` `stripes` `hex` `circuit` `crosses` `rays` | `none` |
 | `patternColor` | colour | the muted colour of the theme |
 | `patternOpacity` | 0–1 | each pattern has its own |
 | `patternSize` | 25–400 (percent) | `100` |
@@ -219,7 +219,7 @@ Up to 12 pieces of art on the card, each one a **motif** of the library or an **
 
 | Key | Values | Default |
 |---|---|---|
-| `motif` or `image` | a motif name (`lightning` `shards` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image | one of them is required |
+| `motif`, `image` or `text` | a motif name (`lightning` `shards` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image, or a word (`text`, at most 24 characters: a bold slanted caption, `color` its fill, `color2` its outline) | one of them is required |
 | `x` `y` | the centre, in percent of the card **width** (1 = 10 px): `x` from the left, `y` from the top, or from the bottom with `anchor: "bottom"`; −50–150 and −50–200 | `50` `20` |
 | `anchor` | `top` `bottom` | `top` |
 | `size` | the width of the piece, percent of the card width, 2–150 | `20` |
@@ -251,7 +251,7 @@ The configurator has an editor for all of this, with a gallery of the motifs, up
 | `facts` | up to 4 of `contributionsThisYear` `bestDay` `busiestWeekday` `currentStreak` `longestStreak` `topLanguage` `stars` `followers` | first three |
 | `frame` | `none` `ring` `double` `dashed` `neon` `pixel` `glitch` `laurel` `flames` `sakura` `stars` `halo` `aurora` `auto` | `ring` |
 | `frameAnimation` | `default` `none` `spin` `pulse` `twinkle` | `default` |
-| `rankStyle` | `ring` `hexagon` `shield` | `ring` |
+| `rankStyle` | `ring` `hexagon` `shield` `burst` (a comic starburst) | `ring` |
 | `rankThickness` | 4–16 | `8` |
 | `rankIcon` | what the rank shows: `level` (S), `percentile` (6.9%), `github` (mark) | `level` |
 | `rankEffect` | `auto` (by level), `none`, `halo`, `shine`, `embers`, `rainbow` | `auto` |

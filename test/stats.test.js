@@ -694,3 +694,18 @@ test("a background colour override replaces the gradient of the theme, a gradien
   assert.ok(!own.includes('gradientTransform="rotate(60') && own.includes('<stop offset="0" stop-color="#224466"/>'), "the new colour is the background");
   assert.ok(view({ bg_color: "224466", bg_gradient: "90,112233,445566" }).includes('stop-color="#112233"'), "an explicit gradient still wins");
 });
+
+test("pop art: pop panels, rays behind, a burst rank and a word on the card", () => {
+  const view = (card, header) => { const [d, k] = make({ layout: ["header", "stats"], card, ...(header && { header }) }); return render(d, { k }); };
+  const pop = view({ panels: "pop", background: { pattern: "rays", patternColor: "ffcf00" }, decor: [{ text: "BOOM!", color: "ff2bd6", layer: "front" }] }, { rankStyle: "burst" });
+  assert.ok(/<rect x="35" y="\d+" width="\d+" height="\d+" rx="2" fill="#/.test(pop) && pop.includes('stroke-width="2.5"'), "a hard shadow behind a thick outline");
+  assert.ok(/<g opacity="0.1"><path d="M[\d. L]+Z/.test(pop) && pop.includes('fill="#ffcf00"'), "wedges in the pattern colour");
+  assert.ok(/>BOOM!<\/text>/.test(pop) && pop.includes('fill="#ff2bd6"') && pop.includes("skewX(-8)"), "the word, slanted, in its colour");
+  assert.ok(/<path d="M\d+ \d+L[\d. L]+Z" fill="none" pathLength="100"/.test(pop), "the rank is a polygon: a burst");
+  assert.throws(() => normalize({ card: { decor: [{ text: "x".repeat(25) }] } }), /at most 24/);
+  assert.throws(() => normalize({ card: { decor: [{ text: "a", motif: "bolt" }] } }), /exactly one/);
+  // the wedges are cut to the card: nothing far outside it (a path far outside its clip crashes the renderer behind the PNGs)
+  const wedges = /<g opacity="0.1"><path d="([^"]+)"/.exec(pop)[1];
+  const nums = wedges.match(/-?[\d.]+/g).map(Number);
+  assert.ok(nums.every((n) => n >= -0.01 && n <= 1000.01), "every point is on the card (x up to 1000, y up to its height, here less than 1000)");
+});

@@ -132,6 +132,7 @@ const panel = (x, y, w, h, c) => {
     const n = 12;
     return `<path d="M${x} ${y}H${x + w - n}L${x + w} ${y + n}V${y + h}H${x + n}L${x} ${y + h - n}Z" fill="${c.panel}" stroke="${c.border}"/><path d="M${x + w - 54} ${y + h}H${x + w - 14}" stroke="${c.accent}" stroke-width="3"/>`;
   }
+  if (c.panelStyle === "pop") return `<rect x="${x + 5}" y="${y + 5}" width="${w}" height="${h}" rx="2" fill="${c.border}"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${c.panel}" stroke="${c.border}" stroke-width="2.5"/>`;
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${c.panelStyle === "square" ? 2 : 14}" fill="${c.panel}" stroke="${c.border}"/>`;
 };
 const heading = (x, y, text, c, extra = "") => {
@@ -1500,6 +1501,34 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
     crosses: [20, 20, 1, 0.2, `<path d="M10 7V13M7 10H13" fill="none" stroke="${pcol}"/>`],
   };
   const pat = PATTERNS[bg.pattern];
+  // rays: wedges fanning out from the glow, like the speed lines of a comic (patternSize: the narrower, the more of them)
+  const rays = (() => {
+    if (bg.pattern !== "rays") return "";
+    const cx = (bg.glowX / 100) * W, cy = (bg.glowY / 100) * SH, n = Math.max(6, Math.round(2400 / bg.patternSize)), far = Math.hypot(W, SH) * 1.2;
+    // every wedge is cut to the card here (Sutherland-Hodgman): a path reaching far outside the clip made the renderer behind the PNGs panic
+    const cut = (poly, inside, cross) => {
+      const out = [];
+      poly.forEach((p, k) => {
+        const q = poly[(k + 1) % poly.length];
+        if (inside(p)) out.push(p);
+        if (inside(p) !== inside(q)) out.push(cross(p, q));
+      });
+      return out;
+    };
+    const edges = [
+      [(p) => p[0] >= 0, (p, q) => [0, p[1] + ((q[1] - p[1]) * (0 - p[0])) / (q[0] - p[0])]],
+      [(p) => p[0] <= W, (p, q) => [W, p[1] + ((q[1] - p[1]) * (W - p[0])) / (q[0] - p[0])]],
+      [(p) => p[1] >= 0, (p, q) => [p[0] + ((q[0] - p[0]) * (0 - p[1])) / (q[1] - p[1]), 0]],
+      [(p) => p[1] <= SH, (p, q) => [p[0] + ((q[0] - p[0]) * (SH - p[1])) / (q[1] - p[1]), SH]],
+    ];
+    const wedge = Array.from({ length: n }, (_, i) => {
+      const a0 = (i * 2 * Math.PI) / n, a1 = a0 + Math.PI / n;
+      let poly = [[cx, cy], [cx + far * Math.cos(a0), cy + far * Math.sin(a0)], [cx + far * Math.cos(a1), cy + far * Math.sin(a1)]];
+      for (const [inside, cross] of edges) poly = poly.length ? cut(poly, inside, cross) : poly;
+      return poly.length > 2 ? `M${poly.map(([x, y]) => `${r3(x)} ${r3(y)}`).join("L")}Z` : "";
+    }).join("");
+    return `<g opacity="${bg.patternOpacity ?? 0.1}"><path d="${wedge}" fill="${pcol}"/></g>`;
+  })();
   const patDef = pat
     ? `<pattern id="pat" width="${pat[0]}" height="${pat[1]}" patternUnits="userSpaceOnUse" patternTransform="scale(${r3((pat[2] * bg.patternSize) / 100)})">${pat[4]}</pattern>`
     : "";
@@ -1513,9 +1542,16 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
         const a = it.color ?? c.accent2, b = it.color2 ?? c.accent;
         const art = { speed: it.speed, still: A.t !== undefined };
         const picture = it.image ? images[it.image] : "";
+        // a word: bold, slanted, the fill in `color` (the accent colour) and the outline in `color2` (the text colour on a light card, the background on a dark one)
+        const word = () => {
+          const fs = Math.min(64, Math.round(165 / Math.max(3, it.text.length)));
+          return `<text x="50" y="${r3(50 + fs * 0.34)}" text-anchor="middle" font-size="${fs}" font-weight="800" font-family="${FD}" fill="${it.color ?? c.accent}" stroke="${it.color2 ?? (c.base === "light" ? c.text : c.bg1)}" stroke-width="${r3(fs * 0.16)}" stroke-linejoin="round" paint-order="stroke" transform="translate(50 50) skewX(-8) translate(-50 -50)">${esc(it.text)}</text>`;
+        };
         const inner = it.motif
           ? MOTIFS[it.motif](a, b, art)
-          : picture ? inlineSvg(picture, { prefix: `dc${n}`, color: it.color ? a : null, ...art }) ?? `<image href="${picture}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : "";
+          : it.text
+            ? word()
+            : picture ? inlineSvg(picture, { prefix: `dc${n}`, color: it.color ? a : null, ...art }) ?? `<image href="${picture}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : "";
         if (!inner) return "";
         const sc = r3((it.size / 100) * W / 100);
         const piece = `<g transform="translate(${r3((it.x / 100) * W)} ${r3(it.anchor === "bottom" ? SH - (it.y / 100) * W : (it.y / 100) * W)}) rotate(${it.rotate}) scale(${it.flip ? -sc : sc} ${sc}) translate(-50 -50)" opacity="${it.opacity}">${inner}</g>`;
@@ -1532,7 +1568,7 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   A.dt = 0;
   const artIn = k.decor.length ? A.a(Math.min(Math.max(0, ...items.map((it) => it.delay)) + 3, DURATION - 0.8), 0.8, { o: 0 }) : "";
   const over = k.decor.some((it) => it.layer === "front") ? `<g clip-path="url(#dc-clip)"><g${artIn}>${decorSvg("front")}</g></g>` : ""; // built here: its loops add to the style block
-  const under = `${bgImage}${bg.glow ? card("url(#glow)") : ""}${pat ? `<g opacity="${bg.patternOpacity ?? pat[3]}">${card("url(#pat)")}</g>` : ""}${k.decor.some((it) => it.layer === "back") ? `<g${artIn}>${decorSvg("back")}</g>` : ""}`;
+  const under = `${bgImage}${bg.glow ? card("url(#glow)") : ""}${pat ? `<g opacity="${bg.patternOpacity ?? pat[3]}">${card("url(#pat)")}</g>` : ""}${rays}${k.decor.some((it) => it.layer === "back") ? `<g${artIn}>${decorSvg("back")}</g>` : ""}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${SH}" viewBox="0 0 ${W} ${SH}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
   <title>${esc(d.name)} (@${esc(d.login)}) — GitHub profile</title>
   <defs>

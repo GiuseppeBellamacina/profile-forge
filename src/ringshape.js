@@ -16,6 +16,12 @@ const hexVertices = (grow) => Array.from({ length: 6 }, (_, k) => {
   return [CX + R * Math.cos(a), CY + R * Math.sin(a)];
 });
 
+// a comic starburst: 12 spikes, a spike straight up; grown by pushing every vertex outward
+const burstVertices = (grow) => Array.from({ length: 24 }, (_, k) => {
+  const a = ((-90 + 15 * k) * Math.PI) / 180, r = (k % 2 ? 43 : 58) + grow;
+  return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+});
+
 const bez = (p0, p1, p2, p3, t) => {
   const u = 1 - t;
   return [0, 1].map((i) => u * u * u * p0[i] + 3 * u * u * t * p1[i] + 3 * u * t * t * p2[i] + t * t * t * p3[i]);
@@ -60,7 +66,9 @@ const base = (style) =>
       ? withNormals(resample(shieldPoly(), N))
       : style === "hexagon"
         ? withNormals(resample(hexVertices(0), N))
-        : Array.from({ length: N }, (_, k) => {
+        : style === "burst"
+          ? withNormals(resample(burstVertices(0), N))
+          : Array.from({ length: N }, (_, k) => {
             const a = ((-90 + (360 * k) / N) * Math.PI) / 180;
             return [CX + 50 * Math.cos(a), CY + 50 * Math.sin(a), Math.cos(a), Math.sin(a)];
           }));
@@ -78,6 +86,7 @@ export function ringAt(style, u, off = 0) {
 }
 
 export function ringPath(style, grow = 0) {
+  if (style === "burst") return `M${burstVertices(grow).map(([x, y]) => `${r3(x)} ${r3(y)}`).join("L")}Z`;
   if (style === "hexagon") return `M${hexVertices(grow).map(([x, y]) => `${r3(x)} ${r3(y)}`).join("L")}Z`;
   if (style === "shield") {
     // the offset of the shield by the normals, a point every 4 steps (the joins are rounded by the stroke)

@@ -44,8 +44,8 @@ export const DEFAULTS = {
 
 const FACTS = ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"];
 const ENUMS = {
-  locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"], "card.background.imageFit": ["cover", "contain"], "card.panels": ["rounded", "square", "notched"], "card.titles": ["plain", "tag"],
-  "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "embers", "rainbow"],
+  locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses", "rays"], "card.background.imageFit": ["cover", "contain"], "card.panels": ["rounded", "square", "notched", "pop"], "card.titles": ["plain", "tag"],
+  "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield", "burst"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "embers", "rainbow"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],
   "trophies.align": ["center", "left"], "marquee.order": ["shuffle", "config", "name"], "trophies.sort": ["default", "rank", "name"], "orgs.sort": ["contributions", "popularity", "custom"], "orgs.mode": ["static", "scroll"], "orgs.direction": ["left", "right"], "heatmap.snakeStyle": ["classic", "rainbow", "glow"],
@@ -124,7 +124,7 @@ const must = (path, list, valid) => {
 // card.decor: up to 12 pieces of art. Position and size are percents of the card's WIDTH (1 = 10 px on the standard card): x from the
 // left, y from the top (or from the bottom with anchor: bottom), so a piece keeps its place whatever the height of the card.
 export const DECOR_MAX = 12;
-const DECOR_DEFAULTS = { motif: null, image: null, x: 50, y: 20, anchor: "top", size: 20, speed: 1, rotate: 0, opacity: 0.5, color: null, color2: null, layer: "back", flip: false, motion: "none" };
+const DECOR_DEFAULTS = { motif: null, image: null, text: null, x: 50, y: 20, anchor: "top", size: 20, speed: 1, rotate: 0, opacity: 0.5, color: null, color2: null, layer: "back", flip: false, motion: "none" };
 const DECOR_ENUMS = { anchor: ["top", "bottom"], layer: ["back", "front"], motion: ["none", "float", "pulse"] };
 const DECOR_RANGES = { x: [-50, 150], y: [-50, 200], size: [2, 150], speed: [0.25, 4], rotate: [-360, 360], opacity: [0, 1] };
 function decorList(list) {
@@ -135,7 +135,8 @@ function decorList(list) {
     if (!isPlain(it)) throw new Error(`Config "${p}" must be an object`);
     for (const key of Object.keys(it)) if (!(key in DECOR_DEFAULTS)) throw new Error(`Unknown config key "${p}.${key}". Valid keys: ${Object.keys(DECOR_DEFAULTS).join(", ")}`);
     const o = { ...DECOR_DEFAULTS, ...it };
-    if (!o.motif === !o.image) throw new Error(`Config "${p}" needs exactly one of "motif" and "image"`);
+    if ([o.motif, o.image, o.text].filter(Boolean).length !== 1) throw new Error(`Config "${p}" needs exactly one of "motif", "image" and "text"`);
+    if (o.text !== null && (typeof o.text !== "string" || o.text.length > 24)) throw new Error(`Config "${p}.text" must be a text of at most 24 characters`);
     if (o.motif && !MOTIF_NAMES.includes(o.motif)) throw new Error(`Config "${p}.motif": unknown motif "${o.motif}". Available: ${MOTIF_NAMES.join(", ")}`);
     if (o.image !== null && typeof o.image !== "string") throw new Error(`Config "${p}.image" must be a path`);
     for (const [key, [lo, hi]] of Object.entries(DECOR_RANGES)) {

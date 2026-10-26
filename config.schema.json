@@ -67,13 +67,13 @@
         "radius": { "type": "number", "minimum": 0, "maximum": 60, "default": 20 },
         "hideBorder": { "type": "boolean", "default": false },
         "animations": { "type": "boolean", "default": true },
-        "panels": { "enum": ["rounded", "square", "notched"], "default": "rounded", "description": "The shape of the panels: rounded, square, or notched (chamfered corners and an accent stroke, like a game HUD)." },
+        "panels": { "enum": ["rounded", "square", "notched", "pop"], "default": "rounded", "description": "The shape of the panels: rounded, square, notched (chamfered corners and an accent stroke, like a game HUD) or pop (a thick outline and a hard offset shadow, like a comic panel)." },
         "titles": { "enum": ["plain", "tag"], "default": "plain", "description": "The title of each panel: plain text, or a label in the accent colour with a slanted end." },
         "background": {
           "type": "object", "additionalProperties": false,
           "properties": {
             "gradient": { "type": ["string", "null"], "description": "angle,color1,color2,... e.g. 35,4158d0,c850c0,ffcc70" },
-            "pattern": { "enum": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"], "default": "none" },
+            "pattern": { "enum": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses", "rays"], "default": "none" },
             "patternColor": { "oneOf": [{ "$ref": "#/definitions/hex" }, { "type": "null" }], "description": "Colour of the pattern (the muted colour of the theme by default)." },
             "patternOpacity": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Opacity of the pattern (each pattern has its own default)." },
             "patternSize": { "type": "number", "minimum": 25, "maximum": 400, "default": 100, "description": "Scale of the pattern, in percent." },
@@ -96,6 +96,7 @@
             "properties": {
               "motif": { "enum": ["lightning", "shards", "skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
               "image": { "type": "string", "description": "Path of an image relative to config.json, instead of a motif." },
+              "text": { "type": "string", "maxLength": 24, "description": "A word on the card (a comic caption), instead of a motif or an image; color is its fill, color2 its outline." },
               "x": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },
               "y": { "type": "number", "minimum": -50, "maximum": 200, "default": 20, "description": "In percent of the card width, from the top (or from the bottom with anchor: bottom)." },
               "anchor": { "enum": ["top", "bottom"], "default": "top" },
@@ -142,7 +143,7 @@
         "frame": { "enum": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "default": "ring", "description": "A decoration around the avatar, like Discord avatar decorations. ring: the classic gradient ring. auto: follows the level (E none, D ring, C double, B dashed, A neon, S stars, SSS halo, X aurora). Colour: colors.frameColor, default the level colour." },
         "flag": { "type": ["string", "null"], "default": null, "description": "Path of a flag image (svg/png, 4:3) drawn under the name, e.g. assets/img/flags/it.svg." },
         "rankEffect": { "enum": ["auto", "none", "halo", "shine", "embers", "rainbow"], "default": "auto", "description": "The effect around the rank. auto: by level (S- to S+ a halo, SSS a running light and sparkles, X glowing embers). none, halo, shine, embers or rainbow pick one by hand at any level." },
-        "rankStyle": { "enum": ["ring", "hexagon", "shield"], "default": "ring", "description": "The shape of the rank indicator." },
+        "rankStyle": { "enum": ["ring", "hexagon", "shield", "burst"], "default": "ring", "description": "The shape of the rank indicator." },
         "rankThickness": { "type": "number", "minimum": 4, "maximum": 16, "default": 8 },
         "frameAnimation": { "enum": ["default", "none", "spin", "pulse", "twinkle"], "default": "default", "description": "default: the frame's own motion. none: still. spin / pulse / twinkle: override it where it makes sense." },
         "facts": { "type": "array", "maxItems": 4, "items": { "enum": ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"] }, "default": ["contributionsThisYear", "bestDay", "busiestWeekday"] },
