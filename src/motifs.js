@@ -33,7 +33,7 @@ export const MOTIFS = {
     const pts = (r1, r2_) => Array.from({ length: 24 }, (_, k) => polar(50, 50, k % 2 ? r2_ : r1, k * 15).join(" ")).join("L");
     return `<path d="M${pts(48, 32)}Z" fill="${a}"/><path d="M${pts(34, 22)}Z" fill="${b}"/>`;
   },
-  /** a ring of angular glyphs, like a summoning circle (the marks are made up, they spell nothing) */
+  /** a ring of angular glyphs round a pentagram, like a summoning circle (the marks are made up, they spell nothing) */
   runes: (a, b) => {
     const marks = Array.from({ length: 12 }, (_, k) => {
       const [x, y] = polar(50, 50, 38, k * 30);
@@ -41,7 +41,7 @@ export const MOTIFS = {
       const d = v === 0 ? "M0 -5V5M0 -1L4 -5" : v === 1 ? "M-3 -5V5M3 -5V5M-3 0H3" : v === 2 ? "M-3 5L0 -5L3 5M-2 1H2" : "M-3 -5L3 5M3 -5L-3 5";
       return `<path d="${d}" transform="translate(${x} ${y}) rotate(${k * 30 + 90})" stroke="${a}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
     }).join("");
-    return `<circle cx="50" cy="50" r="47" fill="none" stroke="${a}" stroke-width="1.4"/><circle cx="50" cy="50" r="29" fill="none" stroke="${a}" stroke-width="1.4"/>${marks}<path d="M50 24L72.5 63L27.5 63Z" fill="none" stroke="${b}" stroke-width="1.6"/><path d="M50 76L27.5 37L72.5 37Z" fill="none" stroke="${b}" stroke-width="1.6"/>`;
+    return `<circle cx="50" cy="50" r="47" fill="none" stroke="${a}" stroke-width="1.4"/><circle cx="50" cy="50" r="29" fill="none" stroke="${a}" stroke-width="1.4"/>${marks}<path d="M${[0, 2, 4, 1, 3].map((k) => polar(50, 50, 27, -90 + 72 * k).join(" ")).join("L")}Z" fill="none" stroke="${b}" stroke-width="1.6" stroke-linejoin="round"/>`;
   },
   /** a "system" window: corner brackets, a title bar and lines of a status list */
   hud: (a, b) => `<path d="M4 18V4H18M82 4H96V18M96 82V96H82M18 96H4V82" fill="none" stroke="${a}" stroke-width="2"/><rect x="12" y="12" width="76" height="9" fill="${a}" opacity=".3"/><rect x="12" y="12" width="3" height="9" fill="${b}"/><g fill="${a}" opacity=".75"><rect x="14" y="30" width="46" height="3"/><rect x="14" y="40" width="62" height="3"/><rect x="14" y="50" width="38" height="3"/><rect x="14" y="60" width="54" height="3"/></g><rect x="14" y="74" width="72" height="6" fill="none" stroke="${a}" stroke-width="1.2"/><rect x="15.5" y="75.5" width="48" height="3" fill="${b}"/>`,
