@@ -18,7 +18,7 @@ export const DEFAULTS = {
   locale: "en", timezone: "UTC", includePrivate: false,
   themes: ["dark", "light"], customThemes: {}, colors: {}, colorsByTheme: {},
   card: {
-    radius: 20, hideBorder: false, animations: true,
+    radius: 20, hideBorder: false, animations: true, panels: "rounded", titles: "plain",
     background: {
       gradient: null, pattern: "none", patternColor: null, patternOpacity: null, patternSize: 100,
       glow: true, glowColor: null, glowX: 85, glowY: 0, glowSize: 65, glowOpacity: 0.18,
@@ -44,7 +44,7 @@ export const DEFAULTS = {
 
 const FACTS = ["contributionsThisYear", "bestDay", "busiestWeekday", "currentStreak", "longestStreak", "topLanguage", "stars", "followers"];
 const ENUMS = {
-  locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"], "card.background.imageFit": ["cover", "contain"],
+  locale: LOCALES, "card.background.pattern": ["none", "dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"], "card.background.imageFit": ["cover", "contain"], "card.panels": ["rounded", "square", "notched"], "card.titles": ["plain", "tag"],
   "header.avatar": ["circle", "rounded", "hide"], "header.frame": ["none", "ring", "double", "dashed", "neon", "pixel", "glitch", "laurel", "flames", "sakura", "stars", "halo", "aurora", "orbit", "prism", "auto"], "header.frameAnimation": ["default", "none", "spin", "pulse", "twinkle"], "header.rankStyle": ["ring", "hexagon", "shield"], "header.rankIcon": ["level", "percentile", "github"], "header.rankEffect": ["auto", "none", "halo", "shine", "embers", "rainbow"],
   "stats.numberFormat": ["long", "short"], "streak.mode": ["daily", "weekly"],
   "languages.layout": ["bar", "compact", "donut", "donut-vertical", "pie"], "languages.statsFormat": ["percentages", "bytes"],

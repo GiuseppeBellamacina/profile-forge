@@ -124,10 +124,24 @@ function animator(t) {
   };
 }
 
-const panel = (x, y, w, h, c) =>
-  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${c.panel}" stroke="${c.border}"/>`;
-const heading = (x, y, text, c, extra = "") =>
-  `<text x="${x}" y="${y}" font-size="12" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.title}">${esc(text)}${extra}</text>`;
+// the look of the panels (card.panels) and of their titles (card.titles) travels in the theme colours: c.panelStyle, c.titleStyle
+const panel = (x, y, w, h, c) => {
+  if (c.panelStyle === "notched") {
+    // chamfered corners (top right, bottom left) and a short accent stroke on the bottom edge, like a game HUD
+    const n = 12;
+    return `<path d="M${x} ${y}H${x + w - n}L${x + w} ${y + n}V${y + h}H${x + n}L${x} ${y + h - n}Z" fill="${c.panel}" stroke="${c.border}"/><path d="M${x + w - 54} ${y + h}H${x + w - 14}" stroke="${c.accent}" stroke-width="3"/>`;
+  }
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${c.panelStyle === "square" ? 2 : 14}" fill="${c.panel}" stroke="${c.border}"/>`;
+};
+const heading = (x, y, text, c, extra = "") => {
+  if (c.titleStyle === "tag") {
+    // a label in the accent colour with a slanted end, the text in the card's background colour (or white on a light card)
+    const w = Math.round(textWidth(text.toUpperCase(), 12) + text.length * 1.6 + 8);
+    const ink = c.base === "light" ? "#ffffff" : c.bg1;
+    return `<path d="M${x - 8} ${y - 14}H${x + w + 6}L${x + w - 2} ${y + 6}H${x - 8}Z" fill="${c.accent}"/><text x="${x}" y="${y}" font-size="12" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${ink}">${esc(text.toUpperCase())}</text>${extra ? `<text x="${x + w + 14}" y="${y}" font-size="12" font-family="${FD}">${extra}</text>` : ""}`;
+  }
+  return `<text x="${x}" y="${y}" font-size="12" font-weight="700" font-family="${FD}" letter-spacing="1.6" fill="${c.title}">${esc(text)}${extra}</text>`;
+};
 const sub = (c, text) => `<tspan dx="6" font-weight="400" letter-spacing="0" fill="${c.muted}">· ${esc(text)}</tspan>`;
 
 /**
@@ -1375,7 +1389,7 @@ function stackSection(d, X, W = 940) {
  * opts.t undefined = animated SVG, number = static frame at that progress.
  */
 export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), colors, boxesOnly = false, ghost = false } = {}) {
-  const c = resolveTheme(theme, colors ?? k.colors);
+  const c = { ...resolveTheme(theme, colors ?? k.colors), panelStyle: k.card.panels, titleStyle: k.card.titles };
   if (t === undefined && !k.card.animations) t = 1;
   const A = animator(t);
   const tag = intlTag(k.locale);

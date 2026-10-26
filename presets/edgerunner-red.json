@@ -69,7 +69,9 @@
         "color": "f7e600",
         "color2": "ff2a45"
       }
-    ]
+    ],
+    "panels": "notched",
+    "titles": "tag"
   },
   "layout": [
     "header",

@@ -660,3 +660,14 @@ test("card art: motifs, images and the background are validated and drawn behind
   for (const pattern of ["dots", "grid", "diagonal", "halftone", "scanlines", "stripes", "hex", "circuit", "crosses"]) assert.ok(view({ background: { pattern } }).includes('<pattern id="pat"'), pattern);
   for (const motif of MOTIF_NAMES) assert.ok(view({ decor: [{ motif }] }).includes('opacity="0.5"'), motif);
 });
+
+test("card panels and titles: notched panels and tag titles are drawn, the defaults are unchanged", () => {
+  const view = (card) => { const [d, k] = make({ layout: ["header", "stats"], card }); return render(d, { k }); };
+  const plain = view({});
+  assert.ok(plain.includes('rx="14" fill=') && !/<path d="M30 \d+H/.test(plain), "rounded panels, plain titles");
+  const hud = view({ panels: "notched", titles: "tag" });
+  assert.ok(/<path d="M30 \d+H\d+L\d+ \d+V/.test(hud) && hud.includes(">STATS</text>"), "notched panel and an upper-case tag");
+  assert.ok(view({ panels: "square" }).includes('rx="2" fill='), "square panels");
+  assert.throws(() => normalize({ card: { panels: "round" } }), /card\.panels/);
+  assert.throws(() => normalize({ card: { titles: "big" } }), /card\.titles/);
+});

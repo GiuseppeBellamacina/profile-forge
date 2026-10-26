@@ -67,6 +67,8 @@
         "radius": { "type": "number", "minimum": 0, "maximum": 60, "default": 20 },
         "hideBorder": { "type": "boolean", "default": false },
         "animations": { "type": "boolean", "default": true },
+        "panels": { "enum": ["rounded", "square", "notched"], "default": "rounded", "description": "The shape of the panels: rounded, square, or notched (chamfered corners and an accent stroke, like a game HUD)." },
+        "titles": { "enum": ["plain", "tag"], "default": "plain", "description": "The title of each panel: plain text, or a label in the accent colour with a slanted end." },
         "background": {
           "type": "object", "additionalProperties": false,
           "properties": {

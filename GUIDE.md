@@ -182,6 +182,11 @@ More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`.
 |---|---|---|---|
 | <img src="docs/guide/bg-halftone.png"> | <img src="docs/guide/bg-hex.png"> | <img src="docs/guide/bg-circuit.png"> | <img src="docs/guide/bg-scanlines.png"> |
 
+| Key (`card`) | Values | Default |
+|---|---|---|
+| `panels` | `rounded` `square` `notched` (chamfered corners and an accent stroke, like a game HUD) | `rounded` |
+| `titles` | `plain` `tag` (the title as a label in the accent colour with a slanted end) | `plain` |
+
 | Key (`card.background`) | Values | Default |
 |---|---|---|
 | `pattern` | `none` `dots` `grid` `diagonal` `halftone` `scanlines` `stripes` `hex` `circuit` `crosses` | `none` |

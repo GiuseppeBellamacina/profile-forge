@@ -19,7 +19,7 @@
     }
   },
   "card": {
-    "radius": 8,
+    "radius": 4,
     "background": {
       "pattern": "circuit",
       "patternOpacity": 0.1,
@@ -61,7 +61,9 @@
         "color": "22d3ee",
         "color2": "f7e600"
       }
-    ]
+    ],
+    "panels": "notched",
+    "titles": "tag"
   },
   "layout": [
     "header",
