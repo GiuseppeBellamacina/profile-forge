@@ -144,9 +144,10 @@ test("ghost house: 5 x 3 days with a door above the middle of the top edge; Pac-
     assert.ok(!maze.wall[maze.door.w * ROWS + maze.door.i] && maze.door.i === maze.den.i - 2 && maze.door.w === maze.den.w, "a free door above the middle of the top edge");
     for (const k of maze.house) assert.ok(!maze.pellet[k] && !maze.wall[k]);
     for (const f of frames) assert.ok(!maze.house.has(f.p[0] * ROWS + f.p[1]), "Pac-Man stays out");
-    assert.ok(frames[0].g.every((g) => maze.house.has(g[4] * ROWS + g[5])), "the ghosts start in the house");
+    assert.deepEqual([frames[0].g[0][4], frames[0].g[0][5]], [maze.door.w, maze.door.i], "Blinky starts outside, above the door");
+    assert.ok(frames[0].g.slice(1).every((g) => maze.house.has(g[4] * ROWS + g[5])), "the other three start in the house");
     // they leave by the door: the first cell outside the house is the door
-    for (let k = 0; k < 4; k++) {
+    for (let k = 1; k < 4; k++) {
       const out = frames.find((f) => !maze.house.has(f.g[k][4] * ROWS + f.g[k][5]));
       assert.deepEqual([out.g[k][4], out.g[k][5]], [maze.door.w, maze.door.i]);
     }
@@ -217,19 +218,22 @@ test("game: a ghost is eaten, and Pac-Man is caught, only when the two are drawn
   assert.ok(eaten > 0 && caught > 0, `${eaten} eaten, ${caught} caught`);
 });
 
-test("ghosts: none comes out of the house scared, none goes round and round a few cells", () => {
+test("ghosts: one comes out of the house scared only while the scare lasts, none goes round and round a few cells", () => {
   for (const kind of KINDS)
     for (let s = 1; s <= 10; s++) {
       const { frames, maze } = playGame(grid(53, s * 7, 0.5), level, { kind, games: 2, seedText: "l" + s });
       const inside = (g) => maze.house.has(g[4] * ROWS + g[5]);
-      for (let k = 0; k < 4; k++)
+      for (let k = 0; k < 4; k++) {
+        let power = -99; // the last time a power pill was eaten
         frames.forEach((f, t) => {
           if (!t || f.n !== frames[t - 1].n) return;
-          if (inside(frames[t - 1].g[k]) && !inside(f.g[k])) assert.notEqual(f.g[k][2], "s", `${kind} ${s}: ghost ${k} came out scared at ${t}`);
+          if (f.e.some((c) => maze.power.has(c))) power = t;
+          if (inside(frames[t - 1].g[k]) && !inside(f.g[k]) && f.g[k][2] === "s") assert.ok(t - power <= 31, `${kind} ${s}: ghost ${k} came out scared at ${t}, ${t - power} moves after the pill`);
           if (t < 40) return;
           const seg = frames.slice(t - 40, t + 1);
           if (seg.some((x) => x.n !== f.n || x.a === 0 || x.g[k][2] !== "c" || inside(x.g[k]))) return;
           assert.ok(new Set(seg.map((x) => x.g[k][4] * ROWS + x.g[k][5])).size > 8, `${kind} ${s}: ghost ${k} circled a few cells at ${t}`);
         });
+      }
     }
 });

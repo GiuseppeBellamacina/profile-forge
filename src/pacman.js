@@ -200,8 +200,8 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     trail = []; // the last cells he stood on
     noBack = 0; // until this tick he may not turn back
     ghosts = GHOSTS.map((_, k) => {
-      const c = [exitK, denK, denK - ROWS, denK + ROWS][k]; // spread over the house
-      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, nx: null, p: 0, flip: false, sc: 0, hist: [], detour: null, detourUntil: 0 };
+      const c = [doorK, denK, denK - ROWS, denK + ROWS][k]; // Blinky waits outside, above the door, as in the arcade; the others in the house
+      return { k, w: Math.floor(c / ROWS), i: c % ROWS, d: k === 0 ? 2 : 3, st: "c", until: 0, rel: k === 0 ? t + 2 : Infinity, nx: null, p: 0, flip: false, sc: 0, hist: [], detour: null, detourUntil: 0 };
     });
     modeStart = t;
     visited = new Set([idx(start.w, start.i)]);
@@ -234,7 +234,7 @@ export function simulate(maze, { lives = 3, seed = 1, maxTicks = 1200, scare = 3
     score += maze.power.has(k) ? 50 : 10;
     if (maze.power.has(k)) {
       chain = 0;
-      for (const g of ghosts) if (g.st !== "e" && g.st !== "r" && !house.has(idx(g.w, g.i))) (g.st = "s", g.until = t + scare, g.flip = true); // one still in the house stays as it is
+      for (const g of ghosts) if (g.st !== "e" && g.st !== "r") (g.st = "s", g.until = t + scare, g.flip = true); // also one still in the house: it comes out blue if the scare is not over
     }
   };
   const startEaten = [];
