@@ -150,6 +150,8 @@ const apply = (theme, colors) => {
   for (const [k, v] of Object.entries(colors)) for (const t of COLOR_KEYS[k]) c[t] = v;
   // Keep the hand-tuned ramp unless a color it depends on was overridden.
   if (colors.icon_color || colors.track_color) delete c.heat;
+  // a theme with a background gradient (the new series themes have one) would keep it over a new background colour: the colour wins
+  if (colors.bg_color && !colors.bg_gradient) delete c.bgGradient;
   return c;
 };
 

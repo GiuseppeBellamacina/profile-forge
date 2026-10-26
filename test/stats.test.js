@@ -686,3 +686,11 @@ test("animated art: the lightning motif loops and can be recoloured and sped up,
   assert.ok(flat.includes('stroke="blue"') && flat.includes('dur="2s"'), "without a colour or a speed the file stays as it is");
   assert.throws(() => normalize({ card: { decor: [{ motif: "bolt", speed: 9 }] } }), /between 0.25 and 4/);
 });
+
+test("a background colour override replaces the gradient of the theme, a gradient override replaces both", () => {
+  const view = (colors) => { const [d, k] = make({ layout: ["header"], colors }); return render(d, { k, theme: "shadow-monarch", colors: k.colors }); };
+  assert.ok(view({}).includes('gradientTransform="rotate(60 .5 .5)"'), "the theme has its gradient");
+  const own = view({ bg_color: "224466" });
+  assert.ok(!own.includes('gradientTransform="rotate(60') && own.includes('<stop offset="0" stop-color="#224466"/>'), "the new colour is the background");
+  assert.ok(view({ bg_color: "224466", bg_gradient: "90,112233,445566" }).includes('stop-color="#112233"'), "an explicit gradient still wins");
+});
