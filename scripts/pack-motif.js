@@ -20,7 +20,12 @@ const fills = [...inner.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((m) => m[1]
 const main = Object.entries(fills.reduce((o, f) => ((o[f] = (o[f] ?? 0) + 1), o), {})).sort((a, b) => b[1] - a[1])[0][0];
 const dur = inner.match(/dur="([\d.]+)s"/)[1];
 
-const round = (s) => s.replace(/-?\d+\.\d{2,}/g, (n) => String(Math.round(Number(n) * 10) / 10));
+// two decimals, and only in the shapes and the positions: keyTimes and the like must stay exact (0.010556 is a frame boundary)
+const r2 = (n) => String(Math.round(Number(n) * 100) / 100);
+const round = (s) =>
+  s
+    .replace(/ d="([^"]*)"/g, (_, d) => ` d="${d.replace(/-?\d+\.\d{3,}/g, r2)}"`)
+    .replace(/ transform="matrix\(([^)]*)\)"/g, (_, m) => ` transform="matrix(${m.replace(/-?\d+\.\d{3,}/g, r2)})"`);
 let body = round(inner)
   .replace(/ id="[^"]*"/g, "")
   .replaceAll(`fill="${main}"`, 'fill="__COLOR__"')
