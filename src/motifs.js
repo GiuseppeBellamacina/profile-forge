@@ -3,6 +3,7 @@
 // comic halftones, gothic ornaments...) that the themes can lean on. render.js places, scales, rotates and fades them.
 
 import { ANIMATED } from "./motifs-animated.js";
+import { mix } from "./themes.js";
 
 const r2 = (x) => Math.round(x * 100) / 100;
 const polar = (cx, cy, r, deg) => [r2(cx + r * Math.cos((deg * Math.PI) / 180)), r2(cy + r * Math.sin((deg * Math.PI) / 180))];
@@ -38,6 +39,19 @@ export const MOTIFS = {
     const [x1, y1] = polar(50, 50, near, deg), [x2, y2] = polar(50, 50, far, deg);
     return `<path d="M${x1} ${y1}L${x2} ${y2}" stroke-width="${k % 2 ? 1.2 : 2.4}"/>`;
   }).join("")}</g><circle cx="50" cy="50" r="5" fill="${b}"/>`,
+  /** an explosion of shards round a white star, black outlines: the two colours, a yellow and an orange (a pop-art key visual) */
+  shards: (a, b) => {
+    const ink = "#14141c";
+    const fills = [a, "#ffe600", b, "#ff8a00", ink]; // the two colours, and a yellow and an orange of the key art
+    const rays = Array.from({ length: 18 }, (_, k) => {
+      const deg = k * 20 + (k % 3) * 3, far = k % 2 ? 36 : 48 - (k % 4) * 2, half = 7 + (k % 3) * 2;
+      const [x1, y1] = polar(50, 50, 13, deg - half), [x2, y2] = polar(50, 50, 13, deg + half), [tx, ty] = polar(50, 50, far, deg + (k % 2 ? 4 : -3));
+      return `<path d="M${x1} ${y1}L${tx} ${ty}L${x2} ${y2}Z" fill="${fills[k % 5]}" stroke="${ink}" stroke-width="1" stroke-linejoin="miter"/>`;
+    }).join("");
+    const star = Array.from({ length: 10 }, (_, k) => polar(50, 50, k % 2 ? 8 : 19, -90 + 36 * k).join(" ")).join("L");
+    const dots = Array.from({ length: 14 }, (_, k) => { const [x, y] = polar(50, 50, 24 + (k % 5) * 4, k * 26 + 8); return `<circle cx="${x}" cy="${y}" r="0.9" fill="${ink}" opacity=".55"/>`; }).join("");
+    return `${rays}${dots}<path d="M${star}Z" fill="#ffffff" stroke="${ink}" stroke-width="1.6" stroke-linejoin="miter"/>`;
+  },
   /** a pop-art starburst */
   burst: (a, b) => {
     const pts = (r1, r2_) => Array.from({ length: 24 }, (_, k) => polar(50, 50, k % 2 ? r2_ : r1, k * 15).join(" ")).join("L");

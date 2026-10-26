@@ -207,7 +207,7 @@ More patterns: `halftone`, `scanlines`, `stripes`, `hex`, `circuit`, `crosses`.
 
 Up to 12 pieces of art on the card, each one a **motif** of the library or an **image** of yours (the file is embedded in the card, like the tech stack icons). The motifs are original line art drawn in the colours of the theme; they are in the spirit of a style (neon city, system windows, comic halftones, gothic ornaments), not copies of anything.
 
-<img src="docs/guide/decor-motifs.png" alt="the 17 motifs: lightning skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
+<img src="docs/guide/decor-motifs.png" alt="the 18 motifs: lightning shards skyline circuit glitch halftone speedlines burst runes hud wings blade moon stars hexgrid reticle bolt barcode">
 
 ```json
 { "card": { "decor": [
@@ -219,7 +219,7 @@ Up to 12 pieces of art on the card, each one a **motif** of the library or an **
 
 | Key | Values | Default |
 |---|---|---|
-| `motif` or `image` | a motif name (`lightning` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image | one of them is required |
+| `motif` or `image` | a motif name (`lightning` `shards` `skyline` `circuit` `glitch` `halftone` `speedlines` `burst` `runes` `hud` `wings` `blade` `moon` `stars` `hexgrid` `reticle` `bolt` `barcode`) or the path of an image | one of them is required |
 | `x` `y` | the centre, in percent of the card **width** (1 = 10 px): `x` from the left, `y` from the top, or from the bottom with `anchor: "bottom"`; −50–150 and −50–200 | `50` `20` |
 | `anchor` | `top` `bottom` | `top` |
 | `size` | the width of the piece, percent of the card width, 2–150 | `20` |
@@ -688,7 +688,7 @@ A list (`["dracula", "nord"]` → `profile-forge-dracula.svg`, `profile-forge-no
 { "themes": { "dark": "dracula", "light": "gruvbox-light" } }
 ```
 
-There are 79 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
+There are 80 built-in themes. Previews of all of them are in [`docs/themes/`](docs/themes).
 
 | | |
 |---|---|
@@ -702,7 +702,7 @@ There are 79 built-in themes. Previews of all of them are in [`docs/themes/`](do
 | **More editor themes** | `tokyo-night` `tokyo-night-storm` `tokyo-night-day` `kanagawa-wave` `moonlight` `poimandres` `vesper` `rose-pine-moon` `rose-pine-dawn` `night-owl-light` `andromeda` `panda` `everblush` `cyberdream` `nord-light` |
 | **Gradient** | `ambient-gradient` `sunset-gradient` `aurora-gradient` `ocean-gradient` `candy-gradient` |
 | **Originals** | `sakura` `lava` `glacier` `forest-night` `coffee` `amber` `paper` |
-| **Inspired by a series** | `hero-x` `shadow-monarch` `plus-ultra` `dante` `edgerunner` `edgerunner-red` (palettes and mood only; each has a preset with art on the card) |
+| **Inspired by a series** | `hero-x` `hero-x-night` `shadow-monarch` `plus-ultra` `dante` `edgerunner` `edgerunner-red` (palettes and mood only; each has a preset with art on the card) |
 
 Dark themes use the dark trophy palette and light themes the light one (`base`).
 

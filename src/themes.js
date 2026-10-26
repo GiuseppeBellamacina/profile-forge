@@ -104,7 +104,9 @@ const THEMES = {
   amber: dv("dark", "#0d0800", "#ffb000", "#ffcc33", "#ff8c00", "#ffe066", { muted: "#b37a00", heat: ["#1f1500", "#4d3300", "#805500", "#cc8800", "#ffcc33"] }),
   paper: dv("light", "#fbfaf7", "#1c1c1c", "#2b2b2b", "#8a6d3b", "#b4532a", { heat: ["#ecebe6", "#c9c7bf", "#97948a", "#5e5b53", "#1c1c1c"] }),
   // Inspired by the look of five series (palettes and mood, nothing copied): pair them with the presets of the same name
-  "hero-x": dv("dark", "#0a0a10", "#f4f4f8", "#19f0ff", "#ff2e97", "#ffe600", { bgGradient: "135,#0a0a10,#160f2e,#0a0a10", heat: ["#16161f", "#17435a", "#1096b3", "#19f0ff", "#ffe600"] }),
+  // pop art after the key art of To Be Hero X: white, black outlines and shards of magenta, yellow, orange and blue
+  "hero-x": dv("light", "#fbfbff", "#14141c", "#e0149c", "#1b8ef2", "#ff7a00", { panel: "#ffffff", border: "#14141c", muted: "#5a5a6e", heat: ["#efeaf7", "#ffe94d", "#ffb000", "#ff6a00", "#e0149c"] }),
+  "hero-x-night": dv("dark", "#0b0b14", "#ffffff", "#ff2bd6", "#ffe600", "#ff8a00", { panel: "#12121f", border: "#ff2bd6", heat: ["#17172a", "#4a1a6b", "#c0149c", "#ff2bd6", "#ffe600"] }),
   "shadow-monarch": dv("dark", "#080118", "#e6e0ff", "#7c4dff", "#35d0ff", "#c77dff", { bgGradient: "150,#080118,#170d30,#080118", panel: "#0d0a15", snake: "#efd7da", frame: "#6a43db", heat: ["#150d26", "#2a1a52", "#4b2fa3", "#7c4dff", "#35d0ff"] }),
   "plus-ultra": dv("dark", "#0b1a3a", "#fff7e0", "#ffd21f", "#ff3b30", "#ff7a1a", { bgGradient: "160,#0b1a3a,#123073,#0b1a3a", heat: ["#13244d", "#1c3f8f", "#2a64d6", "#6aa5ff", "#ffd21f"] }),
   dante: dv("dark", "#0e0708", "#f3ece8", "#d11a2a", "#cfd3dc", "#ffb02e", { bgGradient: "145,#0e0708,#2a0b10,#0e0708", heat: ["#1b0c0e", "#4a0f16", "#8f1420", "#d11a2a", "#ff6a4d"] }),

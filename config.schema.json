@@ -94,7 +94,7 @@
           "items": {
             "type": "object", "additionalProperties": false,
             "properties": {
-              "motif": { "enum": ["lightning", "skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
+              "motif": { "enum": ["lightning", "shards", "skyline", "circuit", "glitch", "halftone", "speedlines", "burst", "runes", "hud", "wings", "blade", "moon", "stars", "hexgrid", "reticle", "bolt", "barcode"] },
               "image": { "type": "string", "description": "Path of an image relative to config.json, instead of a motif." },
               "x": { "type": "number", "minimum": -50, "maximum": 150, "default": 50 },
               "y": { "type": "number", "minimum": -50, "maximum": 200, "default": 20, "description": "In percent of the card width, from the top (or from the bottom with anchor: bottom)." },

@@ -1,57 +1,46 @@
 {
   "$schema": "https://raw.githubusercontent.com/GiuseppeBellamacina/profile-forge/main/config.schema.json",
   "themes": {
-    "dark": "hero-x",
-    "light": "hero-x-day"
-  },
-  "customThemes": {
-    "hero-x-day": {
-      "base": "light",
-      "bg_color": "fbfaf7",
-      "panel_color": "f1efe8",
-      "border_color": "1c1c1c",
-      "text_color": "14141c",
-      "muted_color": "5c5c6b",
-      "icon_color": "0097b8",
-      "ring_color": "d1197f",
-      "fire_color": "c79a00"
-    }
+    "dark": "hero-x-night",
+    "light": "hero-x"
   },
   "card": {
-    "radius": 10,
+    "radius": 6,
+    "panels": "square",
+    "titles": "tag",
     "background": {
       "pattern": "halftone",
-      "patternOpacity": 0.2,
-      "glowColor": "ff2e97",
-      "glowX": 90,
+      "patternOpacity": 0.14,
+      "glowColor": "ff2bd6",
+      "glowX": 88,
       "glowY": 0,
-      "glowSize": 60
+      "glowSize": 60,
+      "glowOpacity": 0.2
     },
     "decor": [
       {
-        "motif": "halftone",
-        "x": 90,
-        "y": 14,
-        "anchor": "bottom",
-        "size": 24,
-        "opacity": 0.4
-      },
-      {
-        "motif": "burst",
-        "x": 44,
+        "motif": "shards",
+        "x": 46,
         "y": 9,
-        "size": 10,
-        "opacity": 0.6,
-        "motion": "pulse"
+        "size": 15,
+        "opacity": 0.95
       },
       {
-        "motif": "bolt",
-        "x": 52,
-        "y": 5,
+        "motif": "shards",
+        "x": 88,
+        "y": 26,
         "anchor": "bottom",
-        "size": 9,
-        "opacity": 0.45,
-        "rotate": 12
+        "size": 46,
+        "opacity": 0.22,
+        "rotate": 14
+      },
+      {
+        "motif": "halftone",
+        "x": 6,
+        "y": 12,
+        "anchor": "bottom",
+        "size": 18,
+        "opacity": 0.3
       }
     ]
   },

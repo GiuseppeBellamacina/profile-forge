@@ -880,7 +880,8 @@ function heatmapSection(d, X, W = 940) {
         const [cx, cy] = centre(w, i);
         const lv = maze.pellet[k];
         const power = maze.power.has(k);
-        const col = mix(c.heat[lv], "#ffffff", power ? 0.7 : 0.45);
+        const light = c.base === "light"; // on a light card the dots are darkened, not lightened, or they vanish
+        const col = mix(c.heat[lv], light ? "#000000" : "#ffffff", power ? (light ? 0.25 : 0.7) : light ? 0.25 : 0.45);
         const pulse = power ? A.loop({ "0%,100%": "opacity:1", "50%": "opacity:.3" }, { dur: 0.7, ease: "steps(1)" }) : "";
         const dotSvg = `<circle cx="${r3(cx)}" cy="${r3(cy)}" r="${power ? 4.8 : r3(1.4 + lv * 0.45)}" fill="${col}"${pulse}><title>${n} · ${key}</title></circle>`;
         const eats = eatT.get(k);
@@ -1057,7 +1058,7 @@ function heatmapSection(d, X, W = 940) {
     <text x="${840 + W - 940}" y="698" text-anchor="end" font-size="10" fill="${c.muted}">${esc(tr("less"))}</text>
     ${
       pac
-        ? [1, 2, 3, 4].map((lv, i) => `<circle cx="${r3(846 + W - 940 + 13 + i * 18)}" cy="693.9" r="${r3(1.4 + lv * 0.45)}" fill="${mix(c.heat[lv], "#ffffff", 0.45)}"/>`).join("") // the pellets: a bigger dot for a busier day
+        ? [1, 2, 3, 4].map((lv, i) => `<circle cx="${r3(846 + W - 940 + 13 + i * 18)}" cy="693.9" r="${r3(1.4 + lv * 0.45)}" fill="${mix(c.heat[lv], c.base === "light" ? "#000000" : "#ffffff", c.base === "light" ? 0.25 : 0.45)}"/>`).join("") // the pellets: a bigger dot for a busier day
         : c.heat.map((h, i) => cellShape(o.cell === "mixed" ? "square" : o.cell, 846 + W - 940 + i * 16 - 0.75, 687.25, h, { lvl: i, dim: c.heat[0] })).join("")
     }
     <text x="${930 + W - 940}" y="698" font-size="10" fill="${c.muted}">${esc(tr("more"))}</text>
@@ -1526,9 +1527,10 @@ export function render(d, { theme = "dark", t, fontCss = "", k = normalize(), co
   const bgImage = bg.image && images[bg.image]
     ? `<image href="${images[bg.image]}" width="${W}" height="${SH}" opacity="${bg.imageOpacity}" preserveAspectRatio="xMidYMid ${bg.imageFit === "contain" ? "meet" : "slice"}"/>`
     : "";
-  // the art comes in last: after the sections have finished appearing (their rows come one after the other, each one drawing its own parts)
+  // the art comes in last: after the sections have finished appearing (their rows come one after the other, each one drawing its own parts),
+  // but early enough to be complete in the static frame (PNG / GIF), which shows the animation at DURATION
   A.dt = 0;
-  const artIn = k.decor.length ? A.a(Math.max(0, ...items.map((it) => it.delay)) + 3, 0.8, { o: 0 }) : "";
+  const artIn = k.decor.length ? A.a(Math.min(Math.max(0, ...items.map((it) => it.delay)) + 3, DURATION - 0.8), 0.8, { o: 0 }) : "";
   const over = k.decor.some((it) => it.layer === "front") ? `<g clip-path="url(#dc-clip)"><g${artIn}>${decorSvg("front")}</g></g>` : ""; // built here: its loops add to the style block
   const under = `${bgImage}${bg.glow ? card("url(#glow)") : ""}${pat ? `<g opacity="${bg.patternOpacity ?? pat[3]}">${card("url(#pat)")}</g>` : ""}${k.decor.some((it) => it.layer === "back") ? `<g${artIn}>${decorSvg("back")}</g>` : ""}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${SH}" viewBox="0 0 ${W} ${SH}" font-family="${FB}" role="img" aria-label="GitHub profile card for ${esc(d.login)}">
