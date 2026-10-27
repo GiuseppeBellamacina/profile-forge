@@ -23,7 +23,9 @@ async function gql(token, query, variables = {}, endpoint = API) {
       try { json = JSON.parse(text); } catch { last = new Error(`GitHub did not answer in time (HTTP ${res.status}). Try again in a moment.`); continue; }
       if (!res.ok || json.errors) {
         if (res.status >= 500) { last = new Error(`GitHub API: HTTP ${res.status}`); continue; }
-        throw new Error(`GitHub API: ${JSON.stringify(json.errors ?? json)}`);
+        const err = new Error(`GitHub API: ${JSON.stringify(json.errors ?? json)}`);
+        err.errors = json.errors;
+        throw err;
       }
       return json.data;
     } catch (e) {
@@ -32,6 +34,21 @@ async function gql(token, query, variables = {}, endpoint = API) {
     }
   }
   throw last;
+}
+
+// Fields of the profile that only add a detail (a count): a token that may not read one (a fine-grained token without the Gists
+// permission says FORBIDDEN) must not stop the whole card, so the query is asked again without that field.
+const OPTIONAL = ["gists", "following", "starredRepositories", "sponsors", "sponsoring"];
+export async function userPage(token, query, vars, endpoint) {
+  for (let drop = 0; ; drop++) {
+    try {
+      return { data: await gql(token, query, vars, endpoint), query };
+    } catch (e) {
+      const bad = (e.errors ?? []).map((x) => (x.type === "FORBIDDEN" || x.type === "INSUFFICIENT_SCOPES" ? x.path?.[1] : null));
+      if (drop >= OPTIONAL.length || !bad.length || !bad.every((f) => OPTIONAL.includes(f))) throw e;
+      for (const f of new Set(bad)) query = query.replace(new RegExp(`^\\s*${f}\\b.*$`, "m"), "");
+    }
+  }
 }
 
 const BY_REPO = "contributions { totalCount } repository { nameWithOwner stargazerCount owner { __typename login avatarUrl } }";
@@ -92,7 +109,9 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   const step = (f, label) => onProgress?.(Math.min(1, f), label);
   step(0.02, "Reading the profile…");
   const privacy = includePrivate ? null : "PUBLIC";
-  let data = await gql(token, USER_QUERY, { login, privacy, extras }, endpoint);
+  let userQuery = USER_QUERY;
+  let data;
+  ({ data, query: userQuery } = await userPage(token, userQuery, { login, privacy, extras }, endpoint));
   const user = data.user;
   if (!user) throw new Error(`User "${login}" not found`);
   step(0.12, "Reading the repositories…");
@@ -101,7 +120,7 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
   let pages = 1;
   while (page.hasNextPage) {
     step(0.12 + Math.min(0.08, pages++ * 0.02), `Reading the repositories (${repos.length} so far)…`);
-    data = await gql(token, USER_QUERY, { login, privacy, extras, after: page.endCursor }, endpoint);
+    data = await gql(token, userQuery, { login, privacy, extras, after: page.endCursor }, endpoint);
     repos.push(...data.user.repositories.nodes);
     page = data.user.repositories.pageInfo;
   }
@@ -251,11 +270,11 @@ export async function fetchProfile({ login, token, includePrivate = false, tz = 
     discussionsStarted: user.discussionsStarted?.totalCount ?? 0,
     discussionsAnswered: user.discussionsAnswered?.totalCount ?? 0,
     friend,
-    gists: user.gists.totalCount,
-    following: user.following.totalCount,
-    starred: user.starredRepositories.totalCount,
-    sponsors: user.sponsors.totalCount,
-    sponsoring: user.sponsoring.totalCount,
+    gists: user.gists?.totalCount ?? 0,
+    following: user.following?.totalCount ?? 0,
+    starred: user.starredRepositories?.totalCount ?? 0,
+    sponsors: user.sponsors?.totalCount ?? 0,
+    sponsoring: user.sponsoring?.totalCount ?? 0,
     badges: { star: user.isGitHubStar, campus: user.isCampusExpert, bounty: user.isBountyHunter, devProgram: user.isDeveloperProgramMember, employee: user.isEmployee },
     repos: repos.map((r) => ({
       name: r.name,
