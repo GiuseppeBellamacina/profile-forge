@@ -89,7 +89,7 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
   for (const i of tunnels) for (const w of [0, 1, W - 2, W - 1]) keep.add(idx(w, i));
   const link = (w, i) => (tunnels.includes(i) ? (w === 0 ? idx(W - 1, i) : w === W - 1 ? idx(0, i) : -1) : -1);
 
-  const reach = () => {
+  const reach = (links = true) => {
     const seen = new Uint8Array(N);
     const q = [doorK];
     seen[doorK] = 1;
@@ -97,7 +97,7 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
     for (let h = 0; h < q.length; h++) {
       const [w, i] = at(q[h]);
       const around = DIRS.filter(([a, b]) => inGrid(w + a, i + b)).map(([a, b]) => idx(w + a, i + b));
-      if (link(w, i) >= 0) around.push(link(w, i));
+      if (links && link(w, i) >= 0) around.push(link(w, i));
       for (const k of around) if (!wall[k] && !seen[k] && !house.has(k)) (seen[k] = 1, n++, q.push(k));
     }
     return { n, seen };
@@ -122,7 +122,8 @@ export function buildMaze(weeks, level, kind = "data", rand = Math.random) {
         const w = kw + a, i = ki + b;
         return inGrid(w, i) && !wall[idx(w, i)] && DIRS.filter(([c, d]) => inGrid(w + c, i + d) && !wall[idx(w + c, i + d)]).length + (link(w, i) >= 0 ? 1 : 0) < 2;
       });
-      if (deadEnd || reach().n !== freeCount) (wall[k] = 0, freeCount++);
+      // connected without the tunnels too: a wall right across the board (a column of quiet days) would otherwise be crossed only by the tunnel
+      if (deadEnd || reach(false).n !== freeCount) (wall[k] = 0, freeCount++);
     }
   }
   // whatever cannot be reached from the den (a piece of the last week, a corner the template cut off) becomes wall

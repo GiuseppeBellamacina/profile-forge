@@ -237,3 +237,22 @@ test("ghosts: one comes out of the house scared only while the scare lasts, none
       }
     }
 });
+
+test("data maze: every free cell is reachable without the tunnels, so no wall cuts the board in two", () => {
+  for (const width of [27, 40, 53])
+    for (let s = 1; s <= 12; s++) {
+      const weeks = grid(width, s * 13, 0.15 + (s % 4) * 0.08); // sparse: many quiet days, the case where whole columns of them appear
+      const m = buildMaze(weeks, level, "data", mulberry32(s));
+      const free = [...m.wall.keys()].filter((k) => !m.wall[k] && !m.house.has(k));
+      const seen = new Set([m.door.w * ROWS + m.door.i]);
+      const q = [...seen];
+      for (let h = 0; h < q.length; h++) {
+        const w = Math.floor(q[h] / ROWS), i = q[h] % ROWS;
+        for (const [a, b] of DIRS) {
+          const n = (w + a) * ROWS + i + b;
+          if (w + a >= 0 && w + a < m.W && i + b >= 0 && i + b < ROWS && !m.wall[n] && !m.house.has(n) && !seen.has(n)) (seen.add(n), q.push(n));
+        }
+      }
+      assert.equal(seen.size, free.length, `${width}x${s}: a wall splits the board (${seen.size} of ${free.length} cells reached without the tunnels)`);
+    }
+});
